@@ -52,6 +52,15 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
 
 ## 4. Persyaratan Fungsional (Functional Requirements)
 
+### 4.0 Modul Landing Page & Informasi Lembaga (Halaman Beranda `/`)
+1. **Tampilan Utama Publik**: Halaman awal yang muncul pertama kali saat domain situs dibuka (bukan langsung layar login).
+2. **Pengumuman PSB**: Bilah pengumuman teratas (*announcement bar*) mengenai Penerimaan Santri Baru Tahun Ajaran 2025/2026.
+3. **Hero Section & Nilai Kepercayaan**: Judul utama, profil singkat pesantren, tombol aksi pendaftaran & WhatsApp, serta 4 kartu sorotan keunggulan (Metode Ummi, WTN Darul Qur'an, Integrasi Formal, Usia Dini).
+4. **Pilar Solusi Orang Tua**: Menjawab keresahan orang tua dengan program pembinaan kemandirian, tahsin ramah anak, dan pendidikan seimbang.
+5. **Program & Fasilitas**: Informasi lengkap 5 program unggulan (Tahfidz 30 Juz, Tahsin Ummi, MDTA, Formal, WTN) dan fasilitas asrama.
+6. **Formulir Pendaftaran Online Interaktif**: Calon orang tua/wali santri dapat langsung mengisi data pendaftaran dan mengirimkannya otomatis ke WhatsApp admin PSB (`0857 3180 4663`).
+7. **Pusat Akses Portal**: Tombol pintas cepat di header dan footer untuk masuk ke portal pemantauan tahfidz (`/login`).
+
 ### 4.1 Modul Autentikasi & Manajemen Sesi
 1. **Layar Masuk Ganda (Tabbed Login)**:
    - Tab Pengurus/Ustadz: Input username dan password.

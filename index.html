@@ -86,8 +86,687 @@
 </head>
 <body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans antialiased h-screen flex flex-col overflow-hidden theme-transition">
 
+    <!-- ==================== LANDING PAGE VIEW ==================== -->
+    <div id="landingView" class="h-full overflow-y-auto w-full scroll-smooth bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-100 theme-transition">
+        
+        <!-- Top Bar / Announcement Bar -->
+        <div class="bg-gradient-to-r from-[#731417] via-[#9a2024] to-[#731417] text-white text-xs py-2.5 px-4 text-center font-medium shadow-sm">
+            <div class="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-bullhorn text-amber-300"></i> <strong>Penerimaan Santri Baru (PSB) Tahun Ajaran 2025/2026 Telah Dibuka!</strong></span>
+                <span class="text-white/80">Kuota terbatas untuk pembinaan intensif.</span>
+                <a href="#form-pendaftaran" class="underline underline-offset-2 hover:text-amber-200 font-bold ml-1 transition">Isi Formulir Pendaftaran &rarr;</a>
+            </div>
+        </div>
+
+        <!-- Sticky Header / Navigation -->
+        <header class="sticky top-0 z-40 bg-white/95 dark:bg-darkbg/95 backdrop-blur-md border-b border-gray-200 dark:border-darkborder transition-colors">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <!-- Brand / Logo -->
+                <a href="/" onclick="event.preventDefault(); navigateTo('/');" class="flex items-center gap-3 group">
+                    <img src="logo.jpg" alt="Logo Zadil Quran" class="w-11 h-11 rounded-xl object-cover shadow-sm border border-gray-200 dark:border-darkborder bg-white group-hover:scale-105 transition">
+                    <div>
+                        <div class="text-lg font-bold text-gray-900 dark:text-white leading-tight brand-name-display tracking-tight group-hover:text-[#9a2024] transition">Zadil Qur'an</div>
+                        <div class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">Pesantren Tahfidz &bull; Tuban</div>
+                    </div>
+                </a>
+
+                <!-- Desktop Nav Links -->
+                <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <a href="#program" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition">Program</a>
+                    <a href="#ekskul" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition">Ekstrakurikuler</a>
+                    <a href="#fasilitas" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition">Fasilitas</a>
+                    <a href="#alur-pendaftaran" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition">Alur PSB</a>
+                    <a href="#form-pendaftaran" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition font-semibold text-[#9a2024] dark:text-[#f29fa3]">Daftar Online</a>
+                    <a href="#faq" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition">FAQ</a>
+                    <a href="#kontak" class="hover:text-[#9a2024] dark:hover:text-[#f29fa3] transition">Kontak</a>
+                </nav>
+
+                <!-- Actions: Dark Mode & Portal Button -->
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition" title="Ganti Mode Tampilan">
+                        <i class="fa-solid fa-moon dark:hidden"></i>
+                        <i class="fa-solid fa-sun hidden dark:block"></i>
+                    </button>
+
+                    <button id="btnLandingPortal" onclick="handleLandingPortalClick()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95 flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span id="btnLandingPortalText">Portal Tahfidz</span>
+                    </button>
+
+                    <!-- Mobile Menu Hamburger Button -->
+                    <button onclick="toggleLandingMobileMenu()" class="lg:hidden w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition" aria-label="Menu Navigasi">
+                        <i class="fa-solid fa-bars text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Dropdown Menu -->
+            <div id="landingMobileMenu" class="hidden lg:hidden border-t border-gray-200 dark:border-darkborder bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3">
+                <a href="#program" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Program Unggulan</a>
+                <a href="#ekskul" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Ekstrakurikuler & Minat Bakat</a>
+                <a href="#fasilitas" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Fasilitas Pesantren</a>
+                <a href="#alur-pendaftaran" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Persyaratan & Alur PSB</a>
+                <a href="#form-pendaftaran" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-semibold text-[#9a2024] dark:text-[#f29fa3]">Isi Formulir Pendaftaran</a>
+                <a href="#faq" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Pertanyaan Sering Diajukan (FAQ)</a>
+                <a href="#kontak" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Kontak & Lokasi Kampus</a>
+            </div>
+        </header>
+
+        <!-- ==================== HERO SECTION ==================== -->
+        <section class="relative overflow-hidden pt-12 pb-20 lg:pt-16 lg:pb-28 bg-gradient-to-b from-[#fdf2f2]/60 via-white to-gray-50 dark:from-slate-950 dark:via-darkbg dark:to-darkbg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-3xl mx-auto">
+                    <!-- Eyebrow Pill -->
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#fdf2f2] dark:bg-[#731417]/30 text-[#9a2024] dark:text-[#f9c5c7] border border-[#f9c5c7] dark:border-[#731417] mb-6 shadow-xs">
+                        <i class="fa-solid fa-award text-[#9a2024]"></i>
+                        <span>PONDOK PESANTREN TAHFIDZ ZADIL QUR'AN TUBAN</span>
+                    </div>
+
+                    <!-- Headline -->
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.18]">
+                        Mencetak Generasi Qur’ani, Mandiri, dan Berakhlak Mulia Sejak Usia Dini
+                    </h1>
+
+                    <!-- Sub-headline -->
+                    <p class="mt-6 text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-normal">
+                        Pondok Pesantren Tahfidz Zadil Qur'an menghadirkan lingkungan belajar yang hangat dan kondusif untuk membimbing putra-putri Anda menghafal Al-Qur'an 30 Juz, mendalami ilmu agama, serta tetap meraih pendidikan formal berkualitas.
+                    </p>
+
+                    <!-- CTAs -->
+                    <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                        <a href="#form-pendaftaran" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg shadow-[#9a2024]/25 transition active:scale-95 text-sm">
+                            <i class="fa-solid fa-file-signature"></i>
+                            <span>Daftar Santri Baru Sekarang</span>
+                        </a>
+                        <a href="https://wa.me/6285731804663" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold px-7 py-3.5 rounded-xl shadow-md transition active:scale-95 text-sm">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>Konsultasi via WhatsApp</span>
+                        </a>
+                        <button onclick="navigateTo('/login')" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-gray-300 dark:border-darkborder bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 font-semibold px-6 py-3.5 rounded-xl text-sm transition active:scale-95">
+                            <i class="fa-solid fa-book-quran text-[#9a2024]"></i>
+                            <span>Portal Monitoring</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trust Badges (4 Grid Cards) -->
+                <div class="mt-14 pt-10 border-t border-gray-200/80 dark:border-darkborder/80 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+                    <div class="bg-white dark:bg-darkcard p-5 rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:shadow-md transition text-center flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-xl bg-[#edf7f2] dark:bg-[#12452c]/40 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-xl mb-3">
+                            <i class="fa-solid fa-book-open-reader"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white">Metode Ummi Terstandar</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Tahsin tartil, mudah, dan fasih</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard p-5 rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:shadow-md transition text-center flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-xl bg-[#fdf2f2] dark:bg-[#731417]/30 text-[#9a2024] dark:text-[#f29fa3] flex items-center justify-center text-xl mb-3">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white">Wisuda Tahfidz Nasional</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Uji kompetensi WTN Darul Qur'an</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard p-5 rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:shadow-md transition text-center flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center text-xl mb-3">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white">Integrasi Sekolah Formal</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Diniyah & ijazah formal diakui</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard p-5 rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:shadow-md transition text-center flex flex-col items-center">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-xl mb-3">
+                            <i class="fa-solid fa-child-reaching"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white">Mulai Usia 7 Tahun</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pembinaan kemandirian sejak dini</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PROBLEM & SOLUTION SECTION ==================== -->
+        <section class="py-16 sm:py-20 bg-white dark:bg-darkcard border-y border-gray-100 dark:border-darkborder">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl mx-auto text-center mb-14">
+                    <span class="text-xs font-bold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider">Pondasi Emas Generasi Penerus</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mt-2 tracking-tight">
+                        Mempersiapkan Masa Depan Akhirat dan Dunia Anak Tercinta
+                    </h2>
+                    <p class="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Di tengah tantangan pergaulan dan distraksi digital saat ini, memberikan pondasi akidah, adab, dan Al-Qur'an sejak usia dini adalah hadiah terbaik bagi putra-putri kita.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- 1. Kemandirian -->
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-7 rounded-2xl border border-gray-200/70 dark:border-darkborder relative group hover:-translate-y-1 transition duration-200">
+                        <div class="w-12 h-12 rounded-xl bg-[#9a2024] text-white flex items-center justify-center text-xl mb-5 shadow-sm">
+                            <i class="fa-solid fa-hands-praying"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">1. Dibiasakan Mandiri & Beradab</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Melatih kedisiplinan dan akhlakul karimah dalam keseharian asrama. Santri dibiasakan mandiri merapikan tempat tidur, salat berjamaah tepat waktu, menjaga adab kepada guru, dan saling tolong-menolong.
+                        </p>
+                    </div>
+
+                    <!-- 2. Tahsin Ramah Anak -->
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-7 rounded-2xl border border-gray-200/70 dark:border-darkborder relative group hover:-translate-y-1 transition duration-200">
+                        <div class="w-12 h-12 rounded-xl bg-[#1c6b45] text-white flex items-center justify-center text-xl mb-5 shadow-sm">
+                            <i class="fa-solid fa-microphone-lines"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">2. Tahsin Ramah Anak</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Memperbaiki bacaan secara tartil dengan Metode Ummi yang menyenangkan. Pendekatan ramah anak memastikan setiap huruf dibaca fasih dan benar tanpa membuat anak merasa tertekan.
+                        </p>
+                    </div>
+
+                    <!-- 3. Pendidikan Seimbang -->
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-7 rounded-2xl border border-gray-200/70 dark:border-darkborder relative group hover:-translate-y-1 transition duration-200">
+                        <div class="w-12 h-12 rounded-xl bg-[#871a1e] text-white flex items-center justify-center text-xl mb-5 shadow-sm">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">3. Pendidikan Seimbang</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Hak akademis santri tetap terjamin melalui integrasi pendidikan formal. Ijazah formal negeri/swasta tetap diraih berdampingan dengan ilmu diniyah dan capaian hafalan Al-Qur'an.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PROGRAM UNGGULAN SECTION ==================== -->
+        <section id="program" class="py-16 sm:py-24 bg-gray-50 dark:bg-darkbg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl mx-auto text-center mb-14">
+                    <span class="text-xs font-bold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider">Kurikulum Terpadu</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mt-2 tracking-tight">
+                        Kurikulum Terintegrasi untuk Tumbuh Kembang Santri
+                    </h2>
+                    <p class="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Kami menyusun program komprehensif yang memadukan hafalan Al-Qur'an, pemahaman syari'at Islam, dan kurikulum pendidikan nasional secara seimbang.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- 1 -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs hover:border-[#9a2024] dark:hover:border-[#9a2024] transition">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#fdf2f2] dark:bg-[#731417]/30 text-[#9a2024] text-base font-bold mb-4">
+                            01
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Tahfidz 30 Juz Intensif (Target 2-3 Tahun)</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Metode setoran dan muraja'ah terarah yang disesuaikan dengan ritme santri, didampingi oleh asatidz dan asatidzah berpengalaman dengan evaluasi berkala.
+                        </p>
+                    </div>
+
+                    <!-- 2 -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs hover:border-[#1c6b45] dark:hover:border-[#1c6b45] transition">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#edf7f2] dark:bg-[#12452c]/30 text-[#1c6b45] text-base font-bold mb-4">
+                            02
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Tahsin Al-Qur’an Metode Ummi</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Menjamin bacaan santri tartil, fasih makhrajnya, serta memahami hukum tajwid secara mudah dan menyenangkan melalui panduan terstandar nasional.
+                        </p>
+                    </div>
+
+                    <!-- 3 -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs hover:border-[#9a2024] dark:hover:border-[#9a2024] transition">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-700 text-base font-bold mb-4">
+                            03
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Madrasah Diniyah Takmiliyah Awaliyah (MDTA)</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Pembekalan ilmu syar'i dasar mencakup Fiqih ibadah, Aqidah Akhlak, Bahasa Arab dasar, Tarikh Islam (Sejarah Islam), dan Hadits pilihan.
+                        </p>
+                    </div>
+
+                    <!-- 4 -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs hover:border-[#1c6b45] dark:hover:border-[#1c6b45] transition">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-700 text-base font-bold mb-4">
+                            04
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Program Sekolah Formal</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Santri tetap menempuh jenjang pendidikan formal yang diakui pemerintah sehingga legalitas ijazah formal tetap terjamin untuk masa depan akademik.
+                        </p>
+                    </div>
+
+                    <!-- 5 -->
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs hover:border-[#9a2024] dark:hover:border-[#9a2024] transition md:col-span-2 lg:col-span-2">
+                        <div class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-[#1c6b45] text-base font-bold mb-4">
+                            05
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Wisuda Tahfidz Nasional (WTN) Darul Qur’an</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Uji kompetensi hafalan berskala nasional sebagai wujud apresiasi atas perjuangan hafalan para santri yang telah menuntaskan target hafalan dengan standar mutu tinggi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== EKSTRAKURIKULER & MINAT BAKAT ==================== -->
+        <section id="ekskul" class="py-16 sm:py-20 bg-white dark:bg-darkcard border-y border-gray-100 dark:border-darkborder">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl mx-auto text-center mb-14">
+                    <span class="text-xs font-bold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider">Potensi & Kepemimpinan</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mt-2 tracking-tight">
+                        Mengasah Talenta, Membangun Jiwa Kepemimpinan
+                    </h2>
+                    <p class="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Kami percaya setiap santri memiliki potensi unik. Kegiatan penunjang di luar jam belajar dirancang untuk menumbuhkan rasa percaya diri dan ketangkasan santri.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-gray-200/70 dark:border-darkborder text-center">
+                        <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-music"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white mb-1.5">Seni Islami</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Rebana & Sholawat, Tilawah Al-Qur’an, Seni Kaligrafi Islam.</p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-gray-200/70 dark:border-darkborder text-center">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white mb-1.5">Public Speaking</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Latihan Khitobiyah (pidato melatih keberanian dan retorika dakwah).</p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-gray-200/70 dark:border-darkborder text-center">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-futbol"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white mb-1.5">Kebugaran Santri</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Futsal, Tenis Meja, dan olahraga kebugaran jasmani.</p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-gray-200/70 dark:border-darkborder text-center">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-laptop-code"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white mb-1.5">Digital & Masa Depan</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Pelatihan Komputer dasar & literasi digital islami.</p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-gray-200/70 dark:border-darkborder text-center sm:col-span-2 lg:col-span-1">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center text-xl mx-auto mb-3">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
+                        <h4 class="font-bold text-sm text-gray-900 dark:text-white mb-1.5">Kemandirian</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Dasar kewirausahaan (entrepreneurship) santri mandiri.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FASILITAS PESANTREN ==================== -->
+        <section id="fasilitas" class="py-16 sm:py-20 bg-gray-50 dark:bg-darkbg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl mx-auto text-center mb-14">
+                    <span class="text-xs font-bold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider">Kenyamanan & Keamanan</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mt-2 tracking-tight">
+                        Lingkungan Asri, Bersih, dan Mendukung Pembelajaran
+                    </h2>
+                    <p class="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Kami menyediakan sarana hunian dan belajar yang bersih, sejuk, dan aman agar santri betah dan khusyuk dalam menghafal Al-Qur'an.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs">
+                        <div class="w-12 h-12 rounded-xl bg-[#fdf2f2] dark:bg-[#731417]/30 text-[#9a2024] flex items-center justify-center text-xl mb-4">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Gedung Asrama Representatif</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Lingkungan asrama aman, tenang, dan terawat dengan pengawasan asatidz 24 jam.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs">
+                        <div class="w-12 h-12 rounded-xl bg-[#edf7f2] dark:bg-[#12452c]/30 text-[#1c6b45] flex items-center justify-center text-xl mb-4">
+                            <i class="fa-solid fa-bed"></i>
+                        </div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Kamar Tidur Nyaman</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Kapasitas ideal (maksimal 10 santri per kamar) demi menjaga kenyamanan istirahat dan kedekatan antar santri.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-700 flex items-center justify-center text-xl mb-4">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Katering Sehat 3x Sehari</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Menu bergizi seimbang dan higienis setiap hari untuk menjaga stamina dan kesehatan belajar santri.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-darkcard p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder shadow-xs">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-[#1c6b45] flex items-center justify-center text-xl mb-4">
+                            <i class="fa-solid fa-mosque"></i>
+                        </div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Musholla & Aula Serbaguna</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Ruang kegiatan ibadah berjamaah, halaqah Qur'an, kajian kitab, dan pembinaan santri.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== PERSYARATAN & ALUR PENDAFTARAN ==================== -->
+        <section id="alur-pendaftaran" class="py-16 sm:py-20 bg-white dark:bg-darkcard border-y border-gray-100 dark:border-darkborder">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="max-w-3xl mx-auto text-center mb-14">
+                    <span class="text-xs font-bold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider">Penerimaan Santri Baru</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mt-2 tracking-tight">
+                        Persyaratan & Alur Pendaftaran
+                    </h2>
+                    <p class="mt-4 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
+                        Kami menyederhanakan alur pendaftaran agar orang tua dapat mendampingi putra-putrinya dengan mudah dan nyaman.
+                    </p>
+                </div>
+
+                <!-- Kriteria Grid -->
+                <div class="bg-[#edf7f2] dark:bg-[#12452c]/20 border border-[#b2dfc8] dark:border-[#12452c] rounded-2xl p-6 sm:p-8 mb-12">
+                    <h3 class="text-base sm:text-lg font-bold text-[#1c6b45] dark:text-[#83c9a6] mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Kriteria Calon Santri Baru:</span>
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-200">
+                        <div class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-check text-[#1c6b45] mt-1"></i>
+                            <span>Usia minimal <strong>7 tahun</strong> (setara usia masuk SD/MI atau sudah siap belajar mandiri).</span>
+                        </div>
+                        <div class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-check text-[#1c6b45] mt-1"></i>
+                            <span>Memiliki komitmen dan semangat tinggi menghafal Al-Qur'an 30 Juz.</span>
+                        </div>
+                        <div class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-check text-[#1c6b45] mt-1"></i>
+                            <span>Mengisi formulir pendaftaran calon santri secara lengkap.</span>
+                        </div>
+                        <div class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-check text-[#1c6b45] mt-1"></i>
+                            <span>Wajib diantar langsung oleh orang tua / wali santri saat proses pendaftaran dan kedatangan ke pondok.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4 Steps -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder relative">
+                        <div class="w-10 h-10 rounded-full bg-[#9a2024] text-white flex items-center justify-center text-sm font-bold mb-4">1</div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Pengisian Formulir</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Isi formulir pendaftaran pada halaman ini untuk mendaftarkan data diri calon santri dan wali secara online.
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder relative">
+                        <div class="w-10 h-10 rounded-full bg-[#1c6b45] text-white flex items-center justify-center text-sm font-bold mb-4">2</div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Konfirmasi Admin</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Hubungi tim administrasi via WhatsApp di nomor 0857 3180 4663 untuk verifikasi data dan penentuan jadwal ta'aruf.
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder relative">
+                        <div class="w-10 h-10 rounded-full bg-[#871a1e] text-white flex items-center justify-center text-sm font-bold mb-4">3</div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Observasi & Silaturahmi</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Kunjungan santri dan orang tua ke pesantren untuk sesi ta'aruf, observasi minat bakat, dan verifikasi berkas fisik.
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-slate-900/60 p-6 rounded-2xl border border-gray-200/80 dark:border-darkborder relative">
+                        <div class="w-10 h-10 rounded-full bg-[#12452c] text-white flex items-center justify-center text-sm font-bold mb-4">4</div>
+                        <h4 class="font-bold text-base text-gray-900 dark:text-white mb-2">Registrasi Ulang</h4>
+                        <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            Penyelesaian administrasi santri baru dan resmi siap memasuki asrama Pondok Pesantren Zadil Qur'an.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FORMULIR PENDAFTARAN ONLINE ==================== -->
+        <section id="form-pendaftaran" class="py-16 sm:py-20 bg-gray-50 dark:bg-darkbg">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6">
+                <div class="bg-white dark:bg-darkcard rounded-3xl p-6 sm:p-10 border border-gray-200 dark:border-darkborder shadow-xl">
+                    <div class="text-center mb-8">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fdf2f2] dark:bg-[#731417]/30 text-[#9a2024] dark:text-[#f29fa3] mb-3">
+                            <i class="fa-solid fa-file-pen"></i> Form Online PSB
+                        </span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                            Formulir Pendaftaran Calon Santri Baru
+                        </h2>
+                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
+                            Silakan lengkapi formulir di bawah ini. Data Anda akan langsung diteruskan ke WhatsApp Layanan Penerimaan Santri Baru Zadil Qur'an.
+                        </p>
+                    </div>
+
+                    <form onsubmit="submitPsbForm(event)" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap Calon Santri *</label>
+                                <input type="text" id="psbNamaSantri" required placeholder="Contoh: Muhammad Rayhan" class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Usia / Tanggal Lahir *</label>
+                                <input type="text" id="psbTglLahir" required placeholder="Contoh: 8 Tahun (12 Mei 2017)" class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Jenis Kelamin *</label>
+                                <select id="psbGender" required class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                                    <option value="Laki-laki (Putra)">Laki-laki (Putra)</option>
+                                    <option value="Perempuan (Putri)">Perempuan (Putri)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Jenjang Pendidikan Terakhir *</label>
+                                <select id="psbJenjang" required class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                                    <option value="TK / RA (Persiapan Masuk SD)">TK / RA (Persiapan Masuk SD)</option>
+                                    <option value="SD / MI Kelas 1-3">SD / MI Kelas 1-3</option>
+                                    <option value="SD / MI Kelas 4-6">SD / MI Kelas 4-6</option>
+                                    <option value="Lulusan SD / MI (Masuk SMP/MTs)">Lulusan SD / MI (Masuk SMP/MTs)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nama Orang Tua / Wali *</label>
+                                <input type="text" id="psbNamaWali" required placeholder="Contoh: Bpk. Ahmad Hidayat" class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">No. WhatsApp Wali *</label>
+                                <input type="tel" id="psbWaWali" required placeholder="Contoh: 081234567890" class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Alamat / Asal Kota Calon Santri *</label>
+                            <input type="text" id="psbAlamat" required placeholder="Contoh: Kec. Semanding, Kab. Tuban, Jawa Timur" class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Pilihan Program Utama *</label>
+                            <select id="psbProgram" required class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white">
+                                <option value="Tahfidz 30 Juz Intensif + Sekolah Formal">Tahfidz 30 Juz Intensif + Sekolah Formal</option>
+                                <option value="Tahsin Ummi + Diniyah Takmiliyah (MDTA)">Tahsin Ummi + Diniyah Takmiliyah (MDTA)</option>
+                                <option value="Paket Lengkap (Tahfidz + Diniyah + Formal + Asrama)">Paket Lengkap (Tahfidz + Diniyah + Formal + Asrama)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Catatan Tambahan (Opsional)</label>
+                            <textarea id="psbCatatan" rows="3" placeholder="Informasi riwayat hafalan saat ini atau hal lain yang ingin disampaikan..." class="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none transition text-gray-800 dark:text-white"></textarea>
+                        </div>
+
+                        <div class="pt-3">
+                            <button type="submit" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-[#1c6b45]/30 transition active:scale-98 text-sm flex items-center justify-center gap-2">
+                                <i class="fa-brands fa-whatsapp text-lg"></i>
+                                <span>Kirim Formulir Pendaftaran via WhatsApp</span>
+                            </button>
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 text-center mt-2">
+                                Formulir akan langsung membuka WhatsApp admin PSB untuk verifikasi instan.
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FAQ SECTION ==================== -->
+        <section id="faq" class="py-16 sm:py-20 bg-white dark:bg-darkcard border-y border-gray-100 dark:border-darkborder">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6">
+                <div class="text-center mb-12">
+                    <span class="text-xs font-bold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider">Tanya Jawab</span>
+                    <h2 class="text-2xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mt-2 tracking-tight">
+                        Pertanyaan yang Sering Diajukan (FAQ)
+                    </h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- FAQ 1 -->
+                    <div class="border border-gray-200 dark:border-darkborder rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-900/60">
+                        <button onclick="toggleFaq(1)" class="w-full p-5 text-left font-bold text-sm sm:text-base text-gray-900 dark:text-white flex items-center justify-between gap-4">
+                            <span>Apakah anak usia 7 tahun sudah bisa menginap di asrama?</span>
+                            <i id="faq-icon-1" class="fa-solid fa-chevron-down faq-icon transition-transform duration-200 text-gray-400"></i>
+                        </button>
+                        <div id="faq-content-1" class="faq-content p-5 pt-0 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-darkborder">
+                            Ya, kami menerima santri mulai usia 7 tahun. Untuk santri usia dini, tim pembina asrama memberikan pendampingan intensif terutama dalam pembiasaan kemandirian harian seperti makan, mandi, merapikan pakaian, dan kerapian diri.
+                        </div>
+                    </div>
+
+                    <!-- FAQ 2 -->
+                    <div class="border border-gray-200 dark:border-darkborder rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-900/60">
+                        <button onclick="toggleFaq(2)" class="w-full p-5 text-left font-bold text-sm sm:text-base text-gray-900 dark:text-white flex items-center justify-between gap-4">
+                            <span>Bagaimana dengan status kelanjutan sekolah formal santri?</span>
+                            <i id="faq-icon-2" class="fa-solid fa-chevron-down faq-icon transition-transform duration-200 text-gray-400"></i>
+                        </button>
+                        <div id="faq-content-2" class="faq-content hidden p-5 pt-0 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-darkborder">
+                            Santri tetap menempuh jalur pendidikan formal sederajat sehingga ijazah formal negeri/swasta yang diakui pemerintah tetap terpenuhi dengan baik dan dapat digunakan untuk melanjutkan ke jenjang berikutnya.
+                        </div>
+                    </div>
+
+                    <!-- FAQ 3 -->
+                    <div class="border border-gray-200 dark:border-darkborder rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-900/60">
+                        <button onclick="toggleFaq(3)" class="w-full p-5 text-left font-bold text-sm sm:text-base text-gray-900 dark:text-white flex items-center justify-between gap-4">
+                            <span>Bagaimana jika anak belum lancar membaca Al-Qur'an?</span>
+                            <i id="faq-icon-3" class="fa-solid fa-chevron-down faq-icon transition-transform duration-200 text-gray-400"></i>
+                        </button>
+                        <div id="faq-content-3" class="faq-content hidden p-5 pt-0 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-darkborder">
+                            Tidak perlu berkecil hati. Santri akan dibina melalui program Tahsin Metode Ummi terlebih dahulu dari tingkat dasar hingga bacaannya fasih, tartil, dan siap menghafal secara mandiri.
+                        </div>
+                    </div>
+
+                    <!-- FAQ 4 -->
+                    <div class="border border-gray-200 dark:border-darkborder rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-900/60">
+                        <button onclick="toggleFaq(4)" class="w-full p-5 text-left font-bold text-sm sm:text-base text-gray-900 dark:text-white flex items-center justify-between gap-4">
+                            <span>Bagaimana orang tua memantau capaian hafalan anak dari rumah?</span>
+                            <i id="faq-icon-4" class="fa-solid fa-chevron-down faq-icon transition-transform duration-200 text-gray-400"></i>
+                        </button>
+                        <div id="faq-content-4" class="faq-content hidden p-5 pt-0 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-darkborder">
+                            Pondok Pesantren Zadil Qur'an dilengkapi dengan Portal Pantauan Online Mobile-First. Setiap santri diberikan ID Unik khusus yang dapat dimasukkan oleh wali santri kapan saja melalui menu Portal Tahfidz di website ini untuk melihat riwayat setoran harian, surat, juz, predikat kelancaran, dan catatan langsung dari ustadz pembimbing.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== CALL TO ACTION PENUTUP ==================== -->
+        <section class="py-16 sm:py-20 bg-gradient-to-r from-[#9a2024] via-[#871a1e] to-[#1c6b45] text-white text-center relative overflow-hidden">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+                <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">
+                    Siap Mengantarkan Putra-Putri Anda Menjadi Penghafal Al-Qur'an?
+                </h2>
+                <p class="mt-4 text-sm sm:text-base text-white/90 max-w-2xl mx-auto leading-relaxed">
+                    Jangan lewatkan kesempatan kuota pendaftaran Tahun Ajaran 2025/2026. Bimbing buah hati Anda tumbuh dalam naungan Al-Qur'an sejak dini bersama para pengajar berpengalaman.
+                </p>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <a href="#form-pendaftaran" class="w-full sm:w-auto bg-white text-[#9a2024] hover:bg-gray-100 font-bold px-7 py-3.5 rounded-xl shadow-lg transition active:scale-95 text-sm">
+                        Buka Formulir Pendaftaran Santri Baru
+                    </a>
+                    <a href="https://wa.me/6285731804663" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto bg-[#1c6b45] hover:bg-[#165737] text-white border border-white/20 font-semibold px-7 py-3.5 rounded-xl shadow-lg transition active:scale-95 text-sm inline-flex items-center justify-center gap-2">
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                        <span>Tanya Jawab via WhatsApp</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FOOTER & KONTAK ==================== -->
+        <footer id="kontak" class="bg-gray-900 text-gray-300 py-12 border-t border-gray-800 text-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+                    <div class="md:col-span-2 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <img src="logo.jpg" alt="Logo Zadil Quran" class="w-10 h-10 rounded-xl object-cover bg-white">
+                            <div>
+                                <h3 class="text-white font-bold text-lg brand-name-display">Pondok Pesantren Tahfidz Zadil Qur’an</h3>
+                                <p class="text-xs text-gray-400">Mencetak Generasi Penghafal Al-Qur'an yang Beradab, Cerdas, dan Mandiri.</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed max-w-md">
+                            Membina santri dengan metode tahsin terstandar, tahfidz intensif, pendidikan madrasah diniyah, dan pendidikan formal terpadu di lingkungan asrama yang asri dan kondusif.
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-white font-bold text-xs uppercase tracking-wider mb-3">Tautan Navigasi</h4>
+                        <ul class="space-y-2 text-xs text-gray-400">
+                            <li><a href="#program" class="hover:text-white transition">Program Unggulan</a></li>
+                            <li><a href="#ekskul" class="hover:text-white transition">Ekstrakurikuler</a></li>
+                            <li><a href="#fasilitas" class="hover:text-white transition">Fasilitas Asrama</a></li>
+                            <li><a href="#alur-pendaftaran" class="hover:text-white transition">Alur Pendaftaran PSB</a></li>
+                            <li><a href="#faq" class="hover:text-white transition">FAQ Pendaftaran</a></li>
+                            <li><button onclick="navigateTo('/login')" class="hover:text-white text-[#f29fa3] font-semibold transition">Portal Monitoring Santri</button></li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-white font-bold text-xs uppercase tracking-wider mb-3">Kontak & Lokasi</h4>
+                        <ul class="space-y-2.5 text-xs text-gray-400">
+                            <li class="flex items-start gap-2">
+                                <i class="fa-solid fa-location-dot mt-0.5 text-red-400"></i>
+                                <span>Jl. Raya Penambangan, Desa Penambangan, Kec. Semanding, Kab. Tuban, Jawa Timur</span>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa-brands fa-whatsapp text-emerald-400"></i>
+                                <a href="https://wa.me/6285731804663" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">0857 3180 4663</a>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <i class="fa-solid fa-clock text-amber-400"></i>
+                                <span>Layanan Informasi: 08.00 - 16.00 WIB</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+                    <p>&copy; 2025 Pondok Pesantren Tahfidz Zadil Qur'an. Hak Cipta Dilindungi.</p>
+                    <div class="flex items-center gap-4">
+                        <button onclick="navigateTo('/login')" class="hover:text-gray-300 transition">Portal Staff & Guru</button>
+                        <span>&bull;</span>
+                        <button onclick="navigateTo('/wali')" class="hover:text-gray-300 transition">Portal Wali Santri</button>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
     <!-- ==================== LOGIN VIEW ==================== -->
-    <div id="loginView" class="fixed inset-0 bg-[#480a0c] dark:bg-slate-950 flex items-center justify-center z-50 transition-colors duration-300">
+    <div id="loginView" class="fixed inset-0 bg-[#480a0c] dark:bg-slate-950 flex items-center justify-center z-50 transition-colors duration-300 hidden">
+        <!-- Tombol Kembali ke Beranda -->
+        <button onclick="navigateTo('/')" class="absolute top-6 left-6 text-white/80 hover:text-white flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl backdrop-blur-sm transition text-xs font-medium">
+            <i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda
+        </button>
+
         <button onclick="toggleDarkMode()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm shadow-lg">
             <i class="fa-solid fa-moon dark:hidden"></i>
             <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
@@ -777,8 +1456,19 @@
             const path = normalizePath(rawPath);
             const hasSession = !!sessionData;
 
-            // 1. Rute Publik (Login / Root / Index)
-            if (path === '' || path === '/' || path === '/login' || path === '/index.html') {
+            // 1. Rute Beranda / Landing Page (Root / Home / Index)
+            if (path === '' || path === '/' || path === '/home' || path === '/beranda' || path === '/index.html') {
+                const lv = document.getElementById('landingView');
+                if (lv) lv.classList.remove('hidden');
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('mainLayout').classList.add('hidden');
+                updateLandingNavAuthButton(hasSession);
+                document.title = "Pondok Pesantren Tahfidz Zadil Qur'an Tuban";
+                return;
+            }
+
+            // 2. Rute Login Publik (/login atau /portal)
+            if (path === '/login' || path === '/portal') {
                 if (hasSession) {
                     if (sessionData.role === 'superadmin') {
                         navigateTo('/admin', true);
@@ -788,16 +1478,23 @@
                         navigateTo('/wali', true);
                     }
                 } else {
+                    const lv = document.getElementById('landingView');
+                    if (lv) lv.classList.add('hidden');
                     document.getElementById('loginView').classList.remove('hidden');
                     document.getElementById('mainLayout').classList.add('hidden');
                     switchLoginTab('staff');
+                    document.title = "Login Portal - Zadil Quran";
                 }
                 return;
             }
 
-            // 2. Rute Menu Hub (/menu)
+            // 3. Rute Menu Hub (/menu)
             if (path === '/menu') {
                 if (hasSession) {
+                    const lv = document.getElementById('landingView');
+                    if (lv) lv.classList.add('hidden');
+                    document.getElementById('loginView').classList.add('hidden');
+                    document.getElementById('mainLayout').classList.remove('hidden');
                     if (sessionData.role === 'superadmin') {
                         state.currentAdminMenu = 'dashboard';
                         buildSidebarMenu();
@@ -808,15 +1505,15 @@
                         navigateTo('/wali', true);
                     }
                 } else {
-                    document.getElementById('loginView').classList.remove('hidden');
-                    document.getElementById('mainLayout').classList.add('hidden');
-                    switchLoginTab('staff');
+                    navigateTo('/login', true);
                 }
                 return;
             }
 
-            // 3. Rute Privat Tanpa Autentikasi
+            // 4. Rute Privat Tanpa Autentikasi
             if (!hasSession) {
+                const lv = document.getElementById('landingView');
+                if (lv) lv.classList.add('hidden');
                 document.getElementById('loginView').classList.remove('hidden');
                 document.getElementById('mainLayout').classList.add('hidden');
                 if (path === '/wali' || path === '/progres') {
@@ -825,10 +1522,13 @@
                     switchLoginTab('staff');
                 }
                 window.history.replaceState({ path: '/login' }, '', '/login');
+                document.title = "Login Portal - Zadil Quran";
                 return;
             }
 
-            // 4. Pengguna Terotentikasi: Tampilkan Layout Utama
+            // 5. Pengguna Terotentikasi: Tampilkan Layout Utama
+            const lv = document.getElementById('landingView');
+            if (lv) lv.classList.add('hidden');
             document.getElementById('loginView').classList.add('hidden');
             document.getElementById('mainLayout').classList.remove('hidden');
 
@@ -1056,6 +1756,8 @@
                     sessionData = res.data;
                     localStorage.setItem(APP_CONFIG.STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
 
+                    const lv = document.getElementById('landingView');
+                    if (lv) lv.classList.add('hidden');
                     document.getElementById('loginView').classList.add('hidden');
                     document.getElementById('mainLayout').classList.remove('hidden');
 
@@ -1082,6 +1784,8 @@
             localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SESSION);
             sessionData = null;
             document.getElementById('mainLayout').classList.add('hidden');
+            const lv = document.getElementById('landingView');
+            if (lv) lv.classList.add('hidden');
             document.getElementById('loginView').classList.remove('hidden');
             navigateTo('/login');
         }
@@ -1749,14 +2453,87 @@
             }
         }
 
+        // ==================== FUNGSI INTERAKTIF LANDING PAGE ====================
+        function handleLandingPortalClick() {
+            if (sessionData && sessionData.role) {
+                if (sessionData.role === 'superadmin') navigateTo('/admin');
+                else if (sessionData.role === 'ustadz') navigateTo('/ustadz');
+                else navigateTo('/wali');
+            } else {
+                navigateTo('/login');
+            }
+        }
+
+        function updateLandingNavAuthButton(hasSession) {
+            const textEl = document.getElementById('btnLandingPortalText');
+            const btnEl = document.getElementById('btnLandingPortal');
+            if (!textEl || !btnEl) return;
+            if (hasSession && sessionData) {
+                textEl.textContent = 'Buka Dashboard';
+                btnEl.classList.remove('bg-[#9a2024]', 'hover:bg-[#871a1e]');
+                btnEl.classList.add('bg-[#1c6b45]', 'hover:bg-[#165737]');
+            } else {
+                textEl.textContent = 'Portal Tahfidz';
+                btnEl.classList.remove('bg-[#1c6b45]', 'hover:bg-[#165737]');
+                btnEl.classList.add('bg-[#9a2024]', 'hover:bg-[#871a1e]');
+            }
+        }
+
+        function toggleLandingMobileMenu() {
+            const menu = document.getElementById('landingMobileMenu');
+            if (menu) {
+                menu.classList.toggle('hidden');
+            }
+        }
+
+        function toggleFaq(index) {
+            const content = document.getElementById('faq-content-' + index);
+            const icon = document.getElementById('faq-icon-' + index);
+            if (!content) return;
+            const isHidden = content.classList.contains('hidden');
+            document.querySelectorAll('.faq-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.faq-icon').forEach(el => el.classList.remove('rotate-180'));
+            if (isHidden) {
+                content.classList.remove('hidden');
+                if (icon) icon.classList.add('rotate-180');
+            }
+        }
+
+        function submitPsbForm(event) {
+            event.preventDefault();
+            const namaSantri = document.getElementById('psbNamaSantri').value.trim();
+            const tglLahir = document.getElementById('psbTglLahir').value.trim();
+            const gender = document.getElementById('psbGender').value;
+            const jenjang = document.getElementById('psbJenjang').value;
+            const namaWali = document.getElementById('psbNamaWali').value.trim();
+            const waWali = document.getElementById('psbWaWali').value.trim();
+            const alamat = document.getElementById('psbAlamat').value.trim();
+            const program = document.getElementById('psbProgram').value;
+            const catatan = document.getElementById('psbCatatan').value.trim();
+
+            const pesan = `*FORMULIR PENDAFTARAN SANTRI BARU (PSB)*\n*PONDOK PESANTREN TAHFIDZ ZADIL QUR'AN*\n\n` +
+                `• *Nama Calon Santri:* ${namaSantri}\n` +
+                `• *Usia/Tgl Lahir:* ${tglLahir}\n` +
+                `• *Jenis Kelamin:* ${gender}\n` +
+                `• *Jenjang Pendidikan:* ${jenjang}\n` +
+                `• *Nama Orang Tua/Wali:* ${namaWali}\n` +
+                `• *No. WhatsApp Wali:* ${waWali}\n` +
+                `• *Alamat/Kota Asal:* ${alamat}\n` +
+                `• *Pilihan Program:* ${program}\n` +
+                (catatan ? `• *Catatan Tambahan:* ${catatan}\n\n` : `\n`) +
+                `Bismillah, mohon informasi langkah selanjutnya untuk proses observasi dan pendaftaran santri baru. Terima kasih.`;
+
+            const encoded = encodeURIComponent(pesan);
+            const waUrl = `https://wa.me/6285731804663?text=${encoded}`;
+            window.open(waUrl, '_blank');
+        }
+
         // ==================== INISIALISASI SAAT DOM SIAP ====================
         window.addEventListener('DOMContentLoaded', () => {
             fetchInitialBranding();
 
             const hasSession = checkExistingSession();
             if (hasSession) {
-                document.getElementById('loginView').classList.add('hidden');
-                document.getElementById('mainLayout').classList.remove('hidden');
                 const loginType = sessionData.role === 'walisantri' ? 'wali' : 'staff';
                 initApp(loginType);
             }

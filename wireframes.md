@@ -5,6 +5,53 @@ Dokumen ini memvisualisasikan arsitektur tata letak antarmuka pengguna (UI Wiref
 
 ---
 
+## 0. Layar Beranda / Landing Page Utama (`/`)
+
+Layar yang pertama kali tampil saat situs web diakses. Memuat identitas pondok pesantren, program tahfidz, keunggulan, alur pendaftaran, dan formulir online pendaftaran santri baru.
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ 📢 PSB 2025/2026 Telah Dibuka! Kuota Terbatas.   [Isi Formulir Online ➜]│
+├─────────────────────────────────────────────────────────────────────────┤
+│ [Logo] Zadil Qur'an    Program  Ekskul  Fasilitas  Alur PSB  [🌙] [Portal]│
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│         [ 🏛️ PONDOK PESANTREN TAHFIDZ ZADIL QUR'AN TUBAN ]              │
+│                                                                         │
+│     Mencetak Generasi Qur’ani, Mandiri, dan Berakhlak Mulia             │
+│                                                                         │
+│     Pondok Pesantren Tahfidz Zadil Qur'an membimbing putra-putri Anda   │
+│     menghafal Al-Qur'an 30 Juz dan meraih pendidikan formal berkualitas │
+│                                                                         │
+│     [ 📝 Daftar Santri Baru ]   [ 💬 WhatsApp ]   [ 📖 Portal Hafalan ] │
+│                                                                         │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐ │
+│ │ Metode Ummi  │ │ Wisuda WTN   │ │ Sekolah Formal│ │ Mulai Usia 7 Thn │ │
+│ │ Tartil/Fasih │ │ Darul Qur'an │ │ Terakreditasi│ │ Pembinaan Mandiri│ │
+│ └──────────────┘ └──────────────┘ └──────────────┘ └──────────────────┘ │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 💡 Mempersiapkan Masa Depan Akhirat dan Dunia Anak Tercinta              │
+│ ┌──────────────────────┐ ┌──────────────────────┐ ┌───────────────────┐ │
+│ │ 1. Mandiri & Beradab │ │ 2. Tahsin Ramah Anak │ │3. Pddk Seimbang   │ │
+│ └──────────────────────┘ └──────────────────────┘ └───────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 📚 Program Unggulan: Tahfidz 30 Juz | Tahsin Ummi | MDTA | Formal | WTN │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 📝 Formulir Pendaftaran Calon Santri Baru Online                        │
+│ [ Nama Lengkap Santri  ]  [ Usia / Tgl Lahir ]                          │
+│ [ Jenis Kelamin        ]  [ Jenjang Sekolah  ]                          │
+│ [ Nama Orang Tua/Wali  ]  [ No. WhatsApp     ]                          │
+│ [ [ 💬 Kirim Formulir Pendaftaran via WhatsApp ]                      ] │
+├─────────────────────────────────────────────────────────────────────────┤
+│ ❓ Tanya Jawab (FAQ) Accordion                                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 🏛️ Footer: Kampus Semanding, Tuban • WA: 0857 3180 4663 • [Portal Login]│
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 1. Layar Autentikasi Bersih (`/login`)
 
 Layar masuk dirancang terpusat dengan kontras tinggi, latar belakang emerald pekat, dan bersih dari konfigurasi teknis yang membingungkan.

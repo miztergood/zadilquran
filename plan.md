@@ -116,7 +116,8 @@ Aplikasi menggunakan router berbasis HTML5 History API (`window.history.pushStat
 
 | Slug URL | Hak Akses | Deskripsi Tampilan |
 | :--- | :--- | :--- |
-| `/` atau `/login` | Publik | Layar masuk portal Staff atau Wali Santri. |
+| `/` atau `/home` | Publik | Landing page utama profil pesantren, program, alur PSB, dan formulir pendaftaran. |
+| `/login` atau `/portal` | Publik | Layar masuk portal Staff atau Wali Santri. |
 | `/admin` atau `/admin/dashboard` | Superadmin | Statistik santri, ustadz, dan total setoran hafalan. |
 | `/admin/ustadz` | Superadmin | Tabel CRUD akun ustadz pembimbing. |
 | `/admin/santri` | Superadmin | Tabel CRUD data santri dan penugasan pembimbing. |

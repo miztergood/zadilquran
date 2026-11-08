@@ -15,7 +15,8 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
   - Warna Sekunder: Pine Green (`#1c6b45`).
   - Logo Resmi: `logo.jpg` (dimensi bujur sangkar resolusi tinggi).
 - **Routing URL Slug Bersih (Clean Slugs / SPA Navigation)**:
-  - `/login` : Layar autentikasi pengurus/ustadz & wali santri (bersih tanpa setup API).
+  - `/` atau `/home` : Landing page resmi profil pesantren, program tahfidz, fasilitas, alur PSB, dan formulir pendaftaran santri baru online.
+  - `/login` atau `/portal` : Layar masuk autentikasi pengurus/ustadz & portal wali santri.
   - `/admin` atau `/admin/dashboard` : Ringkasan statistik & metrik hafalan pondok.
   - `/admin/ustadz` : Manajemen data akun ustadz pembimbing.
   - `/admin/santri` : Manajemen pendaftaran santri & pembagian kelompok ustadz.
@@ -127,7 +128,8 @@ Aplikasi ini menggunakan HTML5 History Routing dengan dukungan Cloudflare Worker
 
 | Rute URL | Akses Hak | Keterangan Tampilan |
 | :--- | :--- | :--- |
-| `/` atau `/login` | Publik | Layar masuk portal Staff atau Wali Santri. |
+| `/` atau `/home` | Publik | Landing page resmi profil pesantren, program unggulan, alur PSB, dan formulir pendaftaran. |
+| `/login` atau `/portal` | Publik | Layar masuk portal Staff atau Wali Santri. |
 | `/admin` atau `/admin/dashboard` | Superadmin | Statistik santri, ustadz, dan total setoran hafalan. |
 | `/admin/ustadz` | Superadmin | Tabel CRUD akun ustadz pembimbing & duplikasi akun. |
 | `/admin/santri` | Superadmin | Tabel CRUD data santri & penugasan ustadz pembimbing. |
