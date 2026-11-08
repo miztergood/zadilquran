@@ -151,3 +151,5 @@ Aplikasi Monitoring Tahfizh Zadil Qur'an dirancang sebagai sistem digital terpad
    - Menghubungkan Webhook Google Apps Script ke layanan WhatsApp API (Fonnte, Wablas, atau Baileys bot) agar setiap kali ustadz menyimpan setoran, orang tua santri langsung menerima pesan notifikasi otomatis di WhatsApp.
 3. **Ekspor Laporan PDF Berkala**:
    - Menambahkan fitur cetak rapor tahfizh bulanan atau per semester dalam format PDF siap cetak untuk arsip pondok pesantren.
+4. **Transformasi Format Buku Mutaba'ah Harian Fisik (`Setoran-hafalan.jpg`)**:
+   - Rencana penyesuaian skema setoran harian (Ziyadah, Murojaah, Binnadhor, Tingkatan Al-Qur'an/Jilid, TM, Nilai Mumtaz/Jayyid/Dhoif, dan Paraf Ustadz) telah dirumuskan dan dicatat dalam dokumen `plans/plan-mutabaah-harian.md`. Status saat ini tersimpan lokal menunggu konfirmasi eksekusi dari pengguna.

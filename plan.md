@@ -165,3 +165,21 @@ Aplikasi menggunakan router berbasis HTML5 History API (`window.history.pushStat
 - [x] Uji persistensi sesi saat halaman di-refresh.
 - [x] Pengujian dark mode dan responsivitas layar ponsel.
 - [x] Pembuatan dokumen PRD, Desain Sistem, Plan, dan Wireframes.
+
+---
+
+## 7. Rencana Pengembangan Lanjutan: Transformasi Buku Mutaba'ah Fisik
+
+Berdasarkan referensi lembar fisik `Setoran-hafalan.jpg`, sistem direncanakan untuk bertransformasi penuh menyerupai buku mutaba'ah harian santri:
+
+1. **Struktur Data Tambahan**:
+   - Kolom `Tingkatan` (Al-Qur'an / Jilid)
+   - Kolom `TM` (Tatap Muka / Nomor Sesi Pertemuan)
+   - Kolom `Nilai` (Mumtaz / Jayyid / Dhoif)
+   - Kolom `ParafUstadz` (Verifikasi Ustadz Pengampu)
+2. **3 Pilar Kategori Setoran Harian**:
+   - **Ziyadah**: Menambah hafalan baru
+   - **Murojaah**: Mengulang hafalan mutqin
+   - **Binnadhor**: Membaca Al-Qur'an / Jilid dengan melihat mushaf langsung di depan ustadz
+3. **Dokumen Rencana Detail**:
+   - Spesifikasi teknis, wireframe ASCII, dan checklist eksekusi lengkap telah didokumentasikan di `plans/plan-mutabaah-harian.md`.
