@@ -93,7 +93,7 @@ function switchAdmin(menuId, pushHistory = true) {
         const newUrl = menuId === 'dashboard' ? 'admin.html' : `admin.html?menu=${menuId}`;
         try {
             window.history.pushState({ menu: menuId }, '', newUrl);
-        } catch (e) {}
+        } catch (e) { }
     }
     buildSidebarMenu();
     loadContent();
@@ -408,8 +408,8 @@ function renderTableSantri() {
             const statusBadge = statusText === 'Aktif'
                 ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
                 : statusText === 'Calon Santri'
-                ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
-                : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300';
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                    : 'bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300';
             const waClean = formatWaNumber(s.No_HP_Wali);
 
             tb.innerHTML += `
@@ -574,7 +574,7 @@ function openModalTagihan(mode = 'INDIVIDU') {
     });
 
     const now = new Date();
-    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const curMonthYear = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
     document.getElementById('inputTagihanTempo').value = `10 ${curMonthYear}`;
 
@@ -597,7 +597,7 @@ function openModalTagihan(mode = 'INDIVIDU') {
 
 function autoFillTagihanPreset(val) {
     const now = new Date();
-    const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const curMonthYear = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
 
     if (val === 'Syahriyah (SPP)') {
@@ -786,7 +786,7 @@ async function initSetupDatabaseFromUI() {
             } else {
                 AppNotify.error('Setup Gagal', res.message);
             }
-        } catch (err) {}
+        } catch (err) { }
     }
 }
 
