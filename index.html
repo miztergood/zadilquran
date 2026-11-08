@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zadil Quran - Sistem Manajemen Tahfidz</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Config File -->
+    <script src="config.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { 
+                extend: { 
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { 
+                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
+                        darkbg: '#0f172a', darkcard: '#1e293b', darkborder: '#334155' 
+                    } 
+                } 
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #059669; }
+        .tab-active { border-bottom-width: 2px; border-color: #059669; color: #059669; font-weight: 600; }
+        .dark .tab-active { border-color: #10b981; color: #10b981; }
+        .tab-inactive { color: #6b7280; } .dark .tab-inactive { color: #9ca3af; }
+        .smart-tab-active { background-color: #10b981; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
+        .smart-tab-inactive { background-color: #f3f4f6; color: #4b5563; }
+        .dark .smart-tab-inactive { background-color: #334155; color: #cbd5e1; }
+        .theme-transition { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        
+        /* TomSelect Dark Mode Fixes */
+        .ts-control { border-radius: 0.5rem; border-color: #d1d5db; padding: 0.6rem 0.75rem; font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        .dark .ts-control { background-color: #1e293b; border-color: #334155; color: white; }
+        .ts-control.focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+        .ts-dropdown { border-radius: 0.5rem; font-family: 'Inter', sans-serif; }
+        .dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: white; }
+        .dark .ts-dropdown .option:hover, .dark .ts-dropdown .option.active { background-color: #334155; color: #10b981; }
+        .ts-control > input { color: inherit !important; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans antialiased h-screen flex flex-col overflow-hidden theme-transition">
+
+    <!-- ==================== LOGIN VIEW ==================== -->
+    <div id="loginView" class="fixed inset-0 bg-emerald-900 dark:bg-slate-950 flex items-center justify-center z-50 transition-colors duration-300">
+        <button onclick="toggleDarkMode()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm shadow-lg">
+            <i class="fa-solid fa-moon dark:hidden"></i>
+            <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
+        </button>
+
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col mx-4 border border-transparent dark:border-darkborder theme-transition">
+            <div class="bg-emerald-600 dark:bg-emerald-800 p-6 text-center theme-transition relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-4 -translate-y-4"><i class="fa-solid fa-mosque text-8xl"></i></div>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                        <i class="fa-solid fa-book-quran text-3xl text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white tracking-wide brand-name-display">Zadil Quran</h1>
+                    <p class="text-emerald-100 text-sm mt-1">Sistem Manajemen Pantauan Hafalan</p>
+                </div>
+            </div>
+            
+            <div class="p-6 relative z-10 bg-white dark:bg-darkcard">
+                <div class="flex border-b border-gray-200 dark:border-darkborder mb-6 cursor-pointer">
+                    <div id="tabStaff" onclick="switchLoginTab('staff')" class="flex-1 text-center py-2 tab-active transition">Pengurus/Ustadz</div>
+                    <div id="tabWali" onclick="switchLoginTab('wali')" class="flex-1 text-center py-2 tab-inactive transition hover:bg-gray-50 dark:hover:bg-slate-800">Wali Santri</div>
+                </div>
+
+                <form id="formLoginStaff" onsubmit="handleLogin(event, 'staff')" class="space-y-4">
+                    <div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-regular fa-user text-gray-400"></i></div>
+                            <input type="text" id="staffUsername" class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="Username (admin / ustadz)" required>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-lock text-gray-400"></i></div>
+                            <input type="password" id="staffPassword" class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="Password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-emerald-500/30">Masuk Dashboard</button>
+                </form>
+
+                <form id="formLoginWali" onsubmit="handleLogin(event, 'wali')" class="space-y-4 hidden">
+                    <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 p-3 rounded-lg text-sm mb-4 flex gap-3 shadow-sm">
+                        <i class="fa-solid fa-circle-info mt-0.5"></i>
+                        <p>Masukkan ID Unik Santri untuk melihat progres hafalan putra/putri Anda.</p>
+                    </div>
+                    <div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-id-card text-gray-400"></i></div>
+                            <input type="text" id="waliIdSantri" class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase transition font-mono tracking-wider" placeholder="Contoh: ST-2026-X8K9Z" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-emerald-500/30">Lihat Progres Anak</button>
+                </form>
+
+                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-darkborder flex justify-between items-center text-xs text-gray-400">
+                    <span>Versi Cloudflare Pages & Apps Script</span>
+                    <button type="button" onclick="openQuickApiModal()" class="text-emerald-600 hover:underline"><i class="fa-solid fa-gear mr-1"></i>Setup API</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
+    <div id="mainLayout" class="hidden h-full flex flex-col md:flex-row w-full">
+        <aside id="sidebar" class="bg-emerald-900 dark:bg-slate-900 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-xl flex flex-col border-r border-transparent dark:border-darkborder theme-transition">
+            <div class="p-5 flex items-center gap-3 border-b border-emerald-800 dark:border-darkborder">
+                <i class="fa-solid fa-book-quran text-2xl text-emerald-400"></i>
+                <span class="text-xl font-bold tracking-wider brand-name-display cursor-pointer" onclick="navigateTo('/')">Zadil Quran</span>
+                <button onclick="toggleSidebar()" class="md:hidden ml-auto text-emerald-300"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 border-b border-emerald-800 dark:border-darkborder bg-emerald-950/30 dark:bg-black/20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold shadow-md" id="userInitial">A</div>
+                    <div>
+                        <p class="text-sm font-medium line-clamp-1" id="userNameDisplay">Nama User</p>
+                        <p class="text-xs text-emerald-400 dark:text-emerald-500 capitalize" id="userRoleDisplay">Role</p>
+                    </div>
+                </div>
+                <button onclick="toggleDarkMode()" class="text-emerald-200 hover:text-white p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebarMenu"></nav>
+
+            <div class="p-4 border-t border-emerald-800 dark:border-darkborder">
+                <button onclick="logout()" class="flex items-center gap-3 w-full p-2 rounded-lg text-emerald-200 hover:bg-red-500 hover:text-white transition group">
+                    <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+            <header class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-sm h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 theme-transition">
+                <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-500 font-bold cursor-pointer" onclick="navigateTo('/')">
+                    <i class="fa-solid fa-book-quran"></i> <span class="brand-name-display">Zadil Quran</span>
+                </div>
+                <button onclick="toggleSidebar()" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 p-2"><i class="fa-solid fa-bars text-xl"></i></button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative" id="contentArea"></div>
+            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    <div id="modalUstadz" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalUstadzContent">
+            <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="titleModalUstadz">Tambah Ustadz Baru</h3>
+                <button onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formTambahUstadz" onsubmit="saveUstadz(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Lengkap Ustadz</label>
+                    <input type="text" id="inputUstadzName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Username Login <button type="button" onclick="generateUstadzCreds()" class="text-xs text-blue-500 ml-2 hover:underline"><i class="fa-solid fa-rotate mr-1"></i>Generate Ulang</button></label>
+                    <input type="text" id="inputUstadzUsername" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password</label>
+                    <input type="text" id="inputUstadzPassword" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono" required>
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg shadow-md">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalSantri" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalSantriContent">
+            <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="titleModalSantri">Tambah Santri Baru</h3>
+                <button onclick="closeModal('modalSantri', 'modalSantriContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formTambahSantri" onsubmit="saveSantri(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">ID Unik <span class="text-xs text-emerald-600 font-normal">(Auto Generate/ReadOnly)</span></label>
+                    <input type="text" id="inputSantriId" class="w-full px-3 py-2 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg font-mono font-bold text-emerald-700 dark:text-emerald-400 outline-none cursor-not-allowed" readonly placeholder="Memuat ID Baru...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Lengkap Santri</label>
+                    <input type="text" id="inputSantriName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Wali Santri</label>
+                    <input type="text" id="inputWaliName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Ustadz Pembimbing (Opsional)</label>
+                    <select id="inputUstadzId" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg outline-none focus:border-emerald-500 text-sm">
+                        <option value="">-- Belum Ditentukan --</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modalSantri', 'modalSantriContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg shadow-md">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== TEMPLATES ==================== -->
+    <template id="tpl-superadmin-dashboard">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold">Dashboard Global</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Ringkasan operasional <span class="brand-name-display font-medium">Zadil Quran</span>.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div onclick="navigateTo('/admin/santri')" class="bg-white dark:bg-darkcard rounded-xl p-5 shadow-sm border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-emerald-500 transition-all opacity-100"></div>
+                <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-users"></i></div>
+                <div class="z-10"><p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Santri</p><p class="text-3xl font-bold" id="statSantri">-</p></div>
+            </div>
+            <div onclick="navigateTo('/admin/ustadz')" class="bg-white dark:bg-darkcard rounded-xl p-5 shadow-sm border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-blue-500 transition-all opacity-100"></div>
+                <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="z-10"><p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Ustadz</p><p class="text-3xl font-bold" id="statUstadz">-</p></div>
+            </div>
+            <div class="bg-white dark:bg-darkcard rounded-xl p-5 shadow-sm border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-amber-500 transition-all opacity-100"></div>
+                <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-book-open"></i></div>
+                <div class="z-10"><p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Setoran</p><p class="text-3xl font-bold" id="statSetoran">-</p></div>
+            </div>
+        </div>
+
+        <!-- Quick Menu Navigasi Sesuai Permintaan Slug/Routing -->
+        <div class="mb-8">
+            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-compass text-emerald-500"></i> Menu & Navigasi Cepat
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button onclick="navigateTo('/admin/ustadz')" class="p-4 bg-white dark:bg-darkcard rounded-xl border border-gray-100 dark:border-darkborder shadow-sm hover:border-emerald-500 dark:hover:border-emerald-500 text-left transition group">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Kelola Ustadz (/admin/ustadz)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tambah & atur akun pembimbing</p>
+                </button>
+                <button onclick="navigateTo('/admin/santri')" class="p-4 bg-white dark:bg-darkcard rounded-xl border border-gray-100 dark:border-darkborder shadow-sm hover:border-blue-500 dark:hover:border-blue-500 text-left transition group">
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Kelola Santri (/admin/santri)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Daftar santri & plot ustadz</p>
+                </button>
+                <button onclick="navigateTo('/admin/pengaturan')" class="p-4 bg-white dark:bg-darkcard rounded-xl border border-gray-100 dark:border-darkborder shadow-sm hover:border-amber-500 dark:hover:border-amber-500 text-left transition group">
+                    <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Pengaturan Sistem (/admin/pengaturan)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Nama lembaga, API & password</p>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-ustadz">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+            <div>
+                <h2 class="text-2xl font-bold">Data Ustadz</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Daftar pembimbing dan santri yang dibimbing.</p>
+            </div>
+            <button onclick="openModalUstadz()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Ustadz</button>
+        </div>
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-darkborder flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
+                <div class="relative w-full max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    <input type="text" oninput="handleSearch('ustadz', this.value)" placeholder="Cari ustadz / username..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
+                            <th class="p-4">Nama Ustadz</th>
+                            <th class="p-4">Username Login</th>
+                            <th class="p-4">Jumlah Santri</th>
+                            <th class="p-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableUstadzBody" class="divide-y divide-gray-100 dark:divide-darkborder text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationUstadz"></div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-santri">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+            <div>
+                <h2 class="text-2xl font-bold">Data Santri</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Daftar santri, nama wali, dan ustadz pembimbing.</p>
+            </div>
+            <button onclick="openModalSantri()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Santri</button>
+        </div>
+        <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-darkborder flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
+                <div class="relative w-full max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    <input type="text" oninput="handleSearch('santri', this.value)" placeholder="Cari santri / ID / wali..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
+                            <th class="p-4">ID Santri</th>
+                            <th class="p-4">Nama Lengkap</th>
+                            <th class="p-4">Nama Wali</th>
+                            <th class="p-4">Ustadz Pembimbing</th>
+                            <th class="p-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableSantriBody" class="divide-y divide-gray-100 dark:divide-darkborder text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationSantri"></div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-pengaturan">
+        <div class="mb-6"><h2 class="text-2xl font-bold">Pengaturan Sistem</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Konfigurasi lembaga, password superadmin, dan backend Apps Script.</p></div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-6">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-building-columns mr-2 text-emerald-500"></i>Identitas Lembaga</h3>
+                <form onsubmit="savePondokName(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nama Pondok / Aplikasi</label>
+                        <input type="text" id="inputPondokName" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                    </div>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-sm">Simpan Identitas</button>
+                </form>
+            </div>
+
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-6">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-shield-halved mr-2 text-blue-500"></i>Ganti Password Admin</h3>
+                <form onsubmit="saveAdminPassword(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password Saat Ini</label>
+                        <input type="password" id="oldPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password Baru</label>
+                        <input type="password" id="newPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-sm">Ubah Password</button>
+                </form>
+            </div>
+
+            <!-- Kartu Integrasi Backend & Cloudflare -->
+            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-6 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b pb-2 dark:border-darkborder">
+                    <h3 class="font-bold text-lg"><i class="fa-solid fa-cloud-arrow-up mr-2 text-emerald-500"></i>Backend Google Apps Script & Cloudflare Pages</h3>
+                    <span id="apiStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium">Status API: Belum Diuji</span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Aplikasi ini berkomunikasi dengan Google Apps Script Web App secara transparan melalui reverse proxy Cloudflare Pages (<code>/api</code>). Anda juga dapat menyetel Web App URL kustom di bawah ini.
+                </p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">URL Google Apps Script Web App Deployment (/exec)</label>
+                        <input type="text" id="settingApiUrlInput" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg text-sm font-mono focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="https://script.google.com/macros/s/.../exec">
+                        <p class="text-xs text-gray-400 mt-1">Kosongkan jika menggunakan Environment Variable <code>APPS_SCRIPT_URL</code> pada dashboard Cloudflare Pages.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 pt-1">
+                        <button type="button" onclick="saveCustomApiUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i>Simpan Konfigurasi</button>
+                        <button type="button" onclick="testBackendConnection()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-network-wired"></i>Tes Koneksi API</button>
+                        <button type="button" onclick="initSetupDatabaseFromUI()" class="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-database"></i>Inisialisasi Database Sheets</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Template Ustadz & Wali -->
+    <template id="tpl-ustadz">
+        <div class="mb-6"><h2 class="text-2xl font-bold">Workspace Ustadz</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kartu Pintar Input Setoran & Riwayat Santri Binaan</p></div>
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <div class="xl:col-span-5">
+                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg border border-gray-100 dark:border-darkborder overflow-hidden sticky top-6">
+                    <div class="p-4 bg-emerald-100/50 dark:bg-emerald-900/30 border-b border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-2"><i class="fa-solid fa-pen-nib"></i> Form Input Setoran</span>
+                        <span class="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-medium">Smart Assist</span>
+                    </div>
+
+                    <form id="formSmartSetoran" onsubmit="saveSetoran(event)" class="p-5 space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tanggal & Jam</label>
+                            <input type="datetime-local" id="smartDate" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Santri Binaan</label>
+                            <select id="smartSantri" required placeholder="Cari nama santri..."></select>
+                        </div>
+
+                        <div id="smartPinContainer" class="hidden bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5 overflow-hidden">
+                                <i class="fa-solid fa-thumbtack text-emerald-600 dark:text-emerald-400 transform -rotate-45"></i>
+                                <span class="text-xs text-emerald-800 dark:text-emerald-200 truncate font-medium" id="smartPinText">Lanjutan Terakhir...</span>
+                            </div>
+                            <button type="button" onclick="applySmartPin()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium whitespace-nowrap shadow-sm transition">Pakai</button>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Jenis Setoran</label>
+                            <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+                                <button type="button" id="btnTabBaru" onclick="switchSmartTab('Hafalan Baru')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-active">Hafalan Baru</button>
+                                <button type="button" id="btnTabMurojaah" onclick="switchSmartTab('Murojaah')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive ml-2">Muroja'ah</button>
+                            </div>
+                            <input type="hidden" id="smartType" value="Hafalan Baru">
+                        </div>
+
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-5">
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Juz</label>
+                                <select id="smartJuz" onchange="populateSurat()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none">
+                                    <option value="all">Semua</option>
+                                </select>
+                            </div>
+                            <div class="col-span-7">
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Surat</label>
+                                <select id="smartSurat" required placeholder="Pilih surat..."></select>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-gray-100 dark:border-darkborder space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cakupan Ayat</span>
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" id="chkFullSurat" onchange="toggleFullSurat()" class="rounded text-emerald-600 focus:ring-emerald-500" disabled>
+                                    <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">1 Surat Penuh</span>
+                                </label>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" id="smartAyatStart" placeholder="Mulai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none text-center font-bold" disabled required>
+                                <span class="text-gray-400 font-bold">-</span>
+                                <input type="number" id="smartAyatEnd" placeholder="Sampai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none text-center font-bold" disabled required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Halaman Mushaf</label>
+                                <input type="text" id="smartHal" placeholder="Contoh: 582" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Penilaian</label>
+                                <div class="grid grid-cols-3 gap-1 pt-0.5">
+                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Lancar" checked class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-xs font-bold peer-checked:bg-emerald-500 peer-checked:text-white transition">Lancar</div></label>
+                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Kurang Lancar" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-xs font-bold peer-checked:bg-yellow-500 peer-checked:text-white transition">Kurang</div></label>
+                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Ulang" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-xs font-bold peer-checked:bg-red-500 peer-checked:text-white transition">Ulang</div></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Catatan Ustadz (Opsional)</label>
+                            <input type="text" id="smartCatatan" placeholder="Contoh: Tajwid makhraj nun mati diperhatikan" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none">
+                        </div>
+
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-500/20 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Simpan Setoran</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="xl:col-span-7">
+                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-sm border border-gray-100 dark:border-darkborder p-5">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> Riwayat Setoran Terakhir Anda</h3>
+                    <div id="listSetoranUstadz" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-walisantri">
+        <div class="max-w-3xl mx-auto">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white shadow-xl mb-6 relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 opacity-10 translate-x-6 translate-y-6"><i class="fa-solid fa-quran text-9xl"></i></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl backdrop-blur-sm flex items-center justify-center text-2xl font-bold"><i class="fa-solid fa-user-graduate"></i></div>
+                        <div>
+                            <h2 class="text-2xl font-bold" id="waliAnakName">Nama Santri</h2>
+                            <p class="text-xs text-emerald-100 font-mono tracking-wider" id="waliAnakId">ST-XXXX</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
+                        <div><p class="text-xs text-emerald-100 uppercase tracking-wider mb-1">Total Pencapaian</p><p class="text-2xl font-bold" id="waliTotalSetoran">0 <span class="text-sm font-normal text-emerald-100">Setoran</span></p></div>
+                        <div class="text-right"><p class="text-xs text-emerald-100 uppercase tracking-wider mb-1">Ustadz Pembimbing</p><p class="font-medium text-sm bg-white/20 px-2 py-1 rounded inline-block" id="waliUstadzName">Ustadz</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-between mb-4 px-1"><h3 class="font-bold text-lg border-b-2 border-emerald-500 pb-1 inline-block">Riwayat Setoran Terbaru</h3></div>
+            <div class="space-y-4" id="waliSetoranList"></div>
+            <div id="waliEmptyState" class="hidden text-center py-12 bg-white dark:bg-darkcard rounded-2xl border border-dashed border-gray-300 dark:border-darkborder mt-4">
+                <div class="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-seedling text-3xl text-emerald-400"></i></div>
+                <p class="font-medium text-gray-700 dark:text-gray-300">Belum ada catatan progres.</p>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        // ==================== API WRAPPER MULTI-ENVIRONMENT ====================
+        async function apiCall(method, ...args) {
+            // 1. Lingkungan Google Apps Script Web App iframe
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(res => resolve(res))
+                        .withFailureHandler(err => reject(err))
+                        [method](...args);
+                });
+            }
+
+            // 2. Lingkungan Cloudflare Pages (melalui /api atau URL Apps Script langsung)
+            const apiUrl = getApiUrl();
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    },
+                    body: JSON.stringify({
+                        action: method,
+                        args: args
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+                }
+
+                const res = await response.json();
+                return res;
+            } catch (err) {
+                console.error('API Call Error:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Koneksi Backend Terkendala',
+                    html: `<div class="text-left text-sm space-y-2">
+                        <p>Gagal menghubungi backend Google Apps Script: <b>${err.message}</b></p>
+                        <p class="text-xs text-gray-500">Pastikan backend Google Apps Script sudah di-deploy sebagai Web App (Who has access: Anyone) dan URL sudah dikonfigurasi di Cloudflare Pages atau Pengaturan.</p>
+                    </div>`,
+                    confirmButtonText: 'Tutup'
+                });
+                throw err;
+            }
+        }
+
+        // ==================== GLOBAL STATE ====================
+        let state = { ustadz: [], santri: [], setoran: [], appName: "Zadil Quran", currentAdminMenu: 'dashboard' };
+        let sessionData = null;
+        let editModeId = null;
+
+        // ==================== ROUTING / SLUG ENGINE ====================
+        function normalizePath(path) {
+            if (!path) return '/';
+            let clean = path.split('?')[0].split('#')[0];
+            if (clean.length > 1 && clean.endsWith('/')) {
+                clean = clean.slice(0, -1);
+            }
+            return clean.toLowerCase();
+        }
+
+        function navigateTo(path, replace = false) {
+            if (window.location.pathname !== path) {
+                try {
+                    if (replace) {
+                        window.history.replaceState({ path }, '', path);
+                    } else {
+                        window.history.pushState({ path }, '', path);
+                    }
+                } catch (e) {
+                    console.warn('History navigation error:', e);
+                }
+            }
+            resolveRoute(path);
+        }
+
+        window.addEventListener('popstate', () => {
+            resolveRoute(window.location.pathname);
+        });
+
+        function checkExistingSession() {
+            try {
+                const saved = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.SESSION);
+                if (saved) {
+                    sessionData = JSON.parse(saved);
+                    if (sessionData && sessionData.role) {
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('Gagal membaca sesi lokal:', e);
+            }
+            sessionData = null;
+            return false;
+        }
+
+        function resolveRoute(rawPath) {
+            const path = normalizePath(rawPath);
+            const hasSession = !!sessionData;
+
+            // 1. Rute Publik (Login / Root / Index)
+            if (path === '' || path === '/' || path === '/login' || path === '/index.html') {
+                if (hasSession) {
+                    if (sessionData.role === 'superadmin') {
+                        navigateTo('/admin', true);
+                    } else if (sessionData.role === 'ustadz') {
+                        navigateTo('/ustadz', true);
+                    } else if (sessionData.role === 'walisantri') {
+                        navigateTo('/wali', true);
+                    }
+                } else {
+                    document.getElementById('loginView').classList.remove('hidden');
+                    document.getElementById('mainLayout').classList.add('hidden');
+                    switchLoginTab('staff');
+                }
+                return;
+            }
+
+            // 2. Rute Menu Hub (/menu)
+            if (path === '/menu') {
+                if (hasSession) {
+                    if (sessionData.role === 'superadmin') {
+                        state.currentAdminMenu = 'dashboard';
+                        buildSidebarMenu();
+                        loadContent();
+                    } else if (sessionData.role === 'ustadz') {
+                        navigateTo('/ustadz', true);
+                    } else {
+                        navigateTo('/wali', true);
+                    }
+                } else {
+                    document.getElementById('loginView').classList.remove('hidden');
+                    document.getElementById('mainLayout').classList.add('hidden');
+                    switchLoginTab('staff');
+                }
+                return;
+            }
+
+            // 3. Rute Privat Tanpa Autentikasi
+            if (!hasSession) {
+                document.getElementById('loginView').classList.remove('hidden');
+                document.getElementById('mainLayout').classList.add('hidden');
+                if (path === '/wali' || path === '/progres') {
+                    switchLoginTab('wali');
+                } else {
+                    switchLoginTab('staff');
+                }
+                window.history.replaceState({ path: '/login' }, '', '/login');
+                return;
+            }
+
+            // 4. Pengguna Terotentikasi: Tampilkan Layout Utama
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('mainLayout').classList.remove('hidden');
+
+            if (sessionData.role === 'superadmin') {
+                if (path === '/admin' || path === '/admin/dashboard') {
+                    state.currentAdminMenu = 'dashboard';
+                    buildSidebarMenu();
+                    loadContent();
+                } else if (path === '/admin/ustadz' || path === '/ustadz-list') {
+                    state.currentAdminMenu = 'ustadz';
+                    buildSidebarMenu();
+                    loadContent();
+                } else if (path === '/admin/santri' || path === '/santri-list') {
+                    state.currentAdminMenu = 'santri';
+                    buildSidebarMenu();
+                    loadContent();
+                } else if (path === '/admin/pengaturan') {
+                    state.currentAdminMenu = 'pengaturan';
+                    buildSidebarMenu();
+                    loadContent();
+                } else {
+                    state.currentAdminMenu = 'dashboard';
+                    buildSidebarMenu();
+                    loadContent();
+                }
+            } else if (sessionData.role === 'ustadz') {
+                if (path === '/ustadz' || path === '/setoran') {
+                    loadContent();
+                } else {
+                    navigateTo('/ustadz', true);
+                }
+            } else if (sessionData.role === 'walisantri') {
+                if (path === '/wali' || path === '/progres') {
+                    loadContent();
+                } else {
+                    navigateTo('/wali', true);
+                }
+            }
+        }
+
+        // --- SEARCH & PAGINATION STATE ---
+        let tableConfig = {
+            ustadz: { page: 1, limit: 10, query: '' },
+            santri: { page: 1, limit: 10, query: '' }
+        };
+
+        function getPaginatedData(data, searchKeys, configKey) {
+            const conf = tableConfig[configKey];
+            let filtered = data;
+            if (conf.query) {
+                const q = conf.query.toLowerCase();
+                filtered = filtered.filter(row => searchKeys.some(key => String(row[key] || "").toLowerCase().includes(q)));
+            }
+            const totalPages = Math.ceil(filtered.length / conf.limit) || 1;
+            if(conf.page > totalPages) conf.page = totalPages;
+            
+            const start = (conf.page - 1) * conf.limit;
+            const pageData = filtered.slice(start, start + conf.limit);
+            return { pageData, totalPages, currentPage: conf.page };
+        }
+
+        function renderPaginationHtml(configKey, totalPages) {
+            const conf = tableConfig[configKey];
+            return `
+                <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 w-full">
+                    <span>Halaman ${conf.page} dari ${totalPages}</span>
+                    <div class="flex gap-2">
+                        <button onclick="changePage('${configKey}', -1, ${totalPages})" class="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-darkborder rounded hover:bg-gray-50 dark:hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" ${conf.page <= 1 ? 'disabled' : ''}>Prev</button>
+                        <button onclick="changePage('${configKey}', 1, ${totalPages})" class="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-darkborder rounded hover:bg-gray-50 dark:hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" ${conf.page >= totalPages ? 'disabled' : ''}>Next</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changePage(configKey, direction, maxPage) {
+            tableConfig[configKey].page += direction;
+            if(configKey === 'ustadz') renderTableUstadz();
+            if(configKey === 'santri') renderTableSantri();
+        }
+
+        function handleSearch(configKey, query) {
+            tableConfig[configKey].query = query;
+            tableConfig[configKey].page = 1;
+            if(configKey === 'ustadz') renderTableUstadz();
+            if(configKey === 'santri') renderTableSantri();
+        }
+
+        // --- QURAN DB ---
+        const rawQuran=[[1,"Al-Fatihah",7,1],[2,"Al-Baqarah",286,1],[3,"Ali 'Imran",200,3],[4,"An-Nisa'",176,4],[5,"Al-Ma'idah",120,6],[6,"Al-An'am",165,7],[7,"Al-A'raf",206,8],[8,"Al-Anfal",75,9],[9,"At-Taubah",129,10],[10,"Yunus",109,11],[11,"Hud",123,11],[12,"Yusuf",111,12],[13,"Ar-Ra'd",43,13],[14,"Ibrahim",52,13],[15,"Al-Hijr",99,14],[16,"An-Nahl",128,14],[17,"Al-Isra'",111,15],[18,"Al-Kahf",110,15],[19,"Maryam",98,16],[20,"Taha",135,16],[21,"Al-Anbiya'",112,17],[22,"Al-Hajj",78,17],[23,"Al-Mu'minun",118,18],[24,"An-Nur",64,18],[25,"Al-Furqan",77,18],[26,"Asy-Syu'ara'",227,19],[27,"An-Naml",93,19],[28,"Al-Qasas",88,20],[29,"Al-'Ankabut",69,20],[30,"Ar-Rum",60,21],[31,"Luqman",34,21],[32,"As-Sajdah",30,21],[33,"Al-Ahzab",73,21],[34,"Saba'",54,22],[35,"Fatir",45,22],[36,"Yasin",83,22],[37,"As-Saffat",182,23],[38,"Sad",88,23],[39,"Az-Zumar",75,23],[40,"Ghafir",85,24],[41,"Fussilat",54,24],[42,"Asy-Syura",53,25],[43,"Az-Zukhruf",89,25],[44,"Ad-Dukhan",59,25],[45,"Al-Jasiyah",37,25],[46,"Al-Ahqaf",35,26],[47,"Muhammad",38,26],[48,"Al-Fath",29,26],[49,"Al-Hujurat",18,26],[50,"Qaf",45,26],[51,"Az-Zariyat",60,26],[52,"At-Tur",49,27],[53,"An-Najm",62,27],[54,"Al-Qamar",55,27],[55,"Ar-Rahman",78,27],[56,"Al-Waqi'ah",96,27],[57,"Al-Hadid",29,27],[58,"Al-Mujadilah",22,28],[59,"Al-Hasyr",24,28],[60,"Al-Mumtahanah",13,28],[61,"As-Saff",14,28],[62,"Al-Jumu'ah",11,28],[63,"Al-Munafiqun",11,28],[64,"At-Tagabun",18,28],[65,"At-Talaq",12,28],[66,"At-Tahrim",12,28],[67,"Al-Mulk",30,29],[68,"Al-Qalam",52,29],[69,"Al-Haqqah",52,29],[70,"Al-Ma'arij",44,29],[71,"Nuh",28,29],[72,"Al-Jinn",28,29],[73,"Al-Muzzammil",20,29],[74,"Al-Muddassir",56,29],[75,"Al-Qiyamah",40,29],[76,"Al-Insan",31,29],[77,"Al-Mursalat",50,29],[78,"An-Naba'",40,30],[79,"An-Nazi'at",46,30],[80,"'Abasa",42,30],[81,"At-Takwir",29,30],[82,"Al-Infitar",19,30],[83,"Al-Mutaffifin",36,30],[84,"Al-Insyiqaq",25,30],[85,"Al-Buruj",22,30],[86,"At-Tariq",17,30],[87,"Al-A'la",19,30],[88,"Al-Gasyiyah",26,30],[89,"Al-Fajr",30,30],[90,"Al-Balad",20,30],[91,"Asy-Syams",15,30],[92,"Al-Lail",21,30],[93,"Ad-Duha",11,30],[94,"Asy-Syarh",8,30],[95,"At-Tin",8,30],[96,"Al-'Alaq",19,30],[97,"Al-Qadr",5,30],[98,"Al-Bayyinah",8,30],[99,"Az-Zalzalah",8,30],[100,"Al-'Adiyat",11,30],[101,"Al-Qari'ah",11,30],[102,"At-Takasur",8,30],[103,"Al-'Asr",3,30],[104,"Al-Humazah",9,30],[105,"Al-Fil",5,30],[106,"Quraisy",4,30],[107,"Al-Ma'un",7,30],[108,"Al-Kausar",3,30],[109,"Al-Kafirun",6,30],[110,"An-Nasr",3,30],[111,"Al-Lahab",5,30],[112,"Al-Ikhlas",4,30],[113,"Al-Falaq",5,30],[114,"An-Nas",6,30]];
+        const quranDB = rawQuran.map(q => ({ no: q[0], nama: q[1], ayat: q[2], juz: q[3] }));
+
+        // --- DARK MODE ---
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem(APP_CONFIG.STORAGE_KEYS.THEME, document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) { 
+            document.documentElement.classList.add('dark'); 
+        }
+
+        function fetchInitialBranding() {
+            apiCall('getAppBranding').then(res => { 
+                if(res.status === 'success' && res.data) {
+                    updateBrandingDOM(res.data); 
+                }
+            }).catch(()=>{});
+        }
+
+        function updateBrandingDOM(name) {
+            document.querySelectorAll('.brand-name-display').forEach(el => el.textContent = name);
+            document.title = name + " - Sistem Manajemen Tahfidz";
+        }
+
+        // --- CRUD MODAL HANDLER ---
+        function generateUstadzCreds() {
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('inputUstadzUsername').value = 'ustadz' + randomNum;
+            document.getElementById('inputUstadzPassword').value = Math.random().toString(36).slice(-6);
+        }
+
+        function openModalUstadz(idToEdit = null, isDuplicate = false) {
+            document.getElementById('formTambahUstadz').reset();
+            const title = document.getElementById('titleModalUstadz');
+            
+            if (idToEdit) {
+                const u = state.ustadz.find(x => x.ID_Ustadz === idToEdit);
+                if(u) {
+                    document.getElementById('inputUstadzName').value = u.Nama + (isDuplicate ? " (Copy)" : "");
+                    if(isDuplicate) {
+                        generateUstadzCreds();
+                        editModeId = null;
+                        title.textContent = 'Duplikasi Data Ustadz';
+                    } else {
+                        document.getElementById('inputUstadzUsername').value = u.Username;
+                        document.getElementById('inputUstadzPassword').value = u.Password;
+                        editModeId = idToEdit;
+                        title.textContent = 'Edit Data Ustadz';
+                    }
+                }
+            } else {
+                editModeId = null;
+                title.textContent = 'Tambah Ustadz Baru';
+                generateUstadzCreds();
+            }
+
+            const modal = document.getElementById('modalUstadz');
+            const content = document.getElementById('modalUstadzContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+        }
+
+        function openModalSantri(idToEdit = null, isDuplicate = false) {
+            document.getElementById('formTambahSantri').reset();
+            const title = document.getElementById('titleModalSantri');
+            const sel = document.getElementById('inputUstadzId');
+            sel.innerHTML = '<option value="">-- Belum Ditentukan --</option>';
+            state.ustadz.forEach(u => sel.innerHTML += `<option value="${u.ID_Ustadz}">${u.Nama}</option>`);
+
+            const prepData = () => {
+                const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+                if(idToEdit) {
+                    const s = state.santri.find(x => x.ID_Santri === idToEdit);
+                    document.getElementById('inputSantriName').value = s.Nama_Santri + (isDuplicate ? " (Copy)" : "");
+                    document.getElementById('inputWaliName').value = s.Nama_Wali;
+                    document.getElementById('inputUstadzId').value = s.ID_Ustadz || "";
+                    
+                    if(isDuplicate) {
+                        editModeId = null;
+                        title.textContent = 'Duplikasi Data Santri';
+                        apiCall('generateNewSantriId', token).then(res => {
+                            if(res.status==='success') document.getElementById('inputSantriId').value = res.data;
+                        });
+                    } else {
+                        editModeId = idToEdit;
+                        title.textContent = 'Edit Data Santri';
+                        document.getElementById('inputSantriId').value = s.ID_Santri;
+                    }
+                } else {
+                    editModeId = null;
+                    title.textContent = 'Tambah Santri Baru';
+                    document.getElementById('inputSantriId').value = "Memuat ID...";
+                    apiCall('generateNewSantriId', token).then(res => {
+                        if(res.status==='success') document.getElementById('inputSantriId').value = res.data;
+                    });
+                }
+            };
+
+            const modal = document.getElementById('modalSantri');
+            const content = document.getElementById('modalSantriContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); prepData(); }, 10);
+        }
+
+        function closeModal(modalId, contentId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(contentId);
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+            document.getElementById('sidebarOverlay').classList.toggle('hidden');
+        }
+
+        // --- LOGIN & AUTH ---
+        function switchLoginTab(tab) {
+            document.getElementById('formLoginStaff').classList.toggle('hidden', tab !== 'staff');
+            document.getElementById('formLoginWali').classList.toggle('hidden', tab !== 'wali');
+            document.getElementById('tabStaff').className = tab === 'staff' ? 'flex-1 text-center py-2 tab-active transition' : 'flex-1 text-center py-2 tab-inactive transition hover:bg-gray-50 dark:hover:bg-slate-800';
+            document.getElementById('tabWali').className = tab === 'wali' ? 'flex-1 text-center py-2 tab-active transition' : 'flex-1 text-center py-2 tab-inactive transition hover:bg-gray-50 dark:hover:bg-slate-800';
+        }
+
+        function handleLogin(e, type) {
+            e.preventDefault();
+            Swal.fire({ title: 'Memeriksa Kredensial...', didOpen: () => Swal.showLoading() });
+            
+            const un = type === 'staff' ? document.getElementById('staffUsername').value : document.getElementById('waliIdSantri').value;
+            const pw = type === 'staff' ? document.getElementById('staffPassword').value : '';
+
+            apiCall('loginUser', un, pw, type).then(res => {
+                if(res.status === 'success') {
+                    if(type === 'staff') localStorage.setItem(APP_CONFIG.STORAGE_KEYS.TOKEN, res.data.token);
+                    sessionData = res.data;
+                    localStorage.setItem(APP_CONFIG.STORAGE_KEYS.SESSION, JSON.stringify(sessionData));
+
+                    document.getElementById('loginView').classList.add('hidden');
+                    document.getElementById('mainLayout').classList.remove('hidden');
+
+                    initApp(type);
+
+                    // Arahkan ke rute slug sesuai peran pengguna
+                    if (sessionData.role === 'superadmin') {
+                        navigateTo('/admin');
+                    } else if (sessionData.role === 'ustadz') {
+                        navigateTo('/ustadz');
+                    } else if (sessionData.role === 'walisantri') {
+                        navigateTo('/wali');
+                    }
+
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: res.message, showConfirmButton: false, timer: 2000 });
+                } else { 
+                    Swal.fire('Akses Ditolak', res.message, 'error'); 
+                }
+            }).catch(() => {});
+        }
+
+        function logout() {
+            localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.SESSION);
+            sessionData = null;
+            document.getElementById('mainLayout').classList.add('hidden');
+            document.getElementById('loginView').classList.remove('hidden');
+            navigateTo('/login');
+        }
+
+        function initApp(loginType) {
+            Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
+            
+            const name = sessionData.role === 'walisantri' ? `Wali: ${sessionData.santri.Nama_Wali}` : sessionData.name;
+            document.getElementById('userNameDisplay').textContent = name;
+            document.getElementById('userRoleDisplay').textContent = sessionData.role;
+            document.getElementById('userInitial').textContent = name.charAt(0).toUpperCase();
+            
+            if(sessionData.role === 'superadmin' && !state.currentAdminMenu) { 
+                state.currentAdminMenu = 'dashboard'; 
+            }
+            buildSidebarMenu();
+
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            if(loginType === 'staff') {
+                apiCall('fetchAppData', token).then(res => {
+                    Swal.close();
+                    if(res.status === 'success') {
+                        state = { ...state, ...res.data }; 
+                        updateBrandingDOM(state.appName);
+                        loadContent();
+                    } else { 
+                        Swal.fire('Error', res.message, 'error'); 
+                    }
+                }).catch(() => Swal.close());
+            } else {
+                apiCall('fetchWaliData', sessionData.id).then(res => {
+                    Swal.close();
+                    if(res.status === 'success') {
+                        state = { ...state, ...res.data };
+                        updateBrandingDOM(state.appName);
+                        loadContent();
+                    }
+                }).catch(() => Swal.close());
+            }
+        }
+
+        function buildSidebarMenu() {
+            const menu = document.getElementById('sidebarMenu');
+            menu.innerHTML = '';
+            const cItem = (id, icon, text, path) => {
+                const isActive = (sessionData.role === 'superadmin' && state.currentAdminMenu === id) ||
+                                 (sessionData.role === 'ustadz' && id === 'workspace') ||
+                                 (sessionData.role === 'walisantri' && id === 'progres');
+                const activeClass = isActive ? "bg-emerald-800 text-white shadow-inner" : "text-emerald-100 hover:bg-emerald-800/50 dark:hover:bg-slate-800";
+                return `<div onclick="navigateTo('${path}')" class="flex items-center gap-3 w-full p-3 rounded-lg font-medium transition cursor-pointer ${activeClass}"><i class="fa-solid ${icon} w-5 text-center"></i> <span>${text}</span></div>`;
+            };
+            if (sessionData.role === 'superadmin') {
+                menu.innerHTML += cItem('dashboard', 'fa-gauge', 'Dashboard Global', '/admin');
+                menu.innerHTML += cItem('ustadz', 'fa-user-tie', 'Data Ustadz', '/admin/ustadz');
+                menu.innerHTML += cItem('santri', 'fa-users', 'Data Santri', '/admin/santri');
+                menu.innerHTML += cItem('pengaturan', 'fa-gear', 'Pengaturan', '/admin/pengaturan');
+            } else if (sessionData.role === 'ustadz') {
+                menu.innerHTML += cItem('workspace', 'fa-pen-clip', 'Input Setoran', '/ustadz');
+            } else {
+                menu.innerHTML += cItem('progres', 'fa-chart-line', 'Progres Anak', '/wali');
+            }
+        }
+
+        function switchAdmin(menuId, pushHistory = true) {
+            state.currentAdminMenu = menuId; 
+            if (pushHistory) {
+                const targetPath = menuId === 'dashboard' ? '/admin' : `/admin/${menuId}`;
+                navigateTo(targetPath);
+                return;
+            }
+            buildSidebarMenu(); 
+            loadContent();
+            if(window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) {
+                toggleSidebar();
+            }
+        }
+
+        // --- CONTENT LOADER & RENDER ---
+        function loadContent() {
+            const container = document.getElementById('contentArea');
+            container.innerHTML = '';
+            
+            let tplId = sessionData.role === 'superadmin' ? `tpl-superadmin-${state.currentAdminMenu}` : `tpl-${sessionData.role}`;
+            
+            const tplElement = document.getElementById(tplId);
+            if(tplElement) {
+                container.appendChild(tplElement.content.cloneNode(true));
+            } else {
+                container.innerHTML = '<p class="text-red-500">Error: Layout tidak ditemukan.</p>';
+                return;
+            }
+            
+            if (sessionData.role === 'superadmin') {
+                if(state.currentAdminMenu === 'dashboard') {
+                    document.getElementById('statSantri').textContent = state.santri.length;
+                    document.getElementById('statUstadz').textContent = state.ustadz.length;
+                    document.getElementById('statSetoran').textContent = state.setoran.length;
+                } else if(state.currentAdminMenu === 'ustadz') {
+                    renderTableUstadz();
+                } else if(state.currentAdminMenu === 'santri') {
+                    renderTableSantri();
+                } else if(state.currentAdminMenu === 'pengaturan') {
+                    document.getElementById('inputPondokName').value = state.appName;
+                    const inputApi = document.getElementById('settingApiUrlInput');
+                    if (inputApi) {
+                        inputApi.value = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.API_URL) || '';
+                    }
+                }
+            } else if (sessionData.role === 'ustadz') {
+                initSmartForm(); 
+                renderUstadzRiwayat();
+            } else if (sessionData.role === 'walisantri') {
+                renderWali();
+            }
+        }
+
+        // --- RENDER TABLES DENGAN PAGINASI & SEARCH ---
+        function renderTableUstadz() {
+            const tb = document.getElementById('tableUstadzBody');
+            tb.innerHTML = '';
+            const paginationResult = getPaginatedData(state.ustadz, ['Nama', 'Username'], 'ustadz');
+            
+            if(paginationResult.pageData.length === 0) {
+                tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Data tidak ditemukan</td></tr>';
+            } else {
+                paginationResult.pageData.forEach(u => {
+                    const jmlSantri = state.santri.filter(s=>s.ID_Ustadz===u.ID_Ustadz).length;
+                    tb.innerHTML += `
+                        <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
+                            <td class="p-4 font-bold">${u.Nama}</td>
+                            <td class="p-4 font-mono text-sm">${u.Username}</td>
+                            <td class="p-4">${jmlSantri} Santri</td>
+                            <td class="p-4 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button onclick="openModalUstadz('${u.ID_Ustadz}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 p-2 rounded-md transition shadow-sm" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="openModalUstadz('${u.ID_Ustadz}', true)" class="text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 p-2 rounded-md transition shadow-sm" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+                                    <button onclick="deleteAction('Users_Ustadz', '${u.ID_Ustadz}', '${u.Nama}')" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 p-2 rounded-md transition shadow-sm" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            }
+            document.getElementById('paginationUstadz').innerHTML = renderPaginationHtml('ustadz', paginationResult.totalPages);
+        }
+
+        function renderTableSantri() {
+            const tb = document.getElementById('tableSantriBody');
+            tb.innerHTML = '';
+            const paginationResult = getPaginatedData(state.santri, ['Nama_Santri', 'Nama_Wali', 'ID_Santri'], 'santri');
+
+            if(paginationResult.pageData.length === 0) {
+                tb.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Data tidak ditemukan</td></tr>';
+            } else {
+                paginationResult.pageData.forEach(s => {
+                    const u = state.ustadz.find(us=>us.ID_Ustadz===s.ID_Ustadz);
+                    tb.innerHTML += `
+                        <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
+                            <td class="p-4 font-mono text-sm text-emerald-600 dark:text-emerald-400 font-bold">${s.ID_Santri}</td>
+                            <td class="p-4 font-bold">${s.Nama_Santri}</td>
+                            <td class="p-4 text-gray-600 dark:text-gray-400">${s.Nama_Wali}</td>
+                            <td class="p-4 text-gray-600 dark:text-gray-400">${u?u.Nama:'-'}</td>
+                            <td class="p-4 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button onclick="openModalSantri('${s.ID_Santri}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md transition shadow-sm" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="openModalSantri('${s.ID_Santri}', true)" class="text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 p-2 rounded-md transition shadow-sm" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+                                    <button onclick="deleteAction('Data_Santri', '${s.ID_Santri}', '${s.Nama_Santri}')" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 p-2 rounded-md transition shadow-sm" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
+            }
+            document.getElementById('paginationSantri').innerHTML = renderPaginationHtml('santri', paginationResult.totalPages);
+        }
+
+        // --- SUPERADMIN ACTIONS (API) ---
+        function saveUstadz(e) {
+            e.preventDefault();
+            Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()});
+            
+            const n = document.getElementById('inputUstadzName').value;
+            const u = document.getElementById('inputUstadzUsername').value;
+            const p = document.getElementById('inputUstadzPassword').value;
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+
+            if (editModeId) {
+                apiCall('editUstadz', token, editModeId, n, u, p).then(res => handleRes(res, 'modalUstadz'));
+            } else {
+                apiCall('addUstadz', token, n, u, p).then(res => handleRes(res, 'modalUstadz'));
+            }
+        }
+
+        function saveSantri(e) {
+            e.preventDefault();
+            Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()});
+            
+            const i = document.getElementById('inputSantriId').value;
+            const n = document.getElementById('inputSantriName').value;
+            const w = document.getElementById('inputWaliName').value;
+            const u = document.getElementById('inputUstadzId').value;
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+
+            if (editModeId) {
+                apiCall('editSantri', token, editModeId, n, w, u).then(res => handleRes(res, 'modalSantri'));
+            } else {
+                apiCall('addSantri', token, i, n, w, u).then(res => handleRes(res, 'modalSantri'));
+            }
+        }
+
+        function deleteAction(sheetName, id, textInfo) {
+            Swal.fire({
+                title: 'Hapus Data?', text: `Yakin ingin menghapus ${textInfo}?`, icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({title: 'Menghapus...', didOpen: ()=>Swal.showLoading()});
+                    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+                    apiCall('deleteDataGlobal', token, sheetName, id).then(res => handleRes(res, null));
+                }
+            });
+        }
+
+        function handleRes(res, modalId) {
+            if(res.status==='success') { 
+                if(modalId) closeModal(modalId, `${modalId}Content`);
+                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: res.message, showConfirmButton: false, timer: 2000 });
+                initApp('staff');
+            } else { 
+                Swal.fire('Error', res.message, 'error'); 
+            }
+        }
+
+        function savePondokName(e) {
+            e.preventDefault();
+            Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()});
+            const newName = document.getElementById('inputPondokName').value;
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            apiCall('updatePondokName', token, newName).then(res => {
+                if(res.status==='success') { 
+                    updateBrandingDOM(newName); 
+                    Swal.fire('Sukses', res.message, 'success'); 
+                } else { 
+                    Swal.fire('Error', res.message, 'error'); 
+                }
+            });
+        }
+
+        function saveAdminPassword(e) {
+            e.preventDefault();
+            Swal.fire({title: 'Memverifikasi...', didOpen: ()=>Swal.showLoading()});
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            apiCall('updateAdminPassword', token, document.getElementById('oldPassword').value, document.getElementById('newPassword').value).then(res => {
+                if(res.status==='success') { 
+                    document.getElementById('oldPassword').value=''; 
+                    document.getElementById('newPassword').value='';
+                    Swal.fire('Sukses', res.message, 'success'); 
+                } else { 
+                    Swal.fire('Error', res.message, 'error'); 
+                }
+            });
+        }
+
+        // --- PENGATURAN KONEKSI API & DATABASE ---
+        function saveCustomApiUrl() {
+            const inputApi = document.getElementById('settingApiUrlInput');
+            if (!inputApi) return;
+            const val = inputApi.value.trim();
+            saveApiUrl(val);
+            Swal.fire({
+                icon: 'success',
+                title: 'Konfigurasi Tersimpan',
+                text: val ? 'URL Google Apps Script kustom berhasil disimpan di perangkat ini.' : 'URL direset ke default proxy Cloudflare Pages (/api).'
+            });
+        }
+
+        async function testBackendConnection() {
+            const badge = document.getElementById('apiStatusBadge');
+            if (badge) {
+                badge.textContent = 'Status API: Menguji koneksi...';
+                badge.className = 'text-xs px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 font-medium';
+            }
+            try {
+                const res = await apiCall('ping');
+                if (res.status === 'success') {
+                    if (badge) {
+                        badge.textContent = 'Status API: Terhubung (Online)';
+                        badge.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold';
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Koneksi Berhasil!',
+                        html: `<p>Backend Google Apps Script merespons dengan normal.</p><p class="text-xs text-gray-500 mt-2">Waktu Server: ${res.data ? res.data.timestamp : new Date().toISOString()}</p>`
+                    });
+                } else {
+                    throw new Error(res.message || 'Respons server tidak sukses.');
+                }
+            } catch (err) {
+                if (badge) {
+                    badge.textContent = 'Status API: Terputus / Gagal';
+                    badge.className = 'text-xs px-2.5 py-1 rounded-full bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 font-bold';
+                }
+            }
+        }
+
+        async function initSetupDatabaseFromUI() {
+            Swal.fire({
+                title: 'Jalankan Setup Database?',
+                text: 'Sistem akan memeriksa dan membuat sheet yang belum ada (Users_Admin, Users_Ustadz, Data_Santri, Data_Setoran, Pengaturan). Data yang sudah ada tidak akan hilang.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                confirmButtonText: 'Ya, Jalankan Setup'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Memproses Setup...', didOpen: () => Swal.showLoading() });
+                    try {
+                        const res = await apiCall('setupDatabase');
+                        if (res.status === 'success') {
+                            Swal.fire('Sukses', res.message, 'success');
+                            initApp('staff');
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    } catch (err) {}
+                }
+            });
+        }
+
+        function openQuickApiModal() {
+            Swal.fire({
+                title: 'Konfigurasi Endpoint API',
+                input: 'url',
+                inputLabel: 'Masukkan Web App URL Google Apps Script (/exec):',
+                inputValue: localStorage.getItem(APP_CONFIG.STORAGE_KEYS.API_URL) || '',
+                inputPlaceholder: 'https://script.google.com/macros/s/.../exec',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    saveApiUrl(res.value || '');
+                    Swal.fire('Tersimpan', 'Konfigurasi API telah diperbarui.', 'success');
+                }
+            });
+        }
+
+        // --- USTADZ SMART FORM ---
+        let tsSantri = null, tsSurat = null, lastPinData = null;
+
+        function initSmartForm() {
+            const now = new Date();
+            document.getElementById('smartDate').value = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            
+            const selSantri = document.getElementById('smartSantri');
+            selSantri.innerHTML = '<option value="">🔍 Ketik nama santri...</option>';
+            state.santri.filter(s => s.ID_Ustadz === sessionData.id).forEach(s => {
+                selSantri.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
+            });
+
+            tsSantri = new TomSelect('#smartSantri', { create: false, sortField: { field: "text", direction: "asc" }, onChange: function(val) { checkSmartPin(val); } });
+
+            const selJuz = document.getElementById('smartJuz');
+            for(let i=1; i<=30; i++) selJuz.innerHTML += `<option value="${i}">Juz ${i}</option>`;
+            populateSurat();
+        }
+
+        function populateSurat() {
+            const juzVal = document.getElementById('smartJuz').value;
+            const selSurat = document.getElementById('smartSurat');
+            if(tsSurat) { tsSurat.destroy(); selSurat.innerHTML = '<option value="">🔍 Ketik surat...</option>'; }
+
+            let filteredSurat = juzVal !== 'all' ? quranDB.filter(q => q.juz == parseInt(juzVal)) : quranDB;
+            filteredSurat.forEach(s => { selSurat.innerHTML += `<option value="${s.no}" data-ayat="${s.ayat}">${s.no}. ${s.nama} (${s.ayat} Ayat)</option>`; });
+
+            tsSurat = new TomSelect('#smartSurat', { create: false, sortField: { field: "value", direction: "asc" }, onChange: function(val) { populateAyatMax(val); } });
+
+            document.getElementById('smartAyatStart').disabled = true; document.getElementById('smartAyatStart').value = '';
+            document.getElementById('smartAyatEnd').disabled = true; document.getElementById('smartAyatEnd').value = '';
+            document.getElementById('chkFullSurat').disabled = true; document.getElementById('chkFullSurat').checked = false;
+        }
+
+        function populateAyatMax(suratNo) {
+            if(!suratNo) return;
+            const suratData = quranDB.find(q => q.no == suratNo);
+            if(!suratData) return;
+            const start = document.getElementById('smartAyatStart'), end = document.getElementById('smartAyatEnd'), chk = document.getElementById('chkFullSurat');
+            start.disabled = false; start.value = '1'; end.disabled = false; end.value = suratData.ayat; chk.disabled = false; chk.checked = false; end.setAttribute('max', suratData.ayat);
+        }
+
+        function toggleFullSurat() {
+            const isChecked = document.getElementById('chkFullSurat').checked, start = document.getElementById('smartAyatStart'), end = document.getElementById('smartAyatEnd');
+            if(isChecked) { start.value = '1'; end.value = end.getAttribute('max'); start.readOnly = true; end.readOnly = true; start.classList.add('bg-gray-100', 'dark:bg-slate-700'); end.classList.add('bg-gray-100', 'dark:bg-slate-700'); } 
+            else { start.readOnly = false; end.readOnly = false; start.classList.remove('bg-gray-100', 'dark:bg-slate-700'); end.classList.remove('bg-gray-100', 'dark:bg-slate-700'); }
+        }
+
+        function switchSmartTab(type) {
+            document.getElementById('smartType').value = type;
+            document.getElementById('btnTabBaru').className = type === 'Hafalan Baru' ? "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-active" : "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive";
+            document.getElementById('btnTabMurojaah').className = type === 'Murojaah' ? "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-active ml-2" : "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive ml-2";
+        }
+
+        function checkSmartPin(santriId) {
+            const pinContainer = document.getElementById('smartPinContainer');
+            if(!santriId) { pinContainer.classList.add('hidden'); lastPinData = null; return; }
+            const history = state.setoran.filter(s => s.ID_Santri === santriId);
+            if(history.length > 0) {
+                lastPinData = history[0]; 
+                document.getElementById('smartPinText').textContent = `Lanjutkan Terakhir: ${lastPinData.Surah} (Juz ${lastPinData.Juz}), Hal ${lastPinData.Halaman}`;
+                pinContainer.classList.remove('hidden');
+            } else { pinContainer.classList.add('hidden'); lastPinData = null; }
+        }
+
+        function applySmartPin() {
+            if(!lastPinData) return;
+            switchSmartTab('Murojaah');
+            document.getElementById('smartJuz').value = lastPinData.Juz;
+            populateSurat();
+            if(tsSurat) tsSurat.setValue(lastPinData.SurahNo);
+            document.getElementById('smartHal').value = lastPinData.Halaman;
+            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Data Lanjutan Terisi', showConfirmButton: false, timer: 1500 });
+        }
+
+        function saveSetoran(e) {
+            e.preventDefault();
+            const santriId = tsSantri.getValue();
+            if(!santriId) return Swal.fire('Error', 'Pilih Santri terlebih dahulu!', 'error');
+            const suratNo = tsSurat.getValue();
+            if(!suratNo) return Swal.fire('Error', 'Pilih Surat terlebih dahulu!', 'error');
+            
+            const suratData = quranDB.find(q => q.no == suratNo);
+            const rawDate = document.getElementById('smartDate').value;
+            const displayDate = new Date(rawDate).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+            const payload = {
+                santriId: santriId, type: document.getElementById('smartType').value,
+                juz: document.getElementById('smartJuz').value === 'all' ? suratData.juz : document.getElementById('smartJuz').value,
+                surah: suratData.nama, surahNo: suratData.no,
+                ayat: `${document.getElementById('smartAyatStart').value} - ${document.getElementById('smartAyatEnd').value}`,
+                halaman: document.getElementById('smartHal').value,
+                predikat: document.querySelector('input[name="smartPredikat"]:checked').value,
+                catatan: document.getElementById('smartCatatan').value,
+                date: displayDate
+            };
+
+            Swal.fire({title: 'Menyimpan Setoran...', didOpen: ()=>Swal.showLoading()});
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            apiCall('saveSetoran', token, payload).then(res => {
+                if(res.status==='success') {
+                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Setoran tersimpan!', showConfirmButton: false, timer: 2000 });
+                    document.getElementById('smartHal').value = ''; 
+                    document.getElementById('smartCatatan').value = '';
+                    initApp('staff'); 
+                } else { 
+                    Swal.fire('Error', res.message, 'error'); 
+                }
+            });
+        }
+
+        function renderUstadzRiwayat() {
+            const container = document.getElementById('listSetoranUstadz');
+            container.innerHTML = '';
+            const mySetoran = state.setoran.filter(set => set.ID_Ustadz === sessionData.id);
+            
+            if(mySetoran.length === 0) { 
+                container.innerHTML = `<p class="text-center text-gray-500 py-4">Belum ada input.</p>`; 
+                return; 
+            }
+
+            mySetoran.forEach(set => {
+                const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+                const isBaru = set.Jenis === 'Hafalan Baru';
+                const borderLeft = isBaru ? 'border-l-4 border-emerald-500' : 'border-l-4 border-blue-500';
+                const typeBadge = isBaru ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
+                let predIcon = set.Predikat === 'Lancar' ? '🟢' : set.Predikat === 'Kurang Lancar' ? '🟡' : '🔴';
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 border border-gray-100 dark:border-darkborder ${borderLeft}">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><h4 class="font-bold text-gray-800 dark:text-white text-sm">${s ? s.Nama_Santri : 'Unknown'}</h4><p class="text-xs text-gray-500">${set.Tanggal}</p></div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${set.Jenis}</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
+                            <div><span class="text-gray-400 text-xs block">Surat & Juz</span> <span class="font-medium">${set.Surah} (Juz ${set.Juz})</span></div>
+                            <div><span class="text-gray-400 text-xs block">Ayat & Hal</span> <span class="font-medium">Ayat ${set.Ayat} | Hal ${set.Halaman}</span></div>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white dark:bg-darkcard px-3 py-2 rounded-lg border border-gray-100 dark:border-darkborder">
+                            <span class="text-xs font-bold">${predIcon} ${set.Predikat}</span>
+                            ${set.Catatan ? `<span class="text-[10px] text-gray-500 italic truncate ml-auto">"${set.Catatan}"</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- WALI SANTRI RENDER ---
+        function renderWali() {
+            const s = state.santri;
+            const u = state.ustadz;
+            const mySetoran = state.setoran;
+
+            document.getElementById('waliAnakName').textContent = s.Nama_Santri;
+            document.getElementById('waliAnakId').textContent = s.ID_Santri;
+            document.getElementById('waliUstadzName').textContent = u ? u.Nama : 'Belum Ditentukan';
+            document.getElementById('waliTotalSetoran').innerHTML = `${mySetoran.length} <span class="text-sm font-normal text-emerald-100">Setoran</span>`;
+
+            const listContainer = document.getElementById('waliSetoranList');
+            const emptyState = document.getElementById('waliEmptyState');
+            listContainer.innerHTML = '';
+            
+            if(mySetoran.length === 0) { 
+                emptyState.classList.remove('hidden'); 
+            } else {
+                emptyState.classList.add('hidden');
+                mySetoran.forEach(set => {
+                    let icon = set.Predikat === 'Lancar' ? 'fa-check-circle text-emerald-500' : set.Predikat === 'Kurang Lancar' ? 'fa-circle-minus text-yellow-500' : 'fa-circle-xmark text-red-500';
+                    let bgLeft = set.Predikat === 'Lancar' ? 'bg-emerald-500' : set.Predikat === 'Kurang Lancar' ? 'bg-yellow-500' : 'bg-red-500';
+                    const badgeStyle = set.Jenis === 'Hafalan Baru' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800';
+
+                    listContainer.innerHTML += `
+                        <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-4 flex gap-4 overflow-hidden relative">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 ${bgLeft}"></div>
+                            <div class="mt-1"><i class="fa-solid ${icon} text-xl"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h4 class="font-bold text-gray-800 dark:text-white truncate">${set.Surah}</h4>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${badgeStyle}">${set.Jenis}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Juz ${set.Juz} • Ayat ${set.Ayat} • Hal ${set.Halaman}</p>
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>${set.Tanggal}</span>
+                                    <span class="font-bold px-2 py-1 bg-gray-50 dark:bg-slate-800 rounded text-gray-700 dark:text-gray-300 shadow-sm">${set.Predikat}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // ==================== INISIALISASI SAAT DOM SIAP ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchInitialBranding();
+
+            const hasSession = checkExistingSession();
+            if (hasSession) {
+                document.getElementById('loginView').classList.add('hidden');
+                document.getElementById('mainLayout').classList.remove('hidden');
+                const loginType = sessionData.role === 'walisantri' ? 'wali' : 'staff';
+                initApp(loginType);
+            }
+
+            resolveRoute(window.location.pathname);
+        });
+    </script>
+</body>
+</html>
