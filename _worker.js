@@ -15,7 +15,6 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzd4Tacd4r0H3UM
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const path = url.pathname.replace(/\/+$/, '') || '/';
 
     // 1. TANGANI REQUEST OPTIONS PREFLIGHT CORS
     if (request.method === 'OPTIONS') {
@@ -23,36 +22,37 @@ export default {
     }
 
     // 2. TANGANI REQUEST API GATEWAY (/api atau /api/*)
-    if (path === '/api' || path.startsWith('/api/')) {
+    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
       return handleApiProxy(request, env, url);
     }
 
-    // 3. PEMETAAN RUTE SLUG BERSIH KE FILE HTML MULTI-PAGE (OPSI 1)
-    let mappedHtml = null;
-    if (path === '/' || path === '/home' || path === '/beranda' || path === '/landingpage') {
-      mappedHtml = '/index.html';
-    } else if (path === '/login' || path === '/portal') {
-      mappedHtml = '/login.html';
-    } else if (path === '/admin' || path.startsWith('/admin/')) {
-      mappedHtml = '/admin.html';
-    } else if (path === '/ustadz' || path === '/setoran') {
-      mappedHtml = '/ustadz.html';
-    } else if (path === '/wali' || path === '/progres') {
-      mappedHtml = '/wali.html';
-    }
-
-    if (mappedHtml) {
-      const targetAssetUrl = new URL(mappedHtml, request.url);
-      targetAssetUrl.search = url.search;
-      return env.ASSETS.fetch(new Request(targetAssetUrl, request));
-    }
-
-    // 4. LAYANI ASET STATIS VIA CLOUDFLARE PAGES ASSET SERVER
+    // 3. AMBIL ASET STATIS SECARA LANGSUNG
     let response = await env.ASSETS.fetch(request);
 
-    // Fallback ke index.html jika rute tanpa ekstensi tidak ditemukan
-    if (response.status === 404 && !url.pathname.includes('.')) {
-      return env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
+    // 4. JIKA 404 (SLUG BERSIH), COBA COCOKKAN DENGAN HALAMAN MULTI-PAGE
+    if (response.status === 404) {
+      const cleanPath = url.pathname.replace(/\/+$/, '') || '/';
+      let mappedFile = null;
+
+      if (cleanPath === '/login' || cleanPath === '/portal') {
+        mappedFile = '/login.html';
+      } else if (cleanPath === '/admin' || cleanPath.startsWith('/admin/')) {
+        mappedFile = '/admin.html';
+      } else if (cleanPath === '/ustadz' || cleanPath === '/setoran') {
+        mappedFile = '/ustadz.html';
+      } else if (cleanPath === '/wali' || cleanPath === '/progres') {
+        mappedFile = '/wali.html';
+      } else if (cleanPath === '/landingpage' || cleanPath === '/home' || cleanPath === '/beranda') {
+        mappedFile = '/index.html';
+      } else if (!url.pathname.includes('.')) {
+        mappedFile = '/index.html';
+      }
+
+      if (mappedFile) {
+        const fallbackUrl = new URL(mappedFile, request.url);
+        fallbackUrl.search = url.search;
+        return env.ASSETS.fetch(new Request(fallbackUrl, request));
+      }
     }
 
     return response;
