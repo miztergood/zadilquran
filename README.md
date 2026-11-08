@@ -1,4 +1,4 @@
-# 📖 Zadil Quran - Sistem Manajemen Tahfidz & Pantauan Hafalan Al-Qur'an
+# 📖 Zadil Quran - Sistem Manajemen Tahfizh & Pantauan Hafalan Al-Qur'an
 
 Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Worker) yang terintegrasi dengan **Google Apps Script & Google Sheets** sebagai Backend Database tanpa server berbayar (Serverless & Free Tier Friendly).
 
@@ -45,7 +45,7 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
 ├── index.html         # Frontend Single Page Application (Tailwind CSS, FontAwesome, TomSelect)
 ├── logo.jpg           # Logo resmi lembaga bujur sangkar resolusi tinggi
 ├── PRD.md             # Product Requirements Document
-├── DESIGN_SISTEM.md   # Desain sistem & standar estetika anti-slop
+├── DESIGN_SISTEM.md   # Desain sistem & standar estetika anti-slop (design_system.md)
 ├── plan.md            # Rencana pengembangan & arsitektur teknis
 ├── wireframes.md      # Sketsa visual wireframe antarmuka seluruh layar
 ├── .gitignore         # Daftar file yang diabaikan oleh Git
@@ -155,4 +155,4 @@ Jika ingin menguji coba secara lokal:
 ---
 
 ## 📄 Lisensi
-Hak Cipta © 2026 Zadil Quran. Dikembangkan untuk kemudahan manajemen hafalan pondok pesantren dan rumah tahfidz.
+Hak Cipta © 2026 Zadil Quran. Dikembangkan untuk kemudahan manajemen hafalan pondok pesantren dan rumah tahfizh.
