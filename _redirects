@@ -1,1 +1,12 @@
-/*    /index.html   200
+/home              /index.html        200
+/beranda           /index.html        200
+/landingpage       /landingpage.html  200
+/login             /login.html        200
+/portal            /login.html        200
+/admin             /admin.html        200
+/admin/*           /admin.html        200
+/ustadz            /ustadz.html       200
+/setoran           /ustadz.html       200
+/wali              /wali.html         200
+/progres           /wali.html         200
+/*                 /index.html        200

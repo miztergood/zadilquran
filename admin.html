@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Superadmin - Zadil Quran</title>
+    
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#9a2024">
+    <meta name="application-name" content="Zadil Qur'an">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zadil Qur'an">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+
+    <!-- Tailwind CSS & Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Config & Core -->
+    <script src="config.js"></script>
+    <script src="js/core.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans antialiased h-screen flex flex-col overflow-hidden theme-transition">
+
+    <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
+    <div id="mainLayout" class="h-full flex flex-col md:flex-row w-full">
+        <aside id="sidebar" class="bg-[#480a0c] dark:bg-slate-950 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-xl flex flex-col border-r border-[#631316] dark:border-darkborder theme-transition">
+            <div class="p-4 flex items-center gap-3 border-b border-[#631316] dark:border-darkborder">
+                <img src="logo.jpg" alt="Logo Zadil Quran" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 bg-white">
+                <a href="index.html" class="text-lg font-bold tracking-wider brand-name-display cursor-pointer">Zadil Quran</a>
+                <button onclick="toggleSidebar()" class="md:hidden ml-auto text-white/70 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-4 border-b border-[#631316] dark:border-darkborder bg-black/20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-[#1c6b45] flex items-center justify-center text-white font-bold shadow-md" id="userInitial">A</div>
+                    <div>
+                        <p class="text-sm font-medium line-clamp-1" id="userNameDisplay">Admin</p>
+                        <p class="text-xs text-emerald-300 capitalize" id="userRoleDisplay">superadmin</p>
+                    </div>
+                </div>
+                <button onclick="toggleDarkMode()" class="text-white/70 hover:text-white p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
+                </button>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebarMenu"></nav>
+
+            <div class="p-4 border-t border-[#631316] dark:border-darkborder space-y-2">
+                <a href="index.html" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition text-sm">
+                    <i class="fa-solid fa-globe text-amber-300"></i>
+                    <span>Lihat Landing Page</span>
+                </a>
+                <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition group text-sm">
+                    <i class="fa-solid fa-download text-emerald-400"></i>
+                    <span>Pasang Aplikasi PWA</span>
+                </button>
+                <button onclick="logout()" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-red-600 hover:text-white transition group text-sm">
+                    <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
+                    <span>Keluar</span>
+                </button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
+            <header id="mobileAdminHeader" class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-xs h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 theme-transition">
+                <a href="index.html" class="flex items-center gap-2.5 text-[#9a2024] dark:text-[#f29fa3] font-bold">
+                    <img src="logo.jpg" alt="Logo" class="w-8 h-8 rounded-lg object-cover">
+                    <span class="brand-name-display text-base">Zadil Quran</span>
+                </a>
+                <button onclick="toggleSidebar()" class="text-gray-600 dark:text-gray-300 hover:text-[#9a2024] p-2"><i class="fa-solid fa-bars text-xl"></i></button>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative" id="contentArea"></div>
+            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    <!-- Modal Tambah & Edit Ustadz -->
+    <div id="modalUstadz" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalUstadzContent">
+            <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="titleModalUstadz">Tambah Ustadz Baru</h3>
+                <button onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formTambahUstadz" onsubmit="saveUstadz(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nama Lengkap Ustadz</label>
+                    <input type="text" id="inputUstadzName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Username Login <button type="button" onclick="generateUstadzCreds()" class="text-xs text-blue-500 ml-2 hover:underline"><i class="fa-solid fa-rotate mr-1"></i>Generate Ulang</button></label>
+                    <input type="text" id="inputUstadzUsername" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none font-mono text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Password</label>
+                    <input type="text" id="inputUstadzPassword" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none font-mono text-sm" required>
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-xl transition text-sm">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-[#9a2024] text-white font-medium hover:bg-[#871a1e] rounded-xl shadow-md text-sm">Simpan Data</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Buku Induk Santri (Tambah & Edit) -->
+    <div id="modalSantri" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-3 sm:p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col transform scale-95 transition-transform" id="modalSantriContent">
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center flex-shrink-0">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-900 dark:text-white" id="titleModalSantri">Buku Induk Santri Baru</h3>
+                    <p class="text-xs text-gray-500">Sesuai Formulir Pendaftaran Santri Mukim PPTZQ</p>
+                </div>
+                <button onclick="closeModal('modalSantri', 'modalSantriContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formTambahSantri" onsubmit="saveSantri(event)" class="p-4 sm:p-6 overflow-y-auto space-y-5 text-sm">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-gray-100 dark:border-darkborder">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kode ID Santri (ZQ)</label>
+                        <input type="text" id="inputSantriId" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl font-mono font-bold text-[#9a2024] dark:text-[#f29fa3] outline-none text-xs" readonly placeholder="ZQ-2026-XXXX">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status Santri</label>
+                        <select id="inputSantriStatus" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl outline-none text-xs font-semibold">
+                            <option value="Aktif">Santri Aktif (Mukim)</option>
+                            <option value="Calon Santri">Calon Santri (Pendaftar)</option>
+                            <option value="Alumni">Alumni / Lulus</option>
+                            <option value="Cuti">Cuti / Non-Aktif</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ustadz Pembimbing</label>
+                        <select id="inputUstadzId" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl outline-none text-xs">
+                            <option value="">-- Belum Ditentukan --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Bagian 1: Identitas Santri -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-[#9a2024] dark:text-[#f29fa3] border-b pb-1 dark:border-darkborder">1. Data Pribadi Santri</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium mb-1">Nama Lengkap (Sesuai Akta) *</label>
+                            <input type="text" id="inputSantriName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Nama Panggilan</label>
+                            <input type="text" id="inputSantriPanggilan" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Jenis Kelamin *</label>
+                            <select id="inputSantriGender" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                                <option value="Laki-laki (Putra)">Laki-laki (Putra)</option>
+                                <option value="Perempuan (Putri)">Perempuan (Putri)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Tempat Lahir *</label>
+                            <input type="text" id="inputTempatLahir" placeholder="Contoh: Tuban" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Tanggal Lahir *</label>
+                            <input type="date" id="inputTanggalLahir" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium mb-1">Alamat Jalan / Dusun</label>
+                            <input type="text" id="inputAlamat" placeholder="Jl. Raya Penambangan" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">RT / RW</label>
+                            <div class="flex gap-1.5">
+                                <input type="text" id="inputRt" placeholder="RT" class="w-1/2 px-2.5 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                                <input type="text" id="inputRw" placeholder="RW" class="w-1/2 px-2.5 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Desa / Kelurahan</label>
+                            <input type="text" id="inputDesa" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Kecamatan</label>
+                            <input type="text" id="inputKecamatan" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Kabupaten / Kota</label>
+                            <input type="text" id="inputKabKota" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Provinsi</label>
+                            <input type="text" id="inputProvinsi" value="Jawa Timur" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Pendidikan Terakhir</label>
+                            <input type="text" id="inputPendidikan" placeholder="SD / MI / SMP" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Tahun Lulus</label>
+                            <input type="text" id="inputTahunLulus" placeholder="2026" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Sekolah Asal</label>
+                            <input type="text" id="inputSekolahAsal" placeholder="Nama sekolah asal" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bagian 2: Data Orang Tua & Wali -->
+                <div class="space-y-3 pt-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-[#1c6b45] dark:text-[#83c9a6] border-b pb-1 dark:border-darkborder">2. Data Orang Tua &amp; Kontak Wali</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Nama Ayah Kandung *</label>
+                            <input type="text" id="inputNamaAyah" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Pekerjaan Ayah</label>
+                            <input type="text" id="inputPekerjaanAyah" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Pendidikan Ayah</label>
+                            <input type="text" id="inputPendidikanAyah" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Nama Ibu Kandung *</label>
+                            <input type="text" id="inputNamaIbu" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Pekerjaan Ibu</label>
+                            <input type="text" id="inputPekerjaanIbu" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Pendidikan Ibu</label>
+                            <input type="text" id="inputPendidikanIbu" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1">Nama Wali Utama (Penanggung Jawab) *</label>
+                            <input type="text" id="inputWaliName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1">No. HP / WhatsApp Wali Santri *</label>
+                            <input type="tel" id="inputNoHpWali" placeholder="081234567890" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none font-mono" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100 dark:border-darkborder flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modalSantri', 'modalSantriContent')" class="px-4 py-2.5 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-xl transition text-sm">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 bg-[#9a2024] text-white font-semibold hover:bg-[#871a1e] rounded-xl shadow-md text-sm"><i class="fa-solid fa-floppy-disk mr-1.5"></i>Simpan Buku Induk</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detail Buku Induk Santri (View & Print) -->
+    <div id="modalDetailSantri" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-3 sm:p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 transition-transform" id="modalDetailSantriContent">
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-[#9a2024] text-white flex items-center justify-center"><i class="fa-solid fa-id-card"></i></div>
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg">Lembar Buku Induk Santri</h3>
+                        <p class="text-xs text-gray-500">Pondok Pesantren Tahfizh Zadil Qur'an Tuban</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modalDetailSantri', 'modalDetailSantriContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 text-sm" id="detailSantriBody"></div>
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex flex-wrap justify-between items-center gap-2 bg-gray-50/50 dark:bg-slate-800/40 rounded-b-2xl">
+                <button type="button" onclick="window.print()" class="px-4 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 rounded-xl text-xs font-semibold flex items-center gap-1.5"><i class="fa-solid fa-print"></i> Cetak Biodata</button>
+                <div class="flex gap-2">
+                    <button type="button" id="btnDetailEditSantri" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5"><i class="fa-solid fa-pen"></i> Edit Data</button>
+                    <button type="button" onclick="closeModal('modalDetailSantri', 'modalDetailSantriContent')" class="px-4 py-2 bg-[#9a2024] text-white rounded-xl text-xs font-semibold">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Buat Tagihan SPP / Keuangan (Individu & Massal) -->
+    <div id="modalBuatTagihan" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform" id="modalBuatTagihanContent">
+            <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-lg" id="titleModalTagihan">Terbitkan Tagihan SPP / Biaya</h3>
+                <button onclick="closeModal('modalBuatTagihan', 'modalBuatTagihanContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formBuatTagihan" onsubmit="saveTagihan(event)" class="p-5 space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Target Penerima Tagihan *</label>
+                    <select id="inputTagihanSantri" class="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none font-semibold" required>
+                        <option value="ALL_ACTIVE">📢 SELURUH SANTRI AKTIF (Generate Massal)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori Biaya *</label>
+                    <select id="inputTagihanKategori" onchange="autoFillTagihanPreset(this.value)" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
+                        <option value="Syahriyah (SPP)">Syahriyah (SPP Bulanan) - Rp 200.000</option>
+                        <option value="Pendaftaran & Fasilitas">Paket Pendaftaran Mukim - Rp 1.800.000</option>
+                        <option value="Almari">Almari Santri - Rp 500.000</option>
+                        <option value="Infaq Gedung">Infaq Gedung - Rp 1.000.000</option>
+                        <option value="Kitab & Buku">Kitab & Buku Panduan - Rp 100.000</option>
+                        <option value="Kesehatan">Kesehatan - Rp 100.000</option>
+                        <option value="Lainnya">Biaya Lainnya (Custom)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul / Keterangan Tagihan *</label>
+                    <input type="text" id="inputTagihanJudul" placeholder="Contoh: Syahriyah (SPP) Bulan November 2026" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nominal (Rp) *</label>
+                        <input type="number" id="inputTagihanNominal" value="200000" min="0" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none font-bold text-[#1c6b45]" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Jatuh Tempo</label>
+                        <input type="text" id="inputTagihanTempo" placeholder="Contoh: 10 Nov 2026" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Catatan (Opsional)</label>
+                    <input type="text" id="inputTagihanCatatan" placeholder="Keterangan tambahan..." class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalBuatTagihan', 'modalBuatTagihanContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold rounded-xl shadow-md"><i class="fa-solid fa-paper-plane mr-1.5"></i>Terbitkan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Verifikasi / Tandai Lunas Pembayaran -->
+    <div id="modalBayarTagihan" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform" id="modalBayarTagihanContent">
+            <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-lg">Konfirmasi Pelunasan Tagihan</h3>
+                <button onclick="closeModal('modalBayarTagihan', 'modalBayarTagihanContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formBayarTagihan" onsubmit="confirmBayarTagihan(event)" class="p-5 space-y-4 text-sm">
+                <input type="hidden" id="bayarIdTagihan">
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder space-y-1">
+                    <p class="text-xs text-gray-500" id="bayarInfoSantri">Santri</p>
+                    <p class="font-bold text-gray-900 dark:text-white" id="bayarInfoJudul">Judul Tagihan</p>
+                    <p class="text-lg font-extrabold text-[#1c6b45]" id="bayarInfoNominal">Rp 0</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Metode Pembayaran *</label>
+                    <select id="bayarMetode" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
+                        <option value="Tunai di Kantor Pesantren">Tunai di Kantor Pesantren (TU)</option>
+                        <option value="Transfer Bank Syariah (BSI)">Transfer Bank Syariah (BSI)</option>
+                        <option value="Transfer Bank Lainnya / QRIS">Transfer Bank Lainnya / QRIS</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Catatan Bendahara / No. Referensi</label>
+                    <input type="text" id="bayarCatatan" placeholder="Contoh: Diterima lunas oleh Ustadzah Bendahara" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalBayarTagihan', 'modalBayarTagihanContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold rounded-xl shadow-md"><i class="fa-solid fa-check-double mr-1.5"></i>Sahkan Lunas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== TEMPLATES SUPERADMIN ==================== -->
+    <template id="tpl-superadmin-dashboard">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold">Dashboard Eksekutif Pesantren</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Ringkasan operasional terpadu <span class="brand-name-display font-medium">Zadil Quran</span>.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div onclick="switchAdmin('santri')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-[#9a2024] transition-all opacity-100"></div>
+                <div class="w-12 h-12 bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-users"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Buku Induk Santri</p><p class="text-2xl font-extrabold mt-0.5" id="statSantri">-</p></div>
+            </div>
+            <div onclick="switchAdmin('ustadz')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-[#1c6b45] transition-all opacity-100"></div>
+                <div class="w-12 h-12 bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Total Asatidz</p><p class="text-2xl font-extrabold mt-0.5" id="statUstadz">-</p></div>
+            </div>
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-amber-500 transition-all opacity-100"></div>
+                <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-book-open"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Rekaman Setoran</p><p class="text-2xl font-extrabold mt-0.5" id="statSetoran">-</p></div>
+            </div>
+            <div onclick="switchAdmin('keuangan')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-emerald-600 transition-all opacity-100"></div>
+                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-money-bill-wave"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Dana SPP Masuk</p><p class="text-lg font-extrabold mt-0.5 text-emerald-600 dark:text-emerald-400" id="statKeuanganMasuk">Rp 0</p></div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="text-base font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-compass text-[#9a2024]"></i> Modul Operasional Pesantren
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button onclick="switchAdmin('santri')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#9a2024] text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-address-book"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Buku Induk Santri</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Biodata lengkap, TTL, Ortu &amp; Kode ZQ</p>
+                </button>
+                <button onclick="switchAdmin('keuangan')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#1c6b45] text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Keuangan &amp; Syahriyah SPP</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tagihan pendaftaran, SPP &amp; rekap lunas</p>
+                </button>
+                <button onclick="switchAdmin('ustadz')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#1c6b45] text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-user-tie"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Data Asatidz / Guru</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Kelola pembimbing halaqah tahfizh</p>
+                </button>
+                <button onclick="switchAdmin('pengaturan')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-gray-400 text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-white text-sm">Pengaturan &amp; Database</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Sinkronisasi sheet, nama pondok &amp; sandi</p>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-ustadz">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+            <div>
+                <h2 class="text-2xl font-bold">Data Ustadz &amp; Pengajar</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Daftar pembimbing halaqah dan jumlah santri binaan.</p>
+            </div>
+            <button onclick="openModalUstadz()" class="bg-[#1c6b45] hover:bg-[#165737] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Ustadz</button>
+        </div>
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-darkborder flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
+                <div class="relative w-full max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    <input type="text" oninput="handleSearch('ustadz', this.value)" placeholder="Cari ustadz / username..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
+                            <th class="p-4">Nama Ustadz</th>
+                            <th class="p-4">Username Login</th>
+                            <th class="p-4">Jumlah Santri</th>
+                            <th class="p-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableUstadzBody" class="divide-y divide-gray-100 dark:divide-darkborder text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationUstadz"></div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-santri">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+            <div>
+                <h2 class="text-2xl font-bold">Buku Induk Santri</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kelola biodata lengkap santri, TTL, orang tua/wali, alamat, dan pembimbing tahfizh.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="openModalSantri()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-user-plus mr-2"></i>Tambah Santri Baru</button>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-darkborder flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-gray-50/50 dark:bg-slate-800/30">
+                <div class="relative w-full max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    <input type="text" oninput="handleSearch('santri', this.value)" placeholder="Cari nama / kode ZQ / orang tua / kota..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500 font-medium">Filter Status:</span>
+                    <select id="filterSantriStatus" onchange="renderTableSantri()" class="px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl outline-none font-semibold">
+                        <option value="ALL">Semua Santri</option>
+                        <option value="Aktif">Santri Aktif</option>
+                        <option value="Calon Santri">Calon Santri (PSB Online)</option>
+                        <option value="Alumni">Alumni</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
+                            <th class="p-4">Kode ZQ</th>
+                            <th class="p-4">Nama &amp; Gender</th>
+                            <th class="p-4">TTL &amp; Alamat</th>
+                            <th class="p-4">Orang Tua / Wali</th>
+                            <th class="p-4">Pembimbing &amp; Status</th>
+                            <th class="p-4 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableSantriBody" class="divide-y divide-gray-100 dark:divide-darkborder text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationSantri"></div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-keuangan">
+        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+            <div>
+                <h2 class="text-2xl font-bold">Manajemen Keuangan &amp; Syahriyah (SPP)</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kelola tagihan biaya pendaftaran, syahriyah bulanan, dan verifikasi pembayaran wali santri.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="openModalTagihan('MASSAL')" class="bg-[#1c6b45] hover:bg-[#165737] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-bullhorn mr-1.5"></i>Terbitkan SPP Massal</button>
+                <button onclick="openModalTagihan('INDIVIDU')" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-plus mr-1.5"></i>Buat Tagihan Santri</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase text-gray-400">Total Pembayaran Lunas</p>
+                    <p class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="keuStatLunas">Rp 0</p>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase text-gray-400">Total Belum Lunas (Piutang)</p>
+                    <p class="text-2xl font-extrabold text-red-600 dark:text-red-400 mt-0.5" id="keuStatBelum">Rp 0</p>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-receipt"></i></div>
+                <div>
+                    <p class="text-xs font-semibold uppercase text-gray-400">Total Lembar Tagihan</p>
+                    <p class="text-2xl font-extrabold text-gray-800 dark:text-white mt-0.5" id="keuStatTotal">0 Tagihan</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
+            <div class="p-4 border-b border-gray-100 dark:border-darkborder flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-gray-50/50 dark:bg-slate-800/30">
+                <div class="relative w-full max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
+                    <input type="text" oninput="handleSearch('tagihan', this.value)" placeholder="Cari ID santri / nama tagihan..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-gray-500 font-medium">Status:</span>
+                    <select id="filterTagihanStatus" onchange="renderTableTagihan()" class="px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl outline-none font-semibold">
+                        <option value="ALL">Semua Status</option>
+                        <option value="Belum Lunas">Belum Lunas</option>
+                        <option value="Lunas">Sudah Lunas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
+                            <th class="p-4">No. Invoice</th>
+                            <th class="p-4">Santri</th>
+                            <th class="p-4">Rincian Tagihan</th>
+                            <th class="p-4">Nominal</th>
+                            <th class="p-4">Status &amp; Tgl Bayar</th>
+                            <th class="p-4 text-center">Aksi Bendahara</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableTagihanBody" class="divide-y divide-gray-100 dark:divide-darkborder text-sm"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationTagihan"></div>
+        </div>
+    </template>
+
+    <template id="tpl-superadmin-pengaturan">
+        <div class="mb-6"><h2 class="text-2xl font-bold">Pengaturan Sistem</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Konfigurasi lembaga, password superadmin, dan backend Apps Script.</p></div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-building-columns mr-2 text-[#9a2024]"></i>Identitas Lembaga</h3>
+                <form onsubmit="savePondokName(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nama Pondok / Aplikasi</label>
+                        <input type="text" id="inputPondokName" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
+                    </div>
+                    <button type="submit" class="bg-[#9a2024] hover:bg-[#871a1e] text-white font-medium py-2.5 px-4 rounded-xl transition shadow-sm text-sm">Simpan Identitas</button>
+                </form>
+            </div>
+
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-shield-halved mr-2 text-[#1c6b45]"></i>Ganti Password Admin</h3>
+                <form onsubmit="saveAdminPassword(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password Saat Ini</label>
+                        <input type="password" id="oldPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password Baru</label>
+                        <input type="password" id="newPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
+                    </div>
+                    <button type="submit" class="bg-[#1c6b45] hover:bg-[#165737] text-white font-medium py-2.5 px-4 rounded-xl transition shadow-sm text-sm">Ubah Password</button>
+                </form>
+            </div>
+
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6 lg:col-span-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b pb-2 dark:border-darkborder">
+                    <h3 class="font-bold text-lg"><i class="fa-solid fa-cloud-arrow-up mr-2 text-[#1c6b45]"></i>Backend Google Apps Script &amp; Cloudflare Pages</h3>
+                    <span id="apiStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium">Status API: Belum Diuji</span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Frontend terhubung ke backend secara transparan melalui reverse proxy Cloudflare Pages (<code>/api</code>). URL Web App Apps Script dikonfigurasi terpusat di file <code>_worker.js</code> atau Cloudflare Environment Variable <code>APPS_SCRIPT_URL</code>.
+                </p>
+                <div class="flex flex-wrap gap-3 pt-1">
+                    <button type="button" onclick="testBackendConnection()" class="bg-[#1c6b45] hover:bg-[#165737] text-white font-medium py-2.5 px-4 rounded-xl transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-network-wired"></i>Tes Koneksi API</button>
+                    <button type="button" onclick="initSetupDatabaseFromUI()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white font-medium py-2.5 px-4 rounded-xl transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-database"></i>Inisialisasi Database Sheets</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
+

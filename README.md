@@ -6,23 +6,30 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
 
 ## 🌟 Fitur Utama
 
-- **Role & Hak Akses Bertingkat**:
-  - **Superadmin**: Kelola akun ustadz, kelola data santri & wali, statistik pencapaian hafalan, dan pengaturan identitas lembaga.
+- **Role & Hak Akses Bertingkat (One-Stop Pesantren Platform V4.0)**:
+  - **Superadmin**:
+    - **Modul 1 (Buku Induk Santri)**: Kelola biodata lengkap santri (27 kolom sesuai formulir fisik PPTQ Zadil Qur'an) dengan kode unik berawalan **`ZQ-`** (`ZQ-2026-X8K9`), mendukung pendaftaran online mandiri oleh wali santri maupun input langsung oleh admin.
+    - **Modul 2 (Keuangan & Syahriyah/SPP)**: Kelola tagihan pendaftaran (`Rp 1.800.000`) & Syahriyah bulanan (`Rp 200.000`), generator SPP massal 1-klik untuk seluruh santri aktif, verifikasi pembayaran lunas, dan pengingat WhatsApp.
+    - **Manajemen Ustadz & Lembaga**: Kelola akun ustadz pembimbing, statistik pencapaian hafalan & kas masuk, serta pengaturan identitas lembaga.
   - **Ustadz**: Formulir cerdas pencatatan setoran hafalan baru & muroja'ah santri binaan dengan database 114 Surat & 30 Juz Al-Qur'an serta riwayat setoran real-time.
-  - **Wali Santri (Mobile-First)**: Portal khusus orang tua dengan tata letak aplikasi ponsel terpusat (`max-w-md mx-auto`), kartu hero bergradien, ringkasan 3 metrik, tombol satu ketukan bagikan ke WhatsApp, filter pil, dan evaluasi ustadz.
+  - **Wali Santri (Mobile-First 3-in-1 Portal)**: Portal khusus orang tua (`max-w-md mx-auto`) dengan **3 Tab Utama**:
+    1. **Tab Tahfizh**: Kartu hero bergradien, ringkasan 3 metrik setoran, tombol bagikan ke WhatsApp, dan linimasa evaluasi ustadz.
+    2. **Tab SPP & Biaya**: Rekapitulasi tagihan Belum Lunas vs Sudah Lunas, rincian invoice Syahriyah/Pendaftaran, dan tombol konfirmasi bayar via WhatsApp Bendahara.
+    3. **Tab Buku Induk**: Kartu biodata lengkap santri dan pengingat berkas pendaftaran fisik.
 - **Identitas Visual Lembaga**:
   - Warna Utama: Crimson Maroon (`#9a2024`).
   - Warna Sekunder: Pine Green (`#1c6b45`).
   - Logo Resmi: `logo.jpg` (dimensi bujur sangkar resolusi tinggi).
 - **Routing URL Slug Bersih (Clean Slugs / SPA Navigation)**:
-  - `/` atau `/home` : Landing page resmi profil pesantren, program tahfizh, fasilitas, alur PSB, dan formulir pendaftaran santri baru online.
-  - `/login` atau `/portal` : Layar masuk autentikasi pengurus/ustadz & portal wali santri.
-  - `/admin` atau `/admin/dashboard` : Ringkasan statistik & metrik hafalan pondok.
+  - `/` atau `/home` : Landing page resmi profil pesantren, 7 syarat pendaftaran santri mukim, rincian biaya Rp 2.000.000, dan formulir pendaftaran online terintegrasi database.
+  - `/login` atau `/portal` : Layar masuk autentikasi pengurus/ustadz & portal wali santri (`ZQ-2026-XXXX`).
+  - `/admin` atau `/admin/dashboard` : Ringkasan statistik santri, ustadz, setoran, & pemasukan keuangan.
+  - `/admin/santri` : Manajemen Buku Induk Santri lengkap & pembagian ustadz pembimbing.
+  - `/admin/keuangan` atau `/admin/spp` : Manajemen Tagihan SPP, Biaya Pendaftaran & Rekapitulasi Keuangan.
   - `/admin/ustadz` : Manajemen data akun ustadz pembimbing.
-  - `/admin/santri` : Manajemen pendaftaran santri & pembagian kelompok ustadz.
-  - `/admin/pengaturan` : Pengaturan nama lembaga, ubah password, dan konfigurasi API Apps Script.
+  - `/admin/pengaturan` : Pengaturan nama lembaga, ubah password, dan setup database.
   - `/ustadz` atau `/setoran` : Portal kartu pintar input setoran ustadz.
-  - `/wali` atau `/progres` : Portal kartu pantauan wali santri (Mobile-First).
+  - `/wali` atau `/progres` : Portal 3-in-1 pantauan wali santri (Tahfizh, SPP & Biaya, Buku Induk).
   - `/menu` : Pusat navigasi cepat.
 - **Cloudflare Pages Reverse Proxy (`_worker.js`)**:
   - Mengatasi kendala CORS (*Cross-Origin Resource Sharing*) secara otomatis.
@@ -35,22 +42,37 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
 
 ---
 
-## 📁 Struktur Repositori
+## 📁 Struktur Repositori (Arsitektur Modular Multi-Page - Opsi 1)
 
 ```text
-├── _worker.js         # Cloudflare Pages Functions: Reverse Proxy & SPA Fallback Router
-├── _redirects         # Aturan fallback SPA Cloudflare Pages (/* -> /index.html 200)
-├── _routes.json       # Routing config Cloudflare Pages Functions
-├── config.js          # Konfigurasi client-side (URL Proxy, default endpoint, keys)
-├── code.gs            # Backend Google Apps Script (doGet, doPost, Auth, CRUD & Database Engine)
-├── index.html         # Frontend Single Page Application (Tailwind CSS, FontAwesome, TomSelect)
-├── logo.jpg           # Logo resmi lembaga bujur sangkar resolusi tinggi
-├── PRD.md             # Product Requirements Document
-├── DESIGN_SISTEM.md   # Desain sistem & standar estetika anti-slop (design_system.md)
-├── plan.md            # Rencana pengembangan & arsitektur teknis
-├── wireframes.md      # Sketsa visual wireframe antarmuka seluruh layar
-├── .gitignore         # Daftar file yang diabaikan oleh Git
-└── README.md          # Dokumentasi lengkap instalasi & panduan deployment
+├── css/
+│   └── style.css          # Stylesheet kustom, scrollbar, animasi & penyesuaian TomSelect
+├── js/
+│   ├── tailwind-config.js # Konfigurasi palet warna Tailwind CSS (#9a2024 & #1c6b45)
+│   ├── core.js            # Modul Inti: Koneksi API, Session Auth, Database 114 Surat & PWA
+│   ├── landing.js         # Modul Landing Page & Formulir Pendaftaran Online PSB
+│   ├── login.js           # Modul Login Pengurus/Ustadz & Wali Santri (ZQ-...)
+│   ├── admin.js           # Modul Superadmin (Buku Induk 27 Kolom, Keuangan & SPP, Ustadz, Pengaturan)
+│   ├── ustadz.js          # Modul Ustadz (Smart Form Setoran & Riwayat Setoran)
+│   └── wali.js            # Modul Wali Santri 3-in-1 (Tahfizh, SPP & Biaya, Buku Induk)
+├── index.html             # Halaman Utama: Landing Page & Formulir Pendaftaran Santri Baru
+├── landingpage.html       # Alias Halaman Landing Page & PSB Online
+├── login.html             # Halaman Autentikasi Portal Staff & Wali Santri
+├── admin.html             # Halaman Dashboard Superadmin
+├── ustadz.html            # Halaman Portal Input Setoran Ustadz
+├── wali.html              # Halaman Portal Mobile-First Wali Santri (3 Tab)
+├── _worker.js             # Cloudflare Pages Functions: Reverse Proxy API & Clean URL Router
+├── _redirects             # Aturan routing Clean URL Cloudflare Pages
+├── _routes.json           # Routing config Cloudflare Pages Functions
+├── sw.js                  # Service Worker PWA v2 (Offline Caching Multi-Page)
+├── config.js              # Konfigurasi client-side (URL Proxy, default endpoint, keys)
+├── code.gs                # Backend Google Apps Script V4.0 (Auth, Buku Induk, Tagihan SPP & Setoran)
+├── logo.jpg               # Logo resmi lembaga bujur sangkar resolusi tinggi
+├── PRD.md                 # Product Requirements Document
+├── DESIGN_SISTEM.md       # Desain sistem & standar estetika anti-slop
+├── plan.md                # Rencana pengembangan & arsitektur teknis
+├── wireframes.md          # Sketsa visual wireframe antarmuka seluruh layar
+└── README.md              # Dokumentasi lengkap instalasi & panduan deployment
 ```
 
 ---
@@ -118,7 +140,7 @@ URL backend Google Apps Script dikelola secara terpusat di sisi server (Edge Wor
 | :--- | :--- | :--- | :--- |
 | **Superadmin** | `admin` | `admin` | Akun dibuat otomatis saat `setupDatabase`. Ubah password di menu Pengaturan. |
 | **Ustadz** | *Dibuat oleh admin* | *Dibuat oleh admin* | Ditambahkan melalui menu `/admin/ustadz`. |
-| **Wali Santri** | ID Unik Santri (Contoh: `ST-2026-X8K9`) | *Tanpa password* | Menggunakan ID Unik Santri yang terdaftar di `/admin/santri`. |
+| **Wali Santri** | ID Unik Santri (Contoh: `ZQ-2026-X8K9`) | *Tanpa password* | Menggunakan ID Unik Santri yang terdaftar di `/admin/santri` atau hasil pendaftaran online. |
 
 ---
 

@@ -49,7 +49,7 @@ Skema kolom pada `Code.gs` dan Google Sheets diperluas agar memuat seluruh eleme
 | No | Nama Kolom | Tipe Data | Deskripsi |
 | :--- | :--- | :--- | :--- |
 | 1 | `ID_Setoran` | String | ID Unik setoran (contoh: `SET-1731056789123`) |
-| 2 | `ID_Santri` | String | ID Santri binaan (contoh: `ST-2026-X8K9`) |
+| 2 | `ID_Santri` | String | ID Santri binaan (contoh: `ZQ-2026-X8K9`) |
 | 3 | `ID_Ustadz` | String | ID Ustadz pengampu (contoh: `U-001`) |
 | 4 | `Tingkatan` | String | `"Al-Qur'an"` atau `"Jilid"` |
 | 5 | `TM` | String | Sesi Tatap Muka (contoh: `"TM-15"` atau `"Sesi Pagi"`) |

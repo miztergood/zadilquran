@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Portal - Zadil Quran</title>
+    
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#9a2024">
+    <meta name="application-name" content="Zadil Qur'an">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zadil Qur'an">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+
+    <!-- Tailwind CSS & Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Config & Core -->
+    <script src="config.js"></script>
+    <script src="js/core.js"></script>
+</head>
+<body class="bg-[#480a0c] dark:bg-slate-950 text-gray-800 dark:text-gray-200 font-sans antialiased min-h-screen flex items-center justify-center relative theme-transition">
+
+    <!-- Tombol Kembali ke Beranda -->
+    <a href="index.html" class="absolute top-6 left-6 text-white/80 hover:text-white flex items-center gap-2 bg-white/10 hover:bg-white/20 px-3.5 py-2 rounded-xl backdrop-blur-sm transition text-xs font-medium">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Beranda
+    </a>
+
+    <button onclick="toggleDarkMode()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm shadow-lg" title="Mode Tampilan">
+        <i class="fa-solid fa-moon dark:hidden"></i>
+        <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
+    </button>
+
+    <div class="bg-white dark:bg-darkcard rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col mx-4 border border-transparent dark:border-darkborder theme-transition">
+        <div class="bg-gradient-to-r from-[#9a2024] via-[#731417] to-[#1c6b45] p-6 text-center theme-transition relative overflow-hidden text-white">
+            <div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-4 -translate-y-4"><i class="fa-solid fa-mosque text-8xl"></i></div>
+            <div class="relative z-10">
+                <img src="logo.jpg" alt="Logo Zadil Quran" class="w-20 h-20 rounded-2xl object-cover shadow-lg mx-auto mb-3 border-2 border-white/30 bg-white">
+                <h1 class="text-2xl font-bold tracking-wide brand-name-display text-white">Zadil Quran</h1>
+                <p class="text-white/80 text-xs mt-1">Sistem Informasi Manajemen Pesantren Terpadu</p>
+            </div>
+        </div>
+        
+        <div class="p-6 relative z-10 bg-white dark:bg-darkcard">
+            <div class="flex border-b border-gray-200 dark:border-darkborder mb-6 cursor-pointer">
+                <div id="tabStaff" onclick="switchLoginTab('staff')" class="flex-1 text-center py-2 tab-active transition">Pengurus/Ustadz</div>
+                <div id="tabWali" onclick="switchLoginTab('wali')" class="flex-1 text-center py-2 tab-inactive transition hover:bg-gray-50 dark:hover:bg-slate-800">Wali Santri</div>
+            </div>
+
+            <form id="formLoginStaff" onsubmit="handleLogin(event, 'staff')" class="space-y-4">
+                <div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-regular fa-user text-gray-400"></i></div>
+                        <input type="text" id="staffUsername" class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none transition text-sm" placeholder="Username (admin / ustadz)" required>
+                    </div>
+                </div>
+                <div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-lock text-gray-400"></i></div>
+                        <input type="password" id="staffPassword" class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none transition text-sm" placeholder="Password" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-[#9a2024]/30 text-sm active:scale-98">Masuk Dashboard</button>
+            </form>
+
+            <form id="formLoginWali" onsubmit="handleLogin(event, 'wali')" class="space-y-4 hidden">
+                <div class="bg-[#edf7f2] dark:bg-[#12452c]/30 border border-[#b2dfc8] dark:border-[#12452c] text-[#1c6b45] dark:text-[#83c9a6] p-3 rounded-xl text-xs mb-4 flex gap-3 shadow-xs">
+                    <i class="fa-solid fa-circle-info mt-0.5 text-sm"></i>
+                    <p>Masukkan ID Unik Santri (Kode <strong>ZQ-...</strong>) untuk memantau hafalan, rekap SPP/keuangan, dan buku induk putra/putri Anda.</p>
+                </div>
+                <div>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-id-card text-gray-400"></i></div>
+                        <input type="text" id="waliIdSantri" class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none uppercase transition font-mono tracking-wider text-sm font-semibold" placeholder="Contoh: ZQ-2026-X8K9" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-[#1c6b45]/30 text-sm active:scale-98">Buka Portal Wali Santri</button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-darkborder text-center text-xs text-gray-400">
+                <span>Zadil Quran &bull; Sistem Informasi Manajemen Pesantren</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>
+

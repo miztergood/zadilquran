@@ -38,11 +38,20 @@ Layar yang pertama kali tampil saat situs web diakses. Memuat identitas pondok p
 ├─────────────────────────────────────────────────────────────────────────┤
 │ 📚 Program Unggulan: Tahfizh 30 Juz | Tahsin Ummi | MDTA | Formal | WTN │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ 📝 Formulir Pendaftaran Calon Santri Baru Online                        │
-│ [ Nama Lengkap Santri  ]  [ Usia / Tgl Lahir ]                          │
-│ [ Jenis Kelamin        ]  [ Jenjang Sekolah  ]                          │
-│ [ Nama Orang Tua/Wali  ]  [ No. WhatsApp     ]                          │
-│ [ [ 💬 Kirim Formulir Pendaftaran via WhatsApp ]                      ] │
+│ 📋 Syarat Pendaftaran (7 Poin) & Rincian Biaya Masuk (Rp 2.000.000)     │
+│ ┌──────────────────────────────────┐ ┌────────────────────────────────┐ │
+│ │ 1. Komitmen 30 Juz               │ │ A. Pendaftaran : Rp 1.800.000  │ │
+│ │ 2. Mengisi Formulir              │ │    (Daftar, Almari, Gedung,    │ │
+│ │ 3. Foto 3x4 (3 Lembar)           │ │     Kesehatan, Kitab)          │ │
+│ │ 4. FC Ijazah/Raport/KK/Akta (2x) │ │ B. Syahriyah   : Rp   200.000  │ │
+│ │ 5-7. Surat Yatim, Tata Tertib    │ │ TOTAL AWAL     : Rp 2.000.000  │ │
+│ └──────────────────────────────────┘ └────────────────────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────┤
+│ 📝 Formulir Pendaftaran Santri Mukim Online (Terhubung Database ZQ-)    │
+│ [ I. Data Calon Santri: Nama Sesuai Akta, Panggilan, Gender, TTL      ] │
+│ [    Alamat Lengkap (RT/RW, Desa, Kec, Kab/Kota, Provinsi), Sekolah   ] │
+│ [ II. Data Orang Tua: Nama/Pekerjaan/Pendidikan Ayah & Ibu, No. WA    ] │
+│ [ [ 💾 Simpan Pendaftaran & Terbitkan Kode ZQ-2026-XXXX ]             ] │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ ❓ Tanya Jawab (FAQ) Accordion                                           │
 ├─────────────────────────────────────────────────────────────────────────┤
@@ -87,7 +96,7 @@ Layar masuk dirancang terpusat dengan kontras tinggi, latar belakang emerald pek
                 ├─────────────┴─────────────┤
                 │ ℹ️ Masukkan ID Unik santri│
                 │                           │
-                │ 🪪 [ ST-2026-X8K9Z      ] │ (Otomatis Kapital)
+                │ 🪪 [ ZQ-2026-X8K9       ] │ (Otomatis Kapital)
                 │                           │
                 │ [  Lihat Progres Anak ➜ ] │
                 └───────────────────────────┘
@@ -101,18 +110,18 @@ Menggunakan model dua kolom: Sidebar di sebelah kiri (dapat diciutkan di ponsel)
 
 ```text
 ┌──────────────┬──────────────────────────────────────────────────────────┐
-│ ZADIL QURAN  │ [Mobile Toggle]  Ringkasan Operasional Lembaga           │
+│ ZADIL QURAN  │ [Mobile Toggle]  Ringkasan Operasional Pesantren         │
 ├──────────────┼──────────────────────────────────────────────────────────┤
-│ 👤 Admin     │ ┌───────────────┐ ┌───────────────┐ ┌──────────────────┐ │
-│   Superadmin │ │ Total Santri  │ │ Total Ustadz  │ │ Total Setoran    │ │
-├──────────────┤ │      48       │ │       6       │ │      312         │ │
-│ 🧭 Dashboard │ └───────────────┘ └───────────────┘ └──────────────────┘ │
-│ 👤 Ustadz    │                                                          │
-│ 👥 Santri    │ Menu & Navigasi Cepat:                                   │
-│ ⚙️ Pengaturan│ ┌─────────────────┐ ┌─────────────────┐ ┌──────────────┐ │
-│              │ │ 👤 Data Ustadz  │ │ 👥 Data Santri  │ │ ⚙️ Pengaturan│ │
-│              │ │ /admin/ustadz   │ │ /admin/santri   │ │ /admin/peng..│ │
-│              │ └─────────────────┘ └─────────────────┘ └──────────────┘ │
+│ 👤 Admin     │ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌─────────┐ │
+│   Superadmin │ │Total Santri│ │Total Ustadz│ │Setoran Hfln│ │Kas Masuk│ │
+├──────────────┤ │     48     │ │     6      │ │    312     │ │Rp 24 Jt │ │
+│ 🧭 Dashboard │ └────────────┘ └────────────┘ └────────────┘ └─────────┘ │
+│ 🪪 Buku Induk│                                                          │
+│ 💳 Keuangan  │ Menu & Navigasi Cepat:                                   │
+│ 👤 Ustadz    │ ┌──────────────┐ ┌──────────────┐ ┌───────────┐ ┌──────┐ │
+│ ⚙️ Pengaturan│ │🪪 Buku Induk │ │💳 SPP & Biaya│ │👤 Ustadz  │ │⚙️ Set│ │
+│              │ │/admin/santri │ │/admin/keuang.│ │/admin/ust.│ │      │ │
+│              │ └──────────────┘ └──────────────┘ └───────────┘ └──────┘ │
 ├──────────────┤                                                          │
 │ 🚪 Keluar    │                                                          │
 └──────────────┴──────────────────────────────────────────────────────────┘
@@ -159,22 +168,37 @@ Menggunakan model dua kolom: Sidebar di sebelah kiri (dapat diciutkan di ponsel)
 
 ---
 
-## 4. Layar Manajemen Data Santri (`/admin/santri`)
+## 4. Layar Buku Induk Santri (`/admin/santri`) & Keuangan (`/admin/keuangan`)
 
+### A. Buku Induk Santri (`/admin/santri`):
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ Data Santri                            [ + Tambah Santri Baru ]         │
-│ Daftar santri, nama wali, dan plotting ustadz pembimbing                │
+│ Buku Induk Santri                      [ + Input Santri Baru (Admin) ]  │
+│ Database lengkap biodata santri, TTL, alamat, orang tua/wali & ustadz   │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ [ 🔍 Cari santri / ID / nama wali...                       ]            │
+│ [ 🔍 Cari nama / kode ZQ / wali / kota...      ] [ Status: Semua ▾ ]    │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ID SANTRI     NAMA LENGKAP     NAMA WALI     USTADZ PEMBIMBING    AKSI  │
+│ KODE ZQ       NAMA & GENDER    TTL & ALAMAT   ORTU / WALI  STATUS  AKSI │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ ST-2026-X8K9  Muhammad Zaki    Bpk. Hendra   Ustadz Abdullah     [•••]  │
-│ ST-2026-M4P1  Ahmad Al-Ghazi   Bpk. Ridwan   Ustadz Fauzan       [•••]  │
-│ ST-2026-Q2W8  Fathimah Az-ZahraIbu Maryam    Ustadz Abdullah     [•••]  │
+│ ZQ-2026-X8K9  Muhammad Zaki    Tuban, 12/05   Bpk. Hendra  Aktif  [👁️💬✏️]│
+│ ZQ-2026-M4P1  Ahmad Al-Ghazi   Lamongan, 01/02Bpk. Ridwan  Calon  [👁️💬✏️]│
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### B. Manajemen Keuangan & Syahriyah SPP (`/admin/keuangan`):
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Manajemen Keuangan & Syahriyah (SPP) [⚡ Generate SPP Massal] [+Tagihan] │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ Halaman 1 dari 2                                    [Prev] [Next]       │
+│ ┌──────────────────────┐ ┌──────────────────────┐ ┌───────────────────┐ │
+│ │ Total Lunas (Masuk)  │ │ Belum Lunas (Piutang)│ │ Total Invoice     │ │
+│ │ Rp 18.400.000        │ │ Rp 3.600.000         │ │ 45 Tagihan        │ │
+│ └──────────────────────┘ └──────────────────────┘ └───────────────────┘ │
+├─────────────────────────────────────────────────────────────────────────┤
+│ SANTRI         RINCIAN TAGIHAN            NOMINAL      STATUS    AKSI   │
+├─────────────────────────────────────────────────────────────────────────┤
+│ Muhammad Zaki  Syahriyah (SPP) Nov 2026   Rp 200.000   Belum   [✓Lunas] │
+│ ZQ-2026-X8K9   Paket Pendaftaran Baru     Rp 1.800.000 Lunas   [↺Batal] │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -243,7 +267,7 @@ Dirancang khusus dengan prinsip *Mobile-First*. Pada layar desktop terpusat rapi
 ├────────────────────────────────────────────────────────┤
 │ ┌────────────────────────────────────────────────────┐ │
 │ │ [MZ]  MUHAMMAD ZAKI                                │ │
-│ │       ID: ST-2026-X8K9 [📋 Salin]                  │ │ (Hero Gradient
+│ │       ID: ZQ-2026-X8K9 [📋 Salin]                  │ │ (Hero Gradient
 │ │       Pembimbing: Ustadz Abdullah                  │ │  Maroon to Green)
 │ ├────────────────────────────────────────────────────┤ │
 │ │  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ │ │
@@ -251,6 +275,10 @@ Dirancang khusus dengan prinsip *Mobile-First*. Pada layar desktop terpusat rapi
 │ │  │ Total Setoran│ │ Hafalan Baru │ │  Muroja'ah  │ │ │
 │ │  └──────────────┘ └──────────────┘ └─────────────┘ │ │
 │ └────────────────────────────────────────────────────┘ │
+│                                                        │
+│ ┌────────────────┬──────────────────┬────────────────┐ │ (3-in-1 Portal
+│ │ 📖 Tahfizh     │ 💳 SPP & Biaya 🔴│ 🪪 Buku Induk  │ │  Segmented Tabs)
+│ └────────────────┴──────────────────┴────────────────┘ │
 │                                                        │
 │ [ 💬 Bagikan Capaian ke WhatsApp                     ] │ (One-Tap Share)
 │                                                        │

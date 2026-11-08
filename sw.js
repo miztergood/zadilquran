@@ -1,15 +1,28 @@
 /**
- * SERVICE WORKER ZADIL QURAN (v1)
+ * SERVICE WORKER ZADIL QURAN (v2 - Multi-Page Modular Architecture)
  * Mendukung instalasi PWA lintas platform (Android, iOS/iPadOS, Windows, Mac) & akses offline
  */
 
-const CACHE_NAME = 'zadil-quran-pwa-v1';
+const CACHE_NAME = 'zadil-quran-pwa-v2';
 
 // Aset inti lokal yang wajib tersedia saat offline
 const CORE_ASSETS = [
   './',
   './index.html',
+  './landingpage.html',
+  './login.html',
+  './admin.html',
+  './ustadz.html',
+  './wali.html',
   './config.js',
+  './css/style.css',
+  './js/tailwind-config.js',
+  './js/core.js',
+  './js/landing.js',
+  './js/login.js',
+  './js/admin.js',
+  './js/ustadz.js',
+  './js/wali.js',
   './manifest.json',
   './logo.jpg',
   './assets/icon-192.png',
@@ -122,7 +135,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Navigasi Halaman Utama (HTML): Network-First dengan fallback ke index.html
+  // 2. Navigasi Halaman Utama (HTML Multi-Page): Network-First dengan fallback ke cache halaman terkait
   const isNavigation =
     event.request.mode === 'navigate' ||
     (event.request.headers.get('accept') || '').includes('text/html');
@@ -135,7 +148,6 @@ self.addEventListener('fetch', (event) => {
             const cloned = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, cloned);
-              cache.put('./index.html', response.clone());
             });
           }
           return response;

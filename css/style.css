@@ -1,0 +1,173 @@
+/* ============================================================================
+ * ZADIL QURAN - GLOBAL STYLESHEET (css/style.css)
+ * Digunakan bersama oleh index.html (Landing), login.html, admin.html,
+ * ustadz.html, dan wali.html
+ * ============================================================================ */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #9a2024; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #731417; }
+
+.tab-active { border-bottom-width: 2px; border-color: #9a2024; color: #9a2024; font-weight: 600; }
+.dark .tab-active { border-color: #e56b71; color: #e56b71; }
+.tab-inactive { color: #6b7280; }
+.dark .tab-inactive { color: #9ca3af; }
+
+.smart-tab-active { background-color: #9a2024; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(154, 32, 36, 0.4); }
+.smart-tab-secondary-active { background-color: #1c6b45; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(28, 107, 69, 0.4); }
+.smart-tab-inactive { background-color: #f3f4f6; color: #4b5563; }
+.dark .smart-tab-inactive { background-color: #334155; color: #cbd5e1; }
+.theme-transition { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+
+/* TomSelect Dark Mode Fixes */
+.ts-control { border-radius: 0.5rem; border-color: #d1d5db; padding: 0.6rem 0.75rem; font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+.dark .ts-control { background-color: #1e293b; border-color: #334155; color: white; }
+.ts-control.focus { border-color: #9a2024; box-shadow: 0 0 0 2px rgba(154, 32, 36, 0.2); }
+.ts-dropdown { border-radius: 0.5rem; font-family: 'Inter', sans-serif; }
+.dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: white; }
+.dark .ts-dropdown .option:hover, .dark .ts-dropdown .option.active { background-color: #334155; color: #e56b71; }
+.ts-control > input { color: inherit !important; }
+
+/* ==================== DESIGN SYSTEM NOTIFICATIONS & SWEETALERT2 ==================== */
+.zq-swal-popup {
+    border-radius: 1.25rem !important;
+    padding: 1.5rem !important;
+    font-family: 'Inter', sans-serif !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+.dark .zq-swal-popup {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+.zq-swal-title {
+    font-weight: 700 !important;
+    font-size: 1.25rem !important;
+    color: #1f2937 !important;
+    letter-spacing: -0.025em !important;
+}
+.dark .zq-swal-title {
+    color: #f8fafc !important;
+}
+.zq-swal-html {
+    font-size: 0.875rem !important;
+    color: #4b5563 !important;
+    line-height: 1.5 !important;
+}
+.dark .zq-swal-html {
+    color: #cbd5e1 !important;
+}
+.zq-swal-btn-primary {
+    background-color: #9a2024 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    padding: 0.65rem 1.35rem !important;
+    border-radius: 0.75rem !important;
+    border: none !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s !important;
+    margin: 0.35rem !important;
+    box-shadow: 0 4px 6px -1px rgba(154, 32, 36, 0.25) !important;
+    cursor: pointer !important;
+}
+.zq-swal-btn-primary:hover {
+    background-color: #871a1e !important;
+    transform: translateY(-1px) !important;
+}
+.zq-swal-btn-secondary {
+    background-color: #64748b !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    padding: 0.65rem 1.35rem !important;
+    border-radius: 0.75rem !important;
+    border: none !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s !important;
+    margin: 0.35rem !important;
+    cursor: pointer !important;
+}
+.zq-swal-btn-secondary:hover {
+    background-color: #475569 !important;
+    transform: translateY(-1px) !important;
+}
+.zq-swal-btn-danger {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    padding: 0.65rem 1.35rem !important;
+    border-radius: 0.75rem !important;
+    border: none !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s !important;
+    margin: 0.35rem !important;
+    cursor: pointer !important;
+}
+.zq-swal-btn-danger:hover {
+    background-color: #dc2626 !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Floating Toast Container & Cards */
+.zq-toast-container {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    pointer-events: none;
+}
+.zq-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 1rem;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateX(120%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+    opacity: 0;
+    max-width: 24rem;
+}
+.dark .zq-toast {
+    background: #1e293b;
+    color: #f8fafc;
+    border-color: #334155;
+}
+.zq-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+.zq-toast-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.15rem;
+}
+.zq-toast-success .zq-toast-icon { color: #1c6b45; }
+.zq-toast-danger .zq-toast-icon, .zq-toast-error .zq-toast-icon { color: #ef4444; }
+.zq-toast-warning .zq-toast-icon { color: #f59e0b; }
+.zq-toast-info .zq-toast-icon { color: #9a2024; }
+.zq-toast-message { flex-1; line-height: 1.4; }
+.zq-toast-close {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 0.25rem;
+    line-height: 1;
+    transition: color 0.15s;
+}
+.zq-toast-close:hover { color: #4b5563; }
+.dark .zq-toast-close:hover { color: #f8fafc; }

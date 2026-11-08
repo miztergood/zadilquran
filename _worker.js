@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * CLOUDFLARE PAGES WORKER (_worker.js)
- * Reverse Proxy API & SPA Fallback Router - Zadil Quran
+ * Reverse Proxy API & Multi-Page Clean Slug Router - Zadil Quran (V4.0)
  * ==============================================================================
  *
  * PANDUAN PENGISIAN URL GOOGLE APPS SCRIPT:
@@ -15,6 +15,7 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzd4Tacd4r0H3UM
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const path = url.pathname.replace(/\/+$/, '') || '/';
 
     // 1. TANGANI REQUEST OPTIONS PREFLIGHT CORS
     if (request.method === 'OPTIONS') {
@@ -22,17 +23,36 @@ export default {
     }
 
     // 2. TANGANI REQUEST API GATEWAY (/api atau /api/*)
-    if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
+    if (path === '/api' || path.startsWith('/api/')) {
       return handleApiProxy(request, env, url);
     }
 
-    // 3. LAYANI ASET STATIS VIA CLOUDFLARE PAGES ASSET SERVER & SPA FALLBACK
+    // 3. PEMETAAN RUTE SLUG BERSIH KE FILE HTML MULTI-PAGE (OPSI 1)
+    let mappedHtml = null;
+    if (path === '/' || path === '/home' || path === '/beranda' || path === '/landingpage') {
+      mappedHtml = '/index.html';
+    } else if (path === '/login' || path === '/portal') {
+      mappedHtml = '/login.html';
+    } else if (path === '/admin' || path.startsWith('/admin/')) {
+      mappedHtml = '/admin.html';
+    } else if (path === '/ustadz' || path === '/setoran') {
+      mappedHtml = '/ustadz.html';
+    } else if (path === '/wali' || path === '/progres') {
+      mappedHtml = '/wali.html';
+    }
+
+    if (mappedHtml) {
+      const targetAssetUrl = new URL(mappedHtml, request.url);
+      targetAssetUrl.search = url.search;
+      return env.ASSETS.fetch(new Request(targetAssetUrl, request));
+    }
+
+    // 4. LAYANI ASET STATIS VIA CLOUDFLARE PAGES ASSET SERVER
     let response = await env.ASSETS.fetch(request);
 
-    // Jika file fisik tidak ditemukan (404) dan bukan file dengan ekstensi (.js, .css, .png, dll)
-    // kembalikan index.html agar Client-Side Router SPA mengambil alih routing slug (misal: /admin, /ustadz, /menu)
+    // Fallback ke index.html jika rute tanpa ekstensi tidak ditemukan
     if (response.status === 404 && !url.pathname.includes('.')) {
-      return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+      return env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
     }
 
     return response;
@@ -124,7 +144,7 @@ function jsonResponse(data, status = 200) {
     status: status,
     headers: {
       'Content-Type': 'application/json;charset=utf-8',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin', '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }

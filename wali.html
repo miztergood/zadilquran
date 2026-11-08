@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Wali Santri - Zadil Quran</title>
+    
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#9a2024">
+    <meta name="application-name" content="Zadil Qur'an">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zadil Qur'an">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+
+    <!-- Tailwind CSS & Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Config & Core -->
+    <script src="config.js"></script>
+    <script src="js/core.js"></script>
+</head>
+<body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans antialiased min-h-screen theme-transition">
+
+    <div class="max-w-md mx-auto w-full min-h-screen bg-gray-50 dark:bg-darkbg pb-24 relative">
+        <!-- Top Mobile App Bar -->
+        <header class="sticky top-0 z-30 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-b border-gray-100 dark:border-darkborder px-4 py-3 flex items-center justify-between shadow-xs">
+            <a href="index.html" class="flex items-center gap-2.5">
+                <img src="logo.jpg" alt="Logo Zadil Quran" class="w-8 h-8 rounded-lg object-cover shadow-xs border border-gray-100 dark:border-darkborder">
+                <div>
+                    <h1 class="text-sm font-bold text-gray-800 dark:text-white leading-tight brand-name-display">Zadil Quran</h1>
+                    <p class="text-[10px] text-[#1c6b45] dark:text-[#83c9a6] font-medium leading-tight">Portal Terpadu Wali Santri</p>
+                </div>
+            </a>
+            <div class="flex items-center gap-2">
+                <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center transition active:scale-95" title="Pasang Aplikasi (PWA)">
+                    <i class="fa-solid fa-download text-xs"></i>
+                </button>
+                <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center transition active:scale-95" title="Ganti Mode">
+                    <i class="fa-solid fa-moon dark:hidden text-xs"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-yellow-400 text-xs"></i>
+                </button>
+                <button onclick="logout()" class="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center transition active:scale-95" title="Ganti Santri / Keluar">
+                    <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="p-4 space-y-4">
+            <!-- Hero Profil Card Santri -->
+            <div class="bg-gradient-to-br from-[#9a2024] via-[#731417] to-[#1c6b45] rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+                    <i class="fa-solid fa-book-quran text-9xl"></i>
+                </div>
+                
+                <div class="relative z-10 space-y-3.5">
+                    <div class="flex items-center justify-between">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white/20 backdrop-blur-sm tracking-wide" id="waliStatusBadge">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> Santri Aktif
+                        </span>
+                        <button onclick="loadWaliData()" class="text-xs text-white/80 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg backdrop-blur-sm transition active:scale-95">
+                            <i class="fa-solid fa-rotate text-[10px]"></i> Segarkan
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-3.5 pt-1">
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-bold text-2xl flex items-center justify-center shadow-inner" id="waliAnakInitial">
+                            Z
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h2 class="text-xl font-bold tracking-tight text-white truncate" id="waliAnakName">Nama Santri</h2>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-xs font-mono bg-black/25 px-2 py-0.5 rounded tracking-wider text-emerald-200" id="waliAnakId">ZQ-XXXX</span>
+                                <button onclick="copySantriId()" class="text-xs text-white/70 hover:text-white transition" title="Salin ID Santri">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-white/15 grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="text-white/70 block text-[10px]">Ustadz Pembimbing</span>
+                            <span class="font-semibold text-white truncate block" id="waliUstadzName">Ustadz</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-white/70 block text-[10px]">Nama Wali</span>
+                            <span class="font-semibold text-white truncate block" id="waliOrangtuaName">Wali</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Segmented Tab Switcher (3 Menu Utama Wali Santri) -->
+            <div class="grid grid-cols-3 gap-1.5 bg-white dark:bg-darkcard p-1.5 rounded-2xl border border-gray-200 dark:border-darkborder shadow-xs">
+                <button onclick="switchWaliTab('hafalan')" id="tabBtnWaliHafalan" class="py-2 px-2 rounded-xl text-xs font-bold bg-[#9a2024] text-white shadow-xs transition flex items-center justify-center gap-1.5 relative">
+                    <i class="fa-solid fa-book-quran"></i> <span>Tahfizh</span>
+                </button>
+                <button onclick="switchWaliTab('keuangan')" id="tabBtnWaliKeuangan" class="py-2 px-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-1.5 relative">
+                    <i class="fa-solid fa-wallet"></i> <span>SPP &amp; Biaya</span>
+                    <span id="badgeWaliTagihanCount" class="hidden w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-extrabold items-center justify-center">0</span>
+                </button>
+                <button onclick="switchWaliTab('profil')" id="tabBtnWaliProfil" class="py-2 px-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-1.5 relative">
+                    <i class="fa-solid fa-id-card"></i> <span>Buku Induk</span>
+                </button>
+            </div>
+
+            <!-- ==================== TAB 1: CAPAIAN HAFALAN TAHFIZH ==================== -->
+            <div id="waliSectionHafalan" class="space-y-4">
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3 border border-gray-100 dark:border-darkborder shadow-xs text-center">
+                        <p class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</p>
+                        <p class="text-xl font-extrabold text-gray-800 dark:text-white mt-0.5" id="waliTotalSetoran">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3 border border-[#b2dfc8] dark:border-[#12452c] shadow-xs text-center">
+                        <p class="text-[10px] font-semibold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider">Baru</p>
+                        <p class="text-xl font-extrabold text-[#1c6b45] dark:text-[#83c9a6] mt-0.5" id="waliTotalBaru">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3 border border-[#f9c5c7] dark:border-[#731417]/50 shadow-xs text-center">
+                        <p class="text-[10px] font-semibold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider">Muroja'ah</p>
+                        <p class="text-xl font-extrabold text-[#9a2024] dark:text-[#f29fa3] mt-0.5" id="waliTotalMurojaah">0</p>
+                    </div>
+                </div>
+
+                <button onclick="shareProgressWa()" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white py-3 px-4 rounded-2xl font-semibold text-sm shadow-md shadow-[#1c6b45]/20 flex items-center justify-center gap-2.5 transition active:scale-98">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span>Bagikan Capaian ke WhatsApp Keluarga</span>
+                </button>
+
+                <div class="space-y-2 pt-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-[#9a2024]"></i> Linimasa Setoran
+                        </h3>
+                        <span class="text-xs text-gray-400" id="waliCountDisplay">Memuat...</span>
+                    </div>
+
+                    <div class="flex gap-1.5 overflow-x-auto pb-1" id="waliFilterButtons">
+                        <button onclick="setWaliFilter('all')" id="btnFilterAll" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#9a2024] text-white shadow-xs transition">Semua</button>
+                        <button onclick="setWaliFilter('baru')" id="btnFilterBaru" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition">Hafalan Baru</button>
+                        <button onclick="setWaliFilter('murojaah')" id="btnFilterMurojaah" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition">Muroja'ah</button>
+                    </div>
+
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                        <input type="text" id="waliSearchSuratInput" oninput="handleWaliSearch(this.value)" placeholder="Cari surat atau juz..." class="w-full pl-8 pr-3 py-2 bg-white dark:bg-darkcard border border-gray-200 dark:border-darkborder rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
+                    </div>
+                </div>
+
+                <div class="space-y-3" id="waliSetoranList"></div>
+
+                <div id="waliEmptyState" class="hidden text-center py-12 px-4 bg-white dark:bg-darkcard rounded-3xl border border-dashed border-gray-200 dark:border-darkborder">
+                    <div class="w-16 h-16 bg-[#edf7f2] dark:bg-[#12452c]/40 rounded-full flex items-center justify-center mx-auto mb-3 text-[#1c6b45] dark:text-[#83c9a6]">
+                        <i class="fa-solid fa-seedling text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 dark:text-white text-sm">Belum Ada Catatan Setoran</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">
+                        Data rekaman setoran ananda akan muncul di sini segera setelah disimak dan dinilai oleh Ustadz pembimbing.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 2: KEUANGAN & REKAP TAGIHAN SPP ==================== -->
+            <div id="waliSectionKeuangan" class="hidden space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 border border-red-200 dark:border-red-900/50 shadow-xs">
+                        <p class="text-[10px] font-bold uppercase text-red-600 dark:text-red-400">Total Belum Lunas</p>
+                        <p class="text-lg font-extrabold text-red-600 dark:text-red-400 mt-0.5" id="waliKeuBelum">Rp 0</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5" id="waliKeuBelumCount">0 Tagihan</p>
+                    </div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 border border-emerald-200 dark:border-emerald-900/50 shadow-xs">
+                        <p class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">Sudah Terbayar</p>
+                        <p class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="waliKeuLunas">Rp 0</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5" id="waliKeuLunasCount">0 Tagihan</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5">
+                    <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice-dollar text-[#9a2024]"></i> Rincian Tagihan &amp; Syahriyah (SPP)
+                    </h3>
+                    <div id="waliTagihanList" class="space-y-2.5"></div>
+                </div>
+
+                <div class="bg-white dark:bg-darkcard rounded-2xl p-4 border border-gray-200 dark:border-darkborder space-y-3 shadow-xs">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-[#edf7f2] dark:bg-[#12452c]/50 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center"><i class="fa-solid fa-building-columns text-sm"></i></div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-900 dark:text-white">Informasi Pembayaran Resmi</h4>
+                            <p class="text-[11px] text-gray-500">Transfer atau Tunai di Kantor Administrasi Pondok</p>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-xl bg-gray-50 dark:bg-slate-800 text-xs space-y-1 border border-gray-100 dark:border-darkborder">
+                        <p class="text-gray-500 dark:text-gray-400">Layanan Konfirmasi Bendahara &amp; PSB:</p>
+                        <p class="font-bold text-gray-900 dark:text-white font-mono">WA Resmi: 0857-3180-4663</p>
+                        <p class="text-[11px] text-gray-500">Standar Biaya: Pendaftaran Mukim Rp 1.800.000 &bull; Syahriyah Rp 200.000/bln</p>
+                    </div>
+                    <button onclick="konfirmasiBayarWaliWa()" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white py-3 px-4 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98">
+                        <i class="fa-brands fa-whatsapp text-base"></i>
+                        <span>Konfirmasi Pembayaran via WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== TAB 3: BUKU INDUK / PROFIL SANTRI ==================== -->
+            <div id="waliSectionProfil" class="hidden space-y-4">
+                <div class="bg-white dark:bg-darkcard rounded-3xl p-5 border border-gray-200 dark:border-darkborder shadow-xs space-y-4" id="waliProfilCardContent"></div>
+            </div>
+        </div>
+
+        <!-- Sticky Bottom Navigation Bar -->
+        <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-100 dark:border-darkborder py-2 px-4 flex items-center justify-around shadow-lg max-w-md mx-auto">
+            <button onclick="switchWaliTab('hafalan')" id="navBottomHafalan" class="flex flex-col items-center gap-0.5 text-[#9a2024] dark:text-[#f29fa3] text-xs font-bold">
+                <i class="fa-solid fa-book-quran text-base"></i>
+                <span class="text-[10px]">Tahfizh</span>
+            </button>
+            <button onclick="switchWaliTab('keuangan')" id="navBottomKeuangan" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 text-xs transition">
+                <i class="fa-solid fa-wallet text-base"></i>
+                <span class="text-[10px]">Keuangan SPP</span>
+            </button>
+            <button onclick="switchWaliTab('profil')" id="navBottomProfil" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 text-xs transition">
+                <i class="fa-solid fa-id-card text-base"></i>
+                <span class="text-[10px]">Buku Induk</span>
+            </button>
+            <button onclick="logout()" class="flex flex-col items-center gap-0.5 text-red-500 hover:text-red-600 text-xs transition">
+                <i class="fa-solid fa-right-from-bracket text-base"></i>
+                <span class="text-[10px]">Keluar</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="js/wali.js"></script>
+</body>
+</html>
+
