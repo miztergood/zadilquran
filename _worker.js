@@ -1,17 +1,16 @@
 /**
+ * ==============================================================================
  * CLOUDFLARE PAGES WORKER (_worker.js)
- * Reverse Proxy & API Gateway & SPA Router untuk Zadil Quran (Sistem Manajemen Tahfidz)
+ * Reverse Proxy API & SPA Fallback Router - Zadil Quran
+ * ==============================================================================
  *
- * FUNGSI UTAMA:
- * 1. Meneruskan request /api ke Google Apps Script Web App secara aman (bypass CORS & redirect 302 Google).
- * 2. Melayani aset statis PWA/Web (HTML, CSS, JS, Gambar) melalui env.ASSETS.
- * 3. Menangani SPA Fallback Routing untuk slug URL (seperti /admin, /admin/santri, /ustadz, /wali, /menu)
- *    agar langsung merender index.html tanpa 404 Not Found.
- * 4. Menyediakan header CORS dan preflight OPTIONS otomatis.
+ * PANDUAN PENGISIAN URL GOOGLE APPS SCRIPT:
+ * Tempelkan URL Web App Deployment Apps Script Anda (yang berakhiran /exec)
+ * langsung pada variabel APPS_SCRIPT_URL di bawah ini:
  */
 
-// Target default URL Apps Script (Dapat dioverride via Cloudflare Pages Environment Variable: APPS_SCRIPT_URL)
-const DEFAULT_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_placeholder/exec';
+// >>> TEMPELKAN URL APPS SCRIPT ANDA DI SINI <<<
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_placeholder/exec';
 
 export default {
   async fetch(request, env, ctx) {
@@ -30,8 +29,8 @@ export default {
     // 3. LAYANI ASET STATIS VIA CLOUDFLARE PAGES ASSET SERVER & SPA FALLBACK
     let response = await env.ASSETS.fetch(request);
 
-    // Jika aset fisik tidak ditemukan (status 404) dan bukan file fisik (tidak memiliki ekstensi .js, .css, .png, dll)
-    // kembalikan index.html agar Client-Side Router SPA (seperti /admin, /ustadz, /menu) berjalan lancar
+    // Jika file fisik tidak ditemukan (404) dan bukan file dengan ekstensi (.js, .css, .png, dll)
+    // kembalikan index.html agar Client-Side Router SPA mengambil alih routing slug (misal: /admin, /ustadz, /menu)
     if (response.status === 404 && !url.pathname.includes('.')) {
       return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
     }
@@ -44,13 +43,16 @@ export default {
  * Proxy request ke Google Apps Script Web App
  */
 async function handleApiProxy(request, env, clientUrl) {
-  const targetBaseUrl = (env && env.APPS_SCRIPT_URL) ? env.APPS_SCRIPT_URL.trim() : DEFAULT_APPS_SCRIPT_URL;
+  // Prioritaskan Cloudflare Environment Variable jika disetel, atau gunakan APPS_SCRIPT_URL dari file ini
+  const targetBaseUrl = (env && env.APPS_SCRIPT_URL && env.APPS_SCRIPT_URL.trim() !== '')
+    ? env.APPS_SCRIPT_URL.trim()
+    : APPS_SCRIPT_URL.trim();
 
   // Jika URL masih berupa placeholder
   if (targetBaseUrl.includes('AKfycbz_placeholder')) {
     return jsonResponse({
       status: 'error',
-      message: 'APPS_SCRIPT_URL belum disetel di Cloudflare Pages Environment Variables atau _worker.js.',
+      message: 'APPS_SCRIPT_URL belum disetel di file _worker.js atau Cloudflare Pages Environment Variables.',
       code: 'UNCONFIGURED_BACKEND'
     }, 200);
   }

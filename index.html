@@ -109,9 +109,8 @@
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-emerald-500/30">Lihat Progres Anak</button>
                 </form>
 
-                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-darkborder flex justify-between items-center text-xs text-gray-400">
-                    <span>Versi Cloudflare Pages & Apps Script</span>
-                    <button type="button" onclick="openQuickApiModal()" class="text-emerald-600 hover:underline"><i class="fa-solid fa-gear mr-1"></i>Setup API</button>
+                <div class="mt-6 pt-4 border-t border-gray-100 dark:border-darkborder text-center text-xs text-gray-400">
+                    <span>Zadil Quran &bull; Sistem Pantauan Tahfidz</span>
                 </div>
             </div>
         </div>
@@ -382,19 +381,11 @@
                     <span id="apiStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium">Status API: Belum Diuji</span>
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Aplikasi ini berkomunikasi dengan Google Apps Script Web App secara transparan melalui reverse proxy Cloudflare Pages (<code>/api</code>). Anda juga dapat menyetel Web App URL kustom di bawah ini.
+                    Frontend terhubung ke backend secara transparan melalui reverse proxy Cloudflare Pages (<code>/api</code>). URL Web App Apps Script dikonfigurasi terpusat di file <code>_worker.js</code> atau Cloudflare Environment Variable <code>APPS_SCRIPT_URL</code>.
                 </p>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">URL Google Apps Script Web App Deployment (/exec)</label>
-                        <input type="text" id="settingApiUrlInput" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg text-sm font-mono focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="https://script.google.com/macros/s/.../exec">
-                        <p class="text-xs text-gray-400 mt-1">Kosongkan jika menggunakan Environment Variable <code>APPS_SCRIPT_URL</code> pada dashboard Cloudflare Pages.</p>
-                    </div>
-                    <div class="flex flex-wrap gap-3 pt-1">
-                        <button type="button" onclick="saveCustomApiUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i>Simpan Konfigurasi</button>
-                        <button type="button" onclick="testBackendConnection()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-network-wired"></i>Tes Koneksi API</button>
-                        <button type="button" onclick="initSetupDatabaseFromUI()" class="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-database"></i>Inisialisasi Database Sheets</button>
-                    </div>
+                <div class="flex flex-wrap gap-3 pt-1">
+                    <button type="button" onclick="testBackendConnection()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-network-wired"></i>Tes Koneksi API</button>
+                    <button type="button" onclick="initSetupDatabaseFromUI()" class="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-database"></i>Inisialisasi Database Sheets</button>
                 </div>
             </div>
         </div>
@@ -1038,10 +1029,6 @@
                     renderTableSantri();
                 } else if(state.currentAdminMenu === 'pengaturan') {
                     document.getElementById('inputPondokName').value = state.appName;
-                    const inputApi = document.getElementById('settingApiUrlInput');
-                    if (inputApi) {
-                        inputApi.value = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.API_URL) || '';
-                    }
                 }
             } else if (sessionData.role === 'ustadz') {
                 initSmartForm(); 
@@ -1197,18 +1184,6 @@
         }
 
         // --- PENGATURAN KONEKSI API & DATABASE ---
-        function saveCustomApiUrl() {
-            const inputApi = document.getElementById('settingApiUrlInput');
-            if (!inputApi) return;
-            const val = inputApi.value.trim();
-            saveApiUrl(val);
-            Swal.fire({
-                icon: 'success',
-                title: 'Konfigurasi Tersimpan',
-                text: val ? 'URL Google Apps Script kustom berhasil disimpan di perangkat ini.' : 'URL direset ke default proxy Cloudflare Pages (/api).'
-            });
-        }
-
         async function testBackendConnection() {
             const badge = document.getElementById('apiStatusBadge');
             if (badge) {
@@ -1258,24 +1233,6 @@
                             Swal.fire('Error', res.message, 'error');
                         }
                     } catch (err) {}
-                }
-            });
-        }
-
-        function openQuickApiModal() {
-            Swal.fire({
-                title: 'Konfigurasi Endpoint API',
-                input: 'url',
-                inputLabel: 'Masukkan Web App URL Google Apps Script (/exec):',
-                inputValue: localStorage.getItem(APP_CONFIG.STORAGE_KEYS.API_URL) || '',
-                inputPlaceholder: 'https://script.google.com/macros/s/.../exec',
-                showCancelButton: true,
-                confirmButtonText: 'Simpan',
-                cancelButtonText: 'Batal'
-            }).then((res) => {
-                if (res.isConfirmed) {
-                    saveApiUrl(res.value || '');
-                    Swal.fire('Tersimpan', 'Konfigurasi API telah diperbarui.', 'success');
                 }
             });
         }

@@ -69,7 +69,21 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
 
 ---
 
-### Langkah 2: Deploy ke Cloudflare Pages (Frontend)
+### Langkah 2: Menghubungkan Backend ke `_worker.js`
+
+URL backend Google Apps Script dikelola secara terpusat di sisi server (Edge Worker) sehingga antarmuka login frontend tetap bersih, profesional, dan aman dari konfigurasi teknis:
+
+1. Buka file [`_worker.js`](./_worker.js).
+2. Pada baris ke-12, tempelkan URL Web App Deployment Anda pada variabel `APPS_SCRIPT_URL`:
+   ```javascript
+   // >>> TEMPELKAN URL APPS SCRIPT ANDA DI SINI <<<
+   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+   ```
+3. *(Opsional)* Jika Anda mendeploy via Cloudflare Pages Dashboard, Anda juga dapat menyetelnya via **Settings** > **Environment variables** dengan nama `APPS_SCRIPT_URL`.
+
+---
+
+### Langkah 3: Deploy ke Cloudflare Pages (Frontend)
 
 1. Buka dashboard [Cloudflare Dashboard](https://dash.cloudflare.com/) > Masuk ke menu **Workers & Pages**.
 2. Klik tombol **Create Application** > Pilih tab **Pages** > **Connect to Git**.
@@ -78,24 +92,12 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
    - **Framework preset**: `None`
    - **Build command**: *(Biarkan kosong)*
    - **Build output directory**: *(Biarkan kosong atau isi `/`)*
-5. Pada bagian **Environment variables (advanced)**, tambahkan variabel berikut:
-   - **Variable name**: `APPS_SCRIPT_URL`
-   - **Value**: Masukkan Web App URL dari Langkah 1 (akhiran `/exec`).
-6. Klik **Save and Deploy**.
-7. Dalam beberapa detik, situs Anda sudah live di subdomain Cloudflare Pages (contoh: `https://zadilquran.pages.dev`).
-
----
-
-### Langkah 3: Alternatif Konfigurasi Cepat dari Tampilan Web
-
-Jika Anda tidak menyetel environment variable di Cloudflare Pages, Anda tetap dapat mengatur URL API langsung melalui antarmuka web:
-1. Buka situs yang sudah terdeploy (misal: `https://zadilquran.pages.dev`).
-2. Login sebagai Superadmin:
+5. Klik **Save and Deploy**.
+6. Dalam beberapa detik, situs Anda sudah live di subdomain Cloudflare Pages (contoh: `https://zadilquran.pages.dev`).
+7. Login awal sebagai Superadmin:
    - **Username**: `admin`
    - **Password**: `admin`
-3. Masuk ke menu **Pengaturan** (atau slug `/admin/pengaturan`).
-4. Pada kartu **Backend Google Apps Script & Cloudflare Pages**, masukkan URL `/exec` Anda ke input form.
-5. Klik **Simpan Konfigurasi**, lalu klik **Tes Koneksi API** untuk memastikan status berubah menjadi `Terhubung (Online)`.
+8. Buka menu **Pengaturan** (`/admin/pengaturan`) dan klik tombol **Tes Koneksi API** untuk memverifikasi status backend sudah `Terhubung (Online)`.
 
 ---
 
