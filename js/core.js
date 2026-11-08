@@ -222,6 +222,397 @@ function formatRupiah(angka) {
     return "Rp " + num.toLocaleString('id-ID');
 }
 
+/**
+ * Konversi angka nominal ke kalimat terbilang Bahasa Indonesia
+ */
+function angkaKeTerbilang(nilai) {
+    const n = Math.abs(Math.floor(Number(nilai) || 0));
+    if (n === 0) return 'Nol Rupiah';
+
+    const satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+
+    function terbilangBagi(x) {
+        if (x < 12) return satuan[x];
+        if (x < 20) return terbilangBagi(x - 10) + ' Belas';
+        if (x < 100) return terbilangBagi(Math.floor(x / 10)) + ' Puluh ' + terbilangBagi(x % 10);
+        if (x < 200) return 'Seratus ' + terbilangBagi(x - 100);
+        if (x < 1000) return terbilangBagi(Math.floor(x / 100)) + ' Ratus ' + terbilangBagi(x % 100);
+        if (x < 2000) return 'Seribu ' + terbilangBagi(x - 1000);
+        if (x < 1000000) return terbilangBagi(Math.floor(x / 1000)) + ' Ribu ' + terbilangBagi(x % 1000);
+        if (x < 1000000000) return terbilangBagi(Math.floor(x / 1000000)) + ' Juta ' + terbilangBagi(x % 1000000);
+        if (x < 1000000000000) return terbilangBagi(Math.floor(x / 1000000000)) + ' Miliar ' + terbilangBagi(x % 1000000000);
+        return '';
+    }
+
+    return (terbilangBagi(n).trim().replace(/\s+/g, ' ') + ' Rupiah');
+}
+
+/**
+ * Generator Kwitansi Pembayaran Resmi (PDF / Printable View)
+ * Menampilkan dokumen kwitansi standar profesional lengkap dengan Kop Lembaga,
+ * Nomor Kwitansi, Terbilang, Rincian, dan Stempel/Paraf Bendahara.
+ */
+function cetakKwitansiResmi(tagihan, santri) {
+    if (!tagihan) {
+        AppNotify.toast('Data tagihan tidak ditemukan', 'warning');
+        return;
+    }
+
+    const s = santri || {};
+    const noKwitansi = `KW-${tagihan.ID_Tagihan || Date.now()}`;
+    const tglCetak = tagihan.Tgl_Bayar || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const nominal = Number(tagihan.Nominal) || 0;
+    const terbilangStr = angkaKeTerbilang(nominal);
+
+    const printHtml = `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kwitansi Pembayaran - ${noKwitansi}</title>
+    <style>
+        @page {
+            size: A5 landscape;
+            margin: 12mm 15mm;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            color: #222;
+        }
+        body {
+            background-color: #fff;
+            margin: 0;
+            padding: 10px;
+        }
+        .kwitansi-wrapper {
+            border: 2px solid #731417;
+            padding: 20px 24px;
+            position: relative;
+            background: #fff;
+            max-width: 820px;
+            margin: 0 auto;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-25deg);
+            font-size: 72px;
+            font-weight: 900;
+            color: rgba(28, 107, 69, 0.08);
+            letter-spacing: 6px;
+            pointer-events: none;
+            user-select: none;
+            text-transform: uppercase;
+        }
+        .header-kop {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #9a2024;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+        }
+        .kop-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .kop-logo {
+            width: 58px;
+            height: 58px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            object-fit: cover;
+        }
+        .kop-text h2 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            color: #731417;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .kop-text p {
+            margin: 2px 0 0;
+            font-size: 10.5px;
+            color: #555;
+            line-height: 1.35;
+        }
+        .kop-right {
+            text-align: right;
+        }
+        .kop-badge {
+            display: inline-block;
+            background: #edf7f2;
+            color: #1c6b45;
+            border: 1px solid #b2dfc8;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kop-no {
+            font-size: 11px;
+            font-family: monospace;
+            color: #444;
+            margin-top: 4px;
+            font-weight: bold;
+        }
+        .title-bar {
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .title-bar h1 {
+            display: inline-block;
+            margin: 0;
+            font-size: 15px;
+            font-weight: 800;
+            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1.5px solid #111;
+            padding-bottom: 2px;
+        }
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 14px;
+        }
+        .content-table td {
+            padding: 5px 4px;
+            vertical-align: top;
+        }
+        .content-table td.col-label {
+            width: 26%;
+            color: #444;
+            font-weight: 600;
+        }
+        .content-table td.col-colon {
+            width: 3%;
+            text-align: center;
+            font-weight: bold;
+        }
+        .content-table td.col-val {
+            width: 71%;
+            color: #111;
+            font-weight: 500;
+        }
+        .terbilang-box {
+            background-color: #faf5f5;
+            border-left: 3px solid #9a2024;
+            padding: 6px 10px;
+            font-style: italic;
+            font-weight: 600;
+            color: #731417;
+            font-size: 11.5px;
+            border-radius: 0 4px 4px 0;
+        }
+        .footer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+        .nominal-badge {
+            border: 2px dashed #1c6b45;
+            background: #edf7f2;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .nominal-badge .lbl {
+            font-size: 9.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #1c6b45;
+            letter-spacing: 0.5px;
+        }
+        .nominal-badge .val {
+            font-size: 19px;
+            font-weight: 900;
+            color: #12452c;
+            font-family: monospace;
+            margin-top: 2px;
+        }
+        .ttd-box {
+            text-align: center;
+            width: 220px;
+        }
+        .ttd-box .tgl {
+            font-size: 11px;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        .ttd-box .role {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+        }
+        .ttd-space {
+            height: 48px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stempel-lunas {
+            display: inline-block;
+            border: 2px solid #1c6b45;
+            color: #1c6b45;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 3px 12px;
+            border-radius: 4px;
+            transform: rotate(-7deg);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .ttd-name {
+            font-size: 11.5px;
+            font-weight: 700;
+            border-bottom: 1px solid #333;
+            display: inline-block;
+            padding-bottom: 2px;
+            color: #111;
+        }
+        .action-bar {
+            text-align: center;
+            margin-top: 18px;
+        }
+        .btn-print {
+            background: #9a2024;
+            color: #fff;
+            border: none;
+            padding: 9px 20px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+        .btn-print:hover {
+            background: #731417;
+        }
+        @media print {
+            body {
+                padding: 0;
+            }
+            .kwitansi-wrapper {
+                border-width: 1.5px;
+            }
+            .action-bar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="kwitansi-wrapper">
+        <div class="watermark">LUNAS</div>
+
+        <!-- Kop Lembaga -->
+        <div class="header-kop">
+            <div class="kop-left">
+                <img src="${window.location.origin}/logo.jpg" alt="Logo" class="kop-logo" onerror="this.style.display='none'">
+                <div class="kop-text">
+                    <h2>Pondok Pesantren Tahfizh Zadil Qur'an</h2>
+                    <p>
+                        Akta Notaris Muntafiah, S.H., M.Kn &bull; AHU-0023909.AH.01.12. Tahun 2020<br>
+                        Jl. Raya Penambangan, Ds. Penambangan, Kec. Semanding, Kab. Tuban, Jatim (62381)
+                    </p>
+                </div>
+            </div>
+            <div class="kop-right">
+                <span class="kop-badge">Bukti Pembayaran Sah</span>
+                <div class="kop-no">${noKwitansi}</div>
+            </div>
+        </div>
+
+        <div class="title-bar">
+            <h1>Kwitansi Pembayaran</h1>
+        </div>
+
+        <!-- Rincian Kwitansi -->
+        <table class="content-table">
+            <tr>
+                <td class="col-label">Telah Terima Dari</td>
+                <td class="col-colon">:</td>
+                <td class="col-val"><strong>${s.Nama_Wali || s.Nama_Ayah || 'Orang Tua / Wali Santri'}</strong></td>
+            </tr>
+            <tr>
+                <td class="col-label">Nama Santri (ID)</td>
+                <td class="col-colon">:</td>
+                <td class="col-val">${s.Nama_Santri || '-'} <strong>(${tagihan.ID_Santri || '-'})</strong></td>
+            </tr>
+            <tr>
+                <td class="col-label">Uang Sejumlah</td>
+                <td class="col-colon">:</td>
+                <td class="col-val">
+                    <div class="terbilang-box"># ${terbilangStr} #</div>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-label">Untuk Pembayaran</td>
+                <td class="col-colon">:</td>
+                <td class="col-val"><strong>${tagihan.Judul_Tagihan}</strong> [${tagihan.Kategori || 'Syahriyah'}]</td>
+            </tr>
+            <tr>
+                <td class="col-label">Metode Pembayaran</td>
+                <td class="col-colon">:</td>
+                <td class="col-val">${tagihan.Metode_Bayar || 'Tunai / Kas Pondok'} ${tagihan.Catatan ? '&bull; <em>(' + tagihan.Catatan + ')</em>' : ''}</td>
+            </tr>
+        </table>
+
+        <!-- Footer Nominal & Tanda Tangan -->
+        <div class="footer-row">
+            <div class="nominal-badge">
+                <div class="lbl">Jumlah Pembayaran</div>
+                <div class="val">${formatRupiah(nominal)}</div>
+            </div>
+
+            <div class="ttd-box">
+                <div class="tgl">Tuban, ${tglCetak}</div>
+                <div class="role">Bendahara Pesantren</div>
+                <div class="ttd-space">
+                    <span class="stempel-lunas">&bull; LUNAS &bull;</span>
+                </div>
+                <div class="ttd-name">Admin Keuangan PPTQ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button onclick="window.print()" class="btn-print">&#128438; Cetak / Simpan sebagai PDF</button>
+    </div>
+
+    <script>
+        // Otomatis memicu dialog print/PDF setelah dokumen siap
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 400);
+        };
+    </script>
+</body>
+</html>
+    `;
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    } else {
+        AppNotify.toast('Pop-up terblokir. Izinkan pop-up peramban untuk mengunduh kwitansi PDF.', 'warning');
+    }
+}
+
 function formatWaNumber(hp) {
     let clean = String(hp || '').replace(/[^0-9]/g, '');
     if (clean.startsWith('0')) clean = '62' + clean.slice(1);

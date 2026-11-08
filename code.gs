@@ -185,7 +185,7 @@ const SHEET_CONFIG = {
     "Nama_Ibu", "Pekerjaan_Ibu", "Pendidikan_Ibu",
     "Nama_Wali", "No_HP_Wali", "ID_Ustadz", "Status", "Timestamp"
   ],
-  "Data_Setoran": ["ID_Setoran", "ID_Santri", "ID_Ustadz", "Jenis", "Juz", "Surah", "SurahNo", "Ayat", "Halaman", "Predikat", "Catatan", "Tanggal"],
+  "Data_Setoran": ["ID_Setoran", "ID_Santri", "ID_Ustadz", "Tingkatan", "TM", "Jenis", "Juz", "Surah", "SurahNo", "Ayat", "Halaman", "Predikat", "Catatan", "Tanggal", "ParafUstadz"],
   "Data_Tagihan": ["ID_Tagihan", "ID_Santri", "Kategori", "Judul_Tagihan", "Nominal", "Jatuh_Tempo", "Status", "Tgl_Bayar", "Metode_Bayar", "Catatan", "Timestamp"]
 };
 
@@ -600,20 +600,51 @@ function deleteDataGlobal(token, sheetName, id) {
   });
 }
 
-// --- INPUT SETORAN TAHFIZH ---
+// --- INPUT SETORAN TAHFIZH & MUTABA'AH HARIAN ---
 function saveSetoran(token, dataSetoran) {
-  const auth = checkRole(token, ["ustadz"]);
+  const auth = checkRole(token, ["ustadz", "superadmin"]);
   if (auth.status === "error") return auth;
 
   return safeExecute(function() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Setoran");
+    if (!sheet) return createResponse(false, null, "Sheet Data_Setoran tidak ditemukan.");
+
+    // Pastikan kolom mutaba'ah terbaru tersedia secara non-destruktif
+    const expectedHeaders = SHEET_CONFIG["Data_Setoran"];
+    const lastCol = Math.max(sheet.getLastColumn(), 1);
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0] || [];
+    expectedHeaders.forEach(function(col) {
+      if (headers.indexOf(col) === -1) {
+        const nextCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, nextCol).setValue(col).setBackground("#9a2024").setFontColor("white").setFontWeight("bold");
+        headers.push(col);
+      }
+    });
+
     const idSetoran = "SET-" + new Date().getTime();
-    sheet.appendRow([
-      idSetoran, dataSetoran.santriId, auth.data.id, dataSetoran.type, 
-      dataSetoran.juz, dataSetoran.surah, dataSetoran.surahNo, dataSetoran.ayat, 
-      dataSetoran.halaman || "-", dataSetoran.predikat, dataSetoran.catatan || "", dataSetoran.date
-    ]);
-    return createResponse(true, null, "Setoran hafalan berhasil disimpan!");
+    const rowObj = {
+      "ID_Setoran": idSetoran,
+      "ID_Santri": dataSetoran.santriId,
+      "ID_Ustadz": auth.data.id,
+      "Tingkatan": dataSetoran.tingkatan || "Al-Qur'an",
+      "TM": dataSetoran.tm || "-",
+      "Jenis": dataSetoran.type || "Ziyadah",
+      "Juz": dataSetoran.juz || "-",
+      "Surah": dataSetoran.surah || "-",
+      "SurahNo": dataSetoran.surahNo || "",
+      "Ayat": dataSetoran.ayat || "-",
+      "Halaman": dataSetoran.halaman || "-",
+      "Predikat": dataSetoran.predikat || "Mumtaz",
+      "Catatan": dataSetoran.catatan || "",
+      "Tanggal": dataSetoran.date || Utilities.formatDate(new Date(), "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
+      "ParafUstadz": dataSetoran.parafUstadz || auth.data.name || "Ustadz Pembimbing"
+    };
+
+    const newRow = headers.map(function(h) {
+      return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
+    });
+    sheet.appendRow(newRow);
+    return createResponse(true, { idSetoran: idSetoran }, "Setoran mutaba'ah harian berhasil disimpan!");
   });
 }
 

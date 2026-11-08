@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workspace Ustadz - Zadil Quran</title>
+    <title>Workspace Ustadz - Buku Mutaba'ah Harian Zadil Qur'an</title>
     
     <!-- PWA Meta Tags & Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -57,7 +57,7 @@
 
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
                 <div class="flex items-center gap-3 w-full p-3 rounded-xl transition cursor-pointer text-sm bg-[#9a2024] text-white shadow-inner font-semibold">
-                    <i class="fa-solid fa-pen-clip w-5 text-center"></i> <span>Input Setoran</span>
+                    <i class="fa-solid fa-book-open-reader w-5 text-center"></i> <span>Mutaba'ah Setoran</span>
                 </div>
                 <a href="index.html" class="flex items-center gap-3 w-full p-3 rounded-xl transition cursor-pointer text-sm text-white/80 hover:bg-white/10">
                     <i class="fa-solid fa-globe w-5 text-center"></i> <span>Beranda Pesantren</span>
@@ -86,103 +86,218 @@
             </header>
 
             <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative" id="contentArea">
-                <div class="mb-6">
-                    <h2 class="text-2xl font-bold">Workspace Ustadz</h2>
-                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kartu Pintar Input Setoran &amp; Riwayat Santri Binaan</p>
+                <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Buku Mutaba'ah Harian Santri</h2>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Pencatatan Ziyadah, Muroja'ah &amp; Binnadhor (Al-Qur'an &amp; Jilid)</p>
+                    </div>
+                    <div class="inline-flex items-center gap-2 bg-[#edf7f2] dark:bg-[#12452c]/40 border border-[#b2dfc8] dark:border-[#12452c] px-3.5 py-2 rounded-xl text-xs font-semibold text-[#1c6b45] dark:text-[#83c9a6] self-start">
+                        <i class="fa-solid fa-user-check"></i>
+                        <span>Pengampu: <strong id="parafUstadzBadge">Ustadz</strong></span>
+                    </div>
                 </div>
+
                 <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                    <!-- KOLOM KIRI: FORMULIR MUTABA'AH PINTAR -->
                     <div class="xl:col-span-5">
-                        <div class="bg-white dark:bg-darkcard rounded-3xl shadow-lg border border-gray-100 dark:border-darkborder overflow-hidden sticky top-6">
+                        <div class="bg-white dark:bg-darkcard rounded-3xl shadow-md border border-gray-200 dark:border-darkborder overflow-hidden sticky top-6">
                             <div class="p-4 bg-[#fdf2f2] dark:bg-[#480a0c]/40 border-b border-[#f9c5c7] dark:border-[#731417]/50 flex items-center justify-between">
-                                <span class="font-bold text-[#9a2024] dark:text-[#f29fa3] text-sm flex items-center gap-2"><i class="fa-solid fa-pen-nib"></i> Form Input Setoran</span>
-                                <span class="text-xs bg-[#1c6b45] text-white px-2.5 py-0.5 rounded-full font-medium">Smart Assist</span>
+                                <span class="font-bold text-[#9a2024] dark:text-[#f29fa3] text-sm flex items-center gap-2">
+                                    <i class="fa-solid fa-pen-nib"></i> Lembar Input Mutaba'ah Harian
+                                </span>
+                                <span class="text-[11px] bg-[#1c6b45] text-white px-2.5 py-0.5 rounded-full font-bold">Smart Assist</span>
                             </div>
 
                             <form id="formSmartSetoran" onsubmit="saveSetoran(event)" class="p-5 space-y-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tanggal &amp; Jam</label>
-                                    <input type="datetime-local" id="smartDate" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none" required>
+                                <!-- Baris 1: Tanggal & TM (Tatap Muka) -->
+                                <div class="grid grid-cols-12 gap-3">
+                                    <div class="col-span-7">
+                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tanggal &amp; Jam</label>
+                                        <input type="datetime-local" id="smartDate" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#9a2024] outline-none" required>
+                                    </div>
+                                    <div class="col-span-5">
+                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1" title="Nomor Tatap Muka / Sesi Pertemuan">Tatap Muka (TM)</label>
+                                        <input type="text" id="smartTM" placeholder="Contoh: TM-1" value="TM-1" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs sm:text-sm font-bold text-[#9a2024] dark:text-[#f29fa3] focus:ring-2 focus:ring-[#9a2024] outline-none" required>
+                                    </div>
                                 </div>
 
+                                <!-- Pilih Santri Binaan -->
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Santri Binaan</label>
                                     <select id="smartSantri" required placeholder="Cari nama santri..."></select>
                                 </div>
 
+                                <!-- Smart Pin Lanjutan Terakhir -->
                                 <div id="smartPinContainer" class="hidden bg-[#edf7f2] dark:bg-[#092316]/50 border border-[#b2dfc8] dark:border-[#12452c] rounded-2xl p-3 flex items-center justify-between gap-3">
                                     <div class="flex items-center gap-2.5 overflow-hidden">
                                         <i class="fa-solid fa-thumbtack text-[#1c6b45] dark:text-[#83c9a6] transform -rotate-45"></i>
                                         <span class="text-xs text-[#1c6b45] dark:text-[#83c9a6] truncate font-medium" id="smartPinText">Lanjutan Terakhir...</span>
                                     </div>
-                                    <button type="button" onclick="applySmartPin()" class="px-2.5 py-1 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-lg text-xs font-medium whitespace-nowrap shadow-xs transition">Pakai</button>
+                                    <button type="button" onclick="applySmartPin()" class="px-2.5 py-1 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-lg text-xs font-bold whitespace-nowrap shadow-xs transition">Gunakan</button>
                                 </div>
 
+                                <!-- 1. TINGKATAN SANTRI (Al-Qur'an vs Jilid) -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Jenis Setoran</label>
-                                    <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
-                                        <button type="button" id="btnTabBaru" onclick="switchSmartTab('Hafalan Baru')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-secondary-active">Hafalan Baru</button>
-                                        <button type="button" id="btnTabMurojaah" onclick="switchSmartTab('Murojaah')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive ml-2">Muroja'ah</button>
+                                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">1. Tingkatan Bacaan</label>
+                                    <div class="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+                                        <button type="button" id="btnTingkatQuran" onclick="switchTingkatan('Al-Qur\'an')" class="py-2 px-3 rounded-lg text-xs font-bold transition bg-[#9a2024] text-white shadow-xs flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-book-quran"></i>
+                                            <span>Al-Qur'an (30 Juz)</span>
+                                        </button>
+                                        <button type="button" id="btnTingkatJilid" onclick="switchTingkatan('Jilid')" class="py-2 px-3 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5">
+                                            <i class="fa-solid fa-book-open"></i>
+                                            <span>Jilid / Tahsin</span>
+                                        </button>
                                     </div>
-                                    <input type="hidden" id="smartType" value="Hafalan Baru">
+                                    <input type="hidden" id="smartTingkatan" value="Al-Qur'an">
                                 </div>
 
-                                <div class="grid grid-cols-12 gap-3">
-                                    <div class="col-span-5">
-                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Juz</label>
-                                        <select id="smartJuz" onchange="populateSurat()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
-                                            <option value="all">Semua</option>
-                                        </select>
+                                <!-- 2. PILAR KATEGORI SETORAN (Ziyadah, Murojaah, Binnadhor) -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">2. Kategori Setoran</label>
+                                    <div class="grid grid-cols-3 gap-1.5 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
+                                        <button type="button" id="btnTabZiyadah" onclick="switchSmartTab('Ziyadah')" class="py-2 px-2 rounded-lg text-xs font-bold transition bg-[#1c6b45] text-white shadow-xs text-center">
+                                            <i class="fa-solid fa-sparkles mr-1"></i>Ziyadah
+                                            <span class="block text-[9px] font-normal opacity-90">Hafalan Baru</span>
+                                        </button>
+                                        <button type="button" id="btnTabMurojaah" onclick="switchSmartTab('Murojaah')" class="py-2 px-2 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 text-center">
+                                            <i class="fa-solid fa-rotate mr-1"></i>Muroja'ah
+                                            <span class="block text-[9px] font-normal opacity-80">Pengulangan</span>
+                                        </button>
+                                        <button type="button" id="btnTabBinnadhor" onclick="switchSmartTab('Binnadhor')" class="py-2 px-2 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 text-center">
+                                            <i class="fa-solid fa-eye mr-1"></i>Binnadhor
+                                            <span class="block text-[9px] font-normal opacity-80">Lihat Mushaf</span>
+                                        </button>
                                     </div>
-                                    <div class="col-span-7">
-                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Surat</label>
-                                        <select id="smartSurat" required placeholder="Pilih surat..."></select>
-                                    </div>
+                                    <input type="hidden" id="smartType" value="Ziyadah">
                                 </div>
 
-                                <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-gray-100 dark:border-darkborder space-y-3">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cakupan Ayat</span>
-                                        <label class="flex items-center gap-1.5 cursor-pointer">
-                                            <input type="checkbox" id="chkFullSurat" onchange="toggleFullSurat()" class="rounded text-[#9a2024] focus:ring-[#9a2024]" disabled>
-                                            <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">1 Surat Penuh</span>
-                                        </label>
+                                <!-- 3A. PANEL INPUT MODE AL-QUR'AN -->
+                                <div id="panelInputQuran" class="space-y-3">
+                                    <div class="grid grid-cols-12 gap-3">
+                                        <div class="col-span-5">
+                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Juz</label>
+                                            <select id="smartJuz" onchange="populateSurat()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                                <option value="all">Semua</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-span-7">
+                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Surat Al-Qur'an</label>
+                                            <select id="smartSurat" placeholder="Pilih surat..."></select>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <input type="number" id="smartAyatStart" placeholder="Mulai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none text-center font-bold" disabled required>
-                                        <span class="text-gray-400 font-bold">-</span>
-                                        <input type="number" id="smartAyatEnd" placeholder="Sampai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none text-center font-bold" disabled required>
-                                    </div>
-                                </div>
 
-                                <div class="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Halaman Mushaf</label>
-                                        <input type="text" id="smartHal" placeholder="Contoh: 582" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Penilaian</label>
-                                        <div class="grid grid-cols-3 gap-1 pt-0.5">
-                                            <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Lancar" checked class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-[#1c6b45] peer-checked:text-white transition">Lancar</div></label>
-                                            <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Kurang Lancar" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-yellow-500 peer-checked:text-white transition">Kurang</div></label>
-                                            <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Ulang" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-red-500 peer-checked:text-white transition">Ulang</div></label>
+                                    <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-gray-100 dark:border-darkborder space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cakupan Ayat</span>
+                                            <label class="flex items-center gap-1.5 cursor-pointer">
+                                                <input type="checkbox" id="chkFullSurat" onchange="toggleFullSurat()" class="rounded text-[#9a2024] focus:ring-[#9a2024]" disabled>
+                                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">1 Surat Penuh</span>
+                                            </label>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" id="smartAyatStart" placeholder="Mulai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none text-center font-bold" disabled>
+                                            <span class="text-gray-400 font-bold">-</span>
+                                            <input type="number" id="smartAyatEnd" placeholder="Sampai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none text-center font-bold" disabled>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Catatan Ustadz (Opsional)</label>
-                                    <input type="text" id="smartCatatan" placeholder="Contoh: Tajwid makhraj nun mati diperhatikan" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                <!-- 3B. PANEL INPUT MODE JILID (TAHSIN / UMMI / IQRO) -->
+                                <div id="panelInputJilid" class="hidden space-y-3">
+                                    <div class="grid grid-cols-12 gap-3">
+                                        <div class="col-span-5">
+                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tingkat Jilid</label>
+                                            <select id="smartJilidLevel" onchange="syncJilidDefaultName()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                                <option value="Jilid 1">Jilid 1</option>
+                                                <option value="Jilid 2">Jilid 2</option>
+                                                <option value="Jilid 3">Jilid 3</option>
+                                                <option value="Jilid 4">Jilid 4</option>
+                                                <option value="Jilid 5">Jilid 5</option>
+                                                <option value="Jilid 6">Jilid 6</option>
+                                                <option value="Ghorib">Ghorib Al-Qur'an</option>
+                                                <option value="Tajwid">Tajwid Dasar</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-span-7">
+                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nama Buku / Materi Jilid</label>
+                                            <input type="text" id="smartJilidNama" value="Metode Ummi Jilid 1" placeholder="Contoh: Metode Ummi Jilid 1" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Baris / Pokok Bahasan</label>
+                                        <input type="text" id="smartJilidBaris" placeholder="Contoh: Baris 1 - 5 / Makhraj Huruf Halqi" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                    </div>
                                 </div>
 
-                                <button type="submit" class="w-full bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold py-3 rounded-2xl transition shadow-lg shadow-[#9a2024]/20 text-sm flex items-center justify-center gap-2 active:scale-98"><i class="fa-solid fa-floppy-disk"></i> Simpan Setoran</button>
+                                <!-- 4. HALAMAN & NILAI (MUMTAZ / JAYYID / DHOIF) -->
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Halaman Mushaf / Buku Jilid</label>
+                                        <input type="text" id="smartHal" placeholder="Contoh: Hal 582 (atau Hal 15)" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nilai Evaluasi (Standar Mutaba'ah)</label>
+                                        <div class="grid grid-cols-3 gap-2 pt-0.5">
+                                            <label class="cursor-pointer text-center">
+                                                <input type="radio" name="smartPredikat" value="Mumtaz" checked class="peer sr-only">
+                                                <div class="py-2 px-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-[#1c6b45] peer-checked:text-white peer-checked:border-[#1c6b45] transition">
+                                                    🌟 Mumtaz
+                                                    <span class="block text-[9px] font-normal opacity-85">Lancar (A)</span>
+                                                </div>
+                                            </label>
+                                            <label class="cursor-pointer text-center">
+                                                <input type="radio" name="smartPredikat" value="Jayyid" class="peer sr-only">
+                                                <div class="py-2 px-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500 transition">
+                                                    👍 Jayyid
+                                                    <span class="block text-[9px] font-normal opacity-85">Cukup (B)</span>
+                                                </div>
+                                            </label>
+                                            <label class="cursor-pointer text-center">
+                                                <input type="radio" name="smartPredikat" value="Dhoif" class="peer sr-only">
+                                                <div class="py-2 px-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-red-600 peer-checked:text-white peer-checked:border-red-600 transition">
+                                                    🔁 Dhoif
+                                                    <span class="block text-[9px] font-normal opacity-85">Ulang (C)</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 5. CATATAN USTADZ -->
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Catatan Ustadz / Ustadzah (Opsional)</label>
+                                    <input type="text" id="smartCatatan" placeholder="Contoh: Perhatikan dengung ikhfa dan panjang mad wajib" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
+                                </div>
+
+                                <button type="submit" class="w-full bg-[#9a2024] hover:bg-[#871a1e] text-white font-bold py-3.5 rounded-2xl transition shadow-md text-sm flex items-center justify-center gap-2 active:scale-98">
+                                    <i class="fa-solid fa-floppy-disk"></i>
+                                    <span>Simpan &amp; Paraf Mutaba'ah Harian</span>
+                                </button>
                             </form>
                         </div>
                     </div>
 
-                    <div class="xl:col-span-7">
-                        <div class="bg-white dark:bg-darkcard rounded-3xl shadow-xs border border-gray-100 dark:border-darkborder p-5">
-                            <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#9a2024]"></i> Riwayat Setoran Terakhir Anda</h3>
+                    <!-- KOLOM KANAN: TABEL / RIWAYAT MUTABA'AH HARIAN -->
+                    <div class="xl:col-span-7 space-y-4">
+                        <div class="bg-white dark:bg-darkcard rounded-3xl shadow-xs border border-gray-200 dark:border-darkborder p-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-gray-100 dark:border-darkborder">
+                                <h3 class="font-bold text-base sm:text-lg flex items-center gap-2 text-gray-900 dark:text-white">
+                                    <i class="fa-solid fa-clock-rotate-left text-[#9a2024]"></i>
+                                    <span>Rekapitulasi Mutaba'ah Harian Binaan</span>
+                                </h3>
+                                <span class="text-xs text-gray-400" id="ustadzHistoryCount">0 Catatan</span>
+                            </div>
                             <div id="listSetoranUstadz" class="space-y-3"></div>
+                        </div>
+
+                        <!-- Kutipan Hadits Buku Mutaba'ah -->
+                        <div class="bg-[#edf7f2] dark:bg-[#12452c]/30 border border-[#b2dfc8] dark:border-[#12452c] rounded-2xl p-4 text-center">
+                            <p class="text-xs sm:text-sm font-semibold text-[#1c6b45] dark:text-[#83c9a6] italic">
+                                "Bacalah Al-Qur'an karena dia akan datang pada hari kiamat sebagai penolong bagi pembacanya."
+                            </p>
+                            <p class="text-[11px] font-bold text-gray-600 dark:text-gray-400 mt-1">(HR. Muslim)</p>
                         </div>
                     </div>
                 </div>
@@ -194,4 +309,3 @@
     <script src="js/ustadz.js"></script>
 </body>
 </html>
-

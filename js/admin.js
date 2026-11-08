@@ -553,6 +553,7 @@ function renderTableTagihan() {
                                 <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#1c6b45] hover:bg-[#155436] text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Tandai Lunas"><i class="fa-solid fa-check"></i> Lunas</button>
                                 <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-lg transition shadow-xs" title="Kirim Pengingat WA"><i class="fa-brands fa-whatsapp"></i></button>
                             ` : `
+                                <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6] rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Cetak Kwitansi PDF"><i class="fa-solid fa-file-invoice"></i> Kwitansi</button>
                                 <button onclick="batalLunasTagihan('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-gray-300 rounded-lg text-xs font-semibold transition" title="Batalkan Status Lunas"><i class="fa-solid fa-rotate-left"></i> Batal</button>
                             `}
                             <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 rounded-lg transition shadow-xs" title="Hapus Tagihan"><i class="fa-solid fa-trash"></i></button>
@@ -682,6 +683,13 @@ async function deleteTagihanAction(idTagihan, judul) {
         const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
         apiCall('deleteTagihan', token, idTagihan).then(res => handleRes(res, null));
     }
+}
+
+function cetakKwitansiAdmin(idTagihan) {
+    const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
+    if (!t) return;
+    const s = (state.santri || []).find(x => x.ID_Santri === t.ID_Santri);
+    cetakKwitansiResmi(t, s);
 }
 
 function kirimWaTagihan(idTagihan) {

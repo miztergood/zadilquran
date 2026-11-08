@@ -1,9 +1,10 @@
 /**
  * ============================================================================
- * ZADIL QURAN - USTADZ WORKSPACE MODULE (js/ustadz.js)
+ * ZADIL QURAN - USTADZ WORKSPACE & MUTABA'AH MODULE (js/ustadz.js)
  * Digunakan oleh ustadz.html
- * Mencakup: Database 114 Surat Al-Qur'an, Smart Form Setoran, Smart Pin,
- * dan Riwayat Setoran Harian.
+ * Mencakup: Database 114 Surat Al-Qur'an, Mode Al-Qur'an & Jilid,
+ * 3 Pilar Setoran (Ziyadah, Murojaah, Binnadhor), Tatap Muka (TM),
+ * Penilaian Standar (Mumtaz, Jayyid, Dhoif), dan Paraf Ustadz.
  * ============================================================================
  */
 
@@ -48,6 +49,59 @@ function initSmartForm() {
     selJuz.innerHTML = '<option value="all">Semua</option>';
     for (let i = 1; i <= 30; i++) selJuz.innerHTML += `<option value="${i}">Juz ${i}</option>`;
     populateSurat();
+}
+
+function switchTingkatan(tingkat) {
+    document.getElementById('smartTingkatan').value = tingkat;
+    const isQuran = tingkat === "Al-Qur'an";
+
+    const btnQuran = document.getElementById('btnTingkatQuran');
+    const btnJilid = document.getElementById('btnTingkatJilid');
+    const panelQuran = document.getElementById('panelInputQuran');
+    const panelJilid = document.getElementById('panelInputJilid');
+
+    const activeClass = "py-2 px-3 rounded-lg text-xs font-bold transition bg-[#9a2024] text-white shadow-xs flex items-center justify-center gap-1.5";
+    const inactiveClass = "py-2 px-3 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5";
+
+    if (btnQuran) btnQuran.className = isQuran ? activeClass : inactiveClass;
+    if (btnJilid) btnJilid.className = !isQuran ? activeClass : inactiveClass;
+
+    if (panelQuran) panelQuran.classList.toggle('hidden', !isQuran);
+    if (panelJilid) panelJilid.classList.toggle('hidden', isQuran);
+}
+
+function syncJilidDefaultName() {
+    const level = document.getElementById('smartJilidLevel').value;
+    const inputNama = document.getElementById('smartJilidNama');
+    if (inputNama) {
+        if (level === 'Ghorib') inputNama.value = 'Materi Ghorib Al-Qur\'an';
+        else if (level === 'Tajwid') inputNama.value = 'Materi Tajwid Dasar';
+        else inputNama.value = `Metode Ummi ${level}`;
+    }
+}
+
+function switchSmartTab(type) {
+    document.getElementById('smartType').value = type;
+    const btnZiyadah = document.getElementById('btnTabZiyadah');
+    const btnMurojaah = document.getElementById('btnTabMurojaah');
+    const btnBinnadhor = document.getElementById('btnTabBinnadhor');
+
+    const inactive = "py-2 px-2 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 text-center";
+    if (btnZiyadah) {
+        btnZiyadah.className = type === 'Ziyadah'
+            ? "py-2 px-2 rounded-lg text-xs font-bold transition bg-[#1c6b45] text-white shadow-xs text-center"
+            : inactive;
+    }
+    if (btnMurojaah) {
+        btnMurojaah.className = type === 'Murojaah'
+            ? "py-2 px-2 rounded-lg text-xs font-bold transition bg-[#9a2024] text-white shadow-xs text-center"
+            : inactive;
+    }
+    if (btnBinnadhor) {
+        btnBinnadhor.className = type === 'Binnadhor'
+            ? "py-2 px-2 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs text-center"
+            : inactive;
+    }
 }
 
 function populateSurat() {
@@ -112,27 +166,24 @@ function toggleFullSurat() {
     }
 }
 
-function switchSmartTab(type) {
-    document.getElementById('smartType').value = type;
-    document.getElementById('btnTabBaru').className = type === 'Hafalan Baru'
-        ? "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-secondary-active font-semibold"
-        : "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-inactive";
-    document.getElementById('btnTabMurojaah').className = type === 'Murojaah'
-        ? "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-active ml-2 font-semibold"
-        : "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-inactive ml-2";
-}
-
 function checkSmartPin(santriId) {
     const pinContainer = document.getElementById('smartPinContainer');
+    const tmInput = document.getElementById('smartTM');
     if (!santriId) {
         pinContainer.classList.add('hidden');
         lastPinData = null;
+        if (tmInput) tmInput.value = 'TM-1';
         return;
     }
+
     const history = state.setoran.filter(s => s.ID_Santri === santriId);
+    // Otomatis hitung TM berikutnya untuk santri ini
+    const nextTmNumber = history.length + 1;
+    if (tmInput) tmInput.value = `TM-${nextTmNumber}`;
+
     if (history.length > 0) {
-        lastPinData = history[0];
-        document.getElementById('smartPinText').textContent = `Lanjutkan Terakhir: ${lastPinData.Surah} (Juz ${lastPinData.Juz}), Hal ${lastPinData.Halaman}`;
+        lastPinData = history[history.length - 1]; // Ambil setoran paling baru
+        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz}), Hal ${lastPinData.Halaman}`;
         pinContainer.classList.remove('hidden');
     } else {
         pinContainer.classList.add('hidden');
@@ -142,22 +193,51 @@ function checkSmartPin(santriId) {
 
 function applySmartPin() {
     if (!lastPinData) return;
+    const tingkat = lastPinData.Tingkatan || "Al-Qur'an";
+    switchTingkatan(tingkat);
     switchSmartTab('Murojaah');
-    document.getElementById('smartJuz').value = lastPinData.Juz;
-    populateSurat();
-    if (tsSurat) tsSurat.setValue(lastPinData.SurahNo);
-    document.getElementById('smartHal').value = lastPinData.Halaman;
-    AppNotify.toast('info', 'Data Lanjutan Terisi');
+
+    if (tingkat === 'Jilid') {
+        document.getElementById('smartJilidLevel').value = lastPinData.Juz || 'Jilid 1';
+        document.getElementById('smartJilidNama').value = lastPinData.Surah || 'Metode Ummi Jilid 1';
+        document.getElementById('smartJilidBaris').value = lastPinData.Ayat || '';
+    } else {
+        document.getElementById('smartJuz').value = lastPinData.Juz;
+        populateSurat();
+        if (tsSurat && lastPinData.SurahNo) tsSurat.setValue(lastPinData.SurahNo);
+    }
+    document.getElementById('smartHal').value = lastPinData.Halaman || '';
+    AppNotify.toast('info', 'Data Setoran Terakhir Terisi');
 }
 
 function saveSetoran(e) {
     e.preventDefault();
     const santriId = tsSantri ? tsSantri.getValue() : '';
-    if (!santriId) return AppNotify.warning('Pilih Santri', 'Silakan pilih santri terlebih dahulu.');
-    const suratNo = tsSurat ? tsSurat.getValue() : '';
-    if (!suratNo) return AppNotify.warning('Pilih Surat', 'Silakan pilih surat terlebih dahulu.');
+    if (!santriId) return AppNotify.warning('Pilih Santri', 'Silakan pilih santri binaan terlebih dahulu.');
 
-    const suratData = quranDB.find(q => q.no == suratNo);
+    const tingkatan = document.getElementById('smartTingkatan').value || "Al-Qur'an";
+    const tmVal = document.getElementById('smartTM').value || "TM-1";
+    const typeVal = document.getElementById('smartType').value || "Ziyadah";
+    let juzVal = '', surahVal = '', surahNoVal = '', ayatVal = '';
+
+    if (tingkatan === "Al-Qur'an") {
+        const suratNo = tsSurat ? tsSurat.getValue() : '';
+        if (!suratNo) return AppNotify.warning('Pilih Surat', 'Silakan pilih surat Al-Qur\'an terlebih dahulu.');
+        const suratData = quranDB.find(q => q.no == suratNo);
+        const startAyat = document.getElementById('smartAyatStart').value || '1';
+        const endAyat = document.getElementById('smartAyatEnd').value || suratData.ayat;
+
+        juzVal = document.getElementById('smartJuz').value === 'all' ? String(suratData.juz) : String(document.getElementById('smartJuz').value);
+        surahVal = suratData.nama;
+        surahNoVal = suratData.no;
+        ayatVal = `${startAyat} - ${endAyat}`;
+    } else {
+        juzVal = document.getElementById('smartJilidLevel').value || 'Jilid 1';
+        surahVal = document.getElementById('smartJilidNama').value || juzVal;
+        surahNoVal = juzVal;
+        ayatVal = document.getElementById('smartJilidBaris').value || '-';
+    }
+
     const rawDate = document.getElementById('smartDate').value;
     const displayDate = new Date(rawDate).toLocaleDateString('id-ID', {
         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -165,22 +245,25 @@ function saveSetoran(e) {
 
     const payload = {
         santriId: santriId,
-        type: document.getElementById('smartType').value,
-        juz: document.getElementById('smartJuz').value === 'all' ? suratData.juz : document.getElementById('smartJuz').value,
-        surah: suratData.nama,
-        surahNo: suratData.no,
-        ayat: `${document.getElementById('smartAyatStart').value} - ${document.getElementById('smartAyatEnd').value}`,
-        halaman: document.getElementById('smartHal').value,
+        tingkatan: tingkatan,
+        tm: tmVal,
+        type: typeVal,
+        juz: juzVal,
+        surah: surahVal,
+        surahNo: surahNoVal,
+        ayat: ayatVal,
+        halaman: document.getElementById('smartHal').value || '-',
         predikat: document.querySelector('input[name="smartPredikat"]:checked').value,
         catatan: document.getElementById('smartCatatan').value,
-        date: displayDate
+        date: displayDate,
+        parafUstadz: sessionData ? sessionData.name : 'Ustadz Pembimbing'
     };
 
-    AppNotify.loading('Menyimpan Setoran...');
+    AppNotify.loading('Menyimpan Mutaba\'ah Harian...');
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
     apiCall('saveSetoran', token, payload).then(res => {
         if (res.status === 'success') {
-            AppNotify.toast('success', 'Setoran hafalan santri berhasil disimpan!');
+            AppNotify.toast('success', 'Setoran mutaba\'ah harian santri berhasil disimpan!');
             document.getElementById('smartHal').value = '';
             document.getElementById('smartCatatan').value = '';
             loadUstadzData();
@@ -192,38 +275,72 @@ function saveSetoran(e) {
 
 function renderUstadzRiwayat() {
     const container = document.getElementById('listSetoranUstadz');
+    const countEl = document.getElementById('ustadzHistoryCount');
     if (!container) return;
     container.innerHTML = '';
-    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === sessionData.id);
+
+    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === sessionData.id).slice().reverse();
+    if (countEl) countEl.textContent = `${mySetoran.length} Catatan Mutaba'ah`;
 
     if (mySetoran.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 py-6 text-sm">Belum ada input setoran hari ini.</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 py-8 text-sm">Belum ada catatan mutaba'ah harian yang diinput.</p>`;
         return;
     }
 
     mySetoran.forEach(set => {
         const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
-        const isBaru = set.Jenis === 'Hafalan Baru';
-        const borderLeft = isBaru ? 'border-l-4 border-[#1c6b45]' : 'border-l-4 border-[#9a2024]';
-        const typeBadge = isBaru
+        const jenis = set.Jenis || 'Ziyadah';
+        const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
+        const isBinnadhor = jenis === 'Binnadhor';
+
+        const borderLeft = isZiyadah
+            ? 'border-l-4 border-[#1c6b45]'
+            : isBinnadhor
+            ? 'border-l-4 border-amber-500'
+            : 'border-l-4 border-[#9a2024]';
+
+        const typeBadge = isZiyadah
             ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
+            : isBinnadhor
+            ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
             : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
-        let predIcon = set.Predikat === 'Lancar' ? '🟢' : set.Predikat === 'Kurang Lancar' ? '🟡' : '🔴';
+
+        const nilai = set.Predikat || 'Mumtaz';
+        const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar';
+        const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
+        const predIcon = isMumtaz ? '🌟' : isJayyid ? '👍' : '🔁';
+
+        const tingkatBadge = set.Tingkatan === 'Jilid' ? 'Jilid / Tahsin' : 'Al-Qur\'an';
+        const tmText = set.TM || 'TM';
+        const parafText = set.ParafUstadz || (sessionData ? sessionData.name : 'Ustadz');
 
         container.innerHTML += `
             <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-4 border border-gray-100 dark:border-darkborder ${borderLeft}">
-                <div class="flex justify-between items-start mb-2">
-                    <div><h4 class="font-bold text-gray-800 dark:text-white text-sm">${s ? s.Nama_Santri : 'Unknown'}</h4><p class="text-[11px] text-gray-500">${set.Tanggal}</p></div>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${set.Jenis}</span>
+                <div class="flex justify-between items-start gap-2 mb-2">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${tmText}</span>
+                            <h4 class="font-bold text-gray-900 dark:text-white text-sm">${s ? s.Nama_Santri : set.ID_Santri}</h4>
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-0.5">${set.Tanggal} &bull; <span class="font-medium">${tingkatBadge}</span></p>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-xs text-gray-700 dark:text-gray-300 mb-2">
-                    <div><span class="text-gray-400 text-[10px] block">Surat & Juz</span> <span class="font-semibold">${set.Surah} (Juz ${set.Juz})</span></div>
-                    <div><span class="text-gray-400 text-[10px] block">Ayat & Hal</span> <span class="font-semibold">Ayat ${set.Ayat} | Hal ${set.Halaman}</span></div>
+                <div class="grid grid-cols-2 gap-2 text-xs text-gray-700 dark:text-gray-300 mb-2 bg-white dark:bg-darkcard p-2.5 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div>
+                        <span class="text-gray-400 text-[10px] block">${set.Tingkatan === 'Jilid' ? 'Materi Jilid' : 'Surat & Juz'}</span>
+                        <span class="font-bold">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-400 text-[10px] block">${set.Tingkatan === 'Jilid' ? 'Baris & Halaman' : 'Ayat & Halaman'}</span>
+                        <span class="font-bold">${set.Tingkatan === 'Jilid' ? set.Ayat : 'Ayat ' + set.Ayat} &bull; Hal ${set.Halaman}</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2 bg-white dark:bg-darkcard px-3 py-2 rounded-xl border border-gray-100 dark:border-darkborder text-xs">
-                    <span class="font-bold">${predIcon} ${set.Predikat}</span>
-                    ${set.Catatan ? `<span class="text-[11px] text-gray-500 italic truncate ml-auto">"${set.Catatan}"</span>` : ''}
+                <div class="flex items-center justify-between gap-2 text-xs pt-1">
+                    <span class="font-bold text-gray-800 dark:text-gray-200">${predIcon} Nilai: ${nilai}</span>
+                    <span class="text-[11px] text-[#1c6b45] dark:text-[#83c9a6] font-semibold"><i class="fa-solid fa-signature mr-1"></i>Paraf: ${parafText}</span>
                 </div>
+                ${set.Catatan ? `<div class="mt-2 pt-2 border-t border-gray-200/60 dark:border-darkborder text-[11px] text-gray-600 dark:text-gray-400 italic">"${set.Catatan}"</div>` : ''}
             </div>
         `;
     });
@@ -231,7 +348,7 @@ function renderUstadzRiwayat() {
 
 function loadUstadzData() {
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
-    AppNotify.loading('Memuat Workspace Ustadz...');
+    AppNotify.loading('Memuat Buku Mutaba\'ah...');
     apiCall('fetchAppData', token).then(res => {
         AppNotify.close();
         if (res.status === 'success') {
@@ -256,7 +373,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userNameDisplay').textContent = name;
     document.getElementById('userRoleDisplay').textContent = sessionData.role;
     document.getElementById('userInitial').textContent = name.charAt(0).toUpperCase();
+    const badgeEl = document.getElementById('parafUstadzBadge');
+    if (badgeEl) badgeEl.textContent = name;
 
     loadUstadzData();
 });
-

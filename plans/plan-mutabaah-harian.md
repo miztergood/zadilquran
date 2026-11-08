@@ -3,7 +3,7 @@
 
 **Tanggal Penyusunan**: 08 November 2026 (081126)  
 **Dokumen Referensi**: Foto Lembar Mutaba'ah Fisik Pesantren (`Setoran-hafalan.jpg`)  
-**Status**: Tersimpan (Menunggu Konfirmasi Eksekusi dari Pengguna)  
+**Status**: Selesai Diterapkan (Implemented - Arsitektur Modular V4.0)  
 
 ---
 
@@ -180,27 +180,25 @@ Mengadopsi tata letak lembar buku mutaba'ah fisik `Setoran-hafalan.jpg` dalam fo
 
 Saat pengguna siap untuk melanjutkan implementasi, langkah-langkah kerja yang akan dieksekusi adalah sebagai berikut:
 
-- [ ] **Langkah 1: Perluasan Skema Google Apps Script (`Code.gs`)**
-  - Menyesuaikan `SHEET_CONFIG["Data_Setoran"]` dengan 15 kolom baru.
-  - Memperbarui fungsi `saveSetoran(token, dataSetoran)` untuk menyimpan `tingkatan`, `tm`, `nilai`, dan `parafUstadz`.
+- [x] **Langkah 1: Perluasan Skema Google Apps Script (`code.gs`)**
+  - Menyesuaikan `SHEET_CONFIG["Data_Setoran"]` dengan 15 kolom baru (`Tingkatan`, `TM`, `Jenis`, `Predikat`, `ParafUstadz`).
+  - Memperbarui fungsi `saveSetoran(token, dataSetoran)` untuk menyimpan `tingkatan`, `tm`, `nilai`, dan `parafUstadz` secara non-destruktif berdasarkan header kolom.
   - Menjaga kompatibilitas mundur (*backward compatibility*) untuk data historis lama.
 
-- [ ] **Langkah 2: Pembaruan Form Input Ustadz (`index.html`)**
-  - Menambahkan radio switch pemilihan **Tingkatan** (Al-Qur'an vs Jilid).
+- [x] **Langkah 2: Pembaruan Form Input Ustadz (`ustadz.html` & `js/ustadz.js`)**
+  - Menambahkan pemilihan **Tingkatan** (Al-Qur'an vs Jilid / Tahsin).
   - Mengubah pemilih jenis setoran menjadi 3 tab interaktif: **Ziyadah**, **Murojaah**, dan **Binnadhor**.
-  - Menambahkan input nomor sesi **Tatap Muka (TM)** dengan penomoran otomatis.
-  - Menyesuaikan opsi penilaian predikat menjadi **Mumtaz (Lancar)**, **Jayyid (Cukup)**, dan **Dhoif (Ulang)**.
+  - Menambahkan input nomor sesi **Tatap Muka (TM)** dengan penomoran otomatis (`TM-1`, `TM-2`, dst).
+  - Menyesuaikan opsi penilaian predikat menjadi **Mumtaz (Lancar)**, **Jayyid (Cukup)**, dan **Dhoif (Ulang)** serta paraf digital otomatis.
 
-- [ ] **Langkah 3: Pembaruan Tampilan Mutaba'ah Wali Santri (`index.html`)**
-  - Menampilkan ringkasan 3 pilar utama: Total Ziyadah, Total Murojaah, dan Total Binnadhor.
-  - Menambahkan filter 4 tab: Semua, Ziyadah, Murojaah, Binnadhor.
-  - Mengubah tampilan kartu linimasa menjadi format kartu buku mutaba'ah fisik lengkap dengan TM, Surat/Jilid, Ayat/Hal, Nilai, Paraf Ustadz, dan Catatan Ustadz.
-  - Menambahkan kutipan Hadits HR. Muslim di bagian bawah halaman.
+- [x] **Langkah 3: Pembaruan Tampilan Mutaba'ah Wali Santri (`wali.html` & `js/wali.js`)**
+  - Menampilkan ringkasan 4 metrik utama: Total Setor, Ziyadah, Muroja'ah, dan Binnadhor.
+  - Menambahkan filter 4 tab: Semua, Ziyadah, Muroja'ah, Binnadhor.
+  - Mengubah tampilan kartu linimasa menjadi format kartu buku mutaba'ah fisik lengkap dengan TM, Tingkatan, Surat/Jilid, Ayat/Hal, Nilai, Paraf Ustadz, dan Catatan Ustadz.
+  - Menambahkan tombol **Unduh / Cetak Lembar Buku Mutaba'ah Harian (PDF)** dan kutipan Hadits HR. Muslim di bagian bawah halaman.
 
-- [ ] **Langkah 4: Pembaruan Format Bagikan WhatsApp (`shareProgressWa()`)**
+- [x] **Langkah 4: Pembaruan Format Bagikan WhatsApp (`shareProgressWa()`)**
   - Memformat pesan WhatsApp laporan mutaba'ah agar mencakup rincian Ziyadah, Murojaah, Binnadhor, dan setoran terakhir.
 
-- [ ] **Langkah 5: Pembaruan Dokumen PRD, Desain Sistem, dan Log**
-  - Memperbarui `PRD.md`, `DESIGN_SISTEM.md`, `plan.md`, dan `logs/log-zadil-quran.081126.md`.
-  - Melakukan uji sintaks JavaScript (`node -c`) dan verifikasi zero em-dash.
-  - Commit dan push ke repositori GitHub `zadilquran` branch `main`.
+- [x] **Langkah 5: Verifikasi Sintaks & Sinkronisasi Git**
+  - Melakukan uji sintaks JavaScript (`node -c`) dan commit serta push ke repositori GitHub `zadilquran` branch `main`.
