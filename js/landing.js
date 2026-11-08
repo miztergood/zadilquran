@@ -48,6 +48,255 @@ function toggleFaq(index) {
     }
 }
 
+/**
+ * Data Galeri Dokumentasi Kegiatan Santri (dari folder lokal `aset grafis/`)
+ */
+const LANDING_GALLERY_ITEMS = [
+    {
+        file: "wisuda-akbar-tahfidz-jawa-timur.jpeg",
+        title: "Wisuda Akbar Tahfizh Al-Qur'an Jawa Timur",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Wisuda"
+    },
+    {
+        file: "setoran-hafalan-santri-putra-bersama-ustadz.jpeg",
+        title: "Simakan Setoran Hafalan Santri Putra Bersama Ustadz",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Halaqah"
+    },
+    {
+        file: "halaqah-talaqqi-quran-santriwati.jpeg",
+        title: "Halaqah Talaqqi & Muroja'ah Al-Qur'an Santriwati",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Halaqah"
+    },
+    {
+        file: "pembelajaran-komputer-santri-remaja.jpeg",
+        title: "Praktik Literasi Komputer & Digital Santri",
+        category: "digital",
+        categoryLabel: "Komputer & Digital"
+    },
+    {
+        file: "ekstrakurikuler-hadroh-rebana-santri-putra.jpeg",
+        title: "Penampilan Seni Islami Hadroh & Rebana Santri Putra",
+        category: "ekskul",
+        categoryLabel: "Ekstrakurikuler"
+    },
+    {
+        file: "kajian-mihrab-musholla-bersama-ustadz.jpeg",
+        title: "Kajian Kitab & Tausiyah Ba'da Shalat Berjamaah",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "pembelajaran-tajwid-makharijul-huruf.jpeg",
+        title: "Pembelajaran Tahsin, Tajwid, & Makharijul Huruf",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Halaqah"
+    },
+    {
+        file: "praktek-komputer-santriwati.jpeg",
+        title: "Pelatihan Komputer Dasar & Teknologi bagi Santriwati",
+        category: "digital",
+        categoryLabel: "Komputer & Digital"
+    },
+    {
+        file: "halaqah-bimbingan-ustadz-santri-putra-putri.jpeg",
+        title: "Halaqah Bimbingan Al-Qur'an Terpadu Bersama Pengampu",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Halaqah"
+    },
+    {
+        file: "tilawah-quran-santriwati.jpeg",
+        title: "Tilawah & Binnadhor Al-Qur'an Santriwati",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Halaqah"
+    },
+    {
+        file: "aula-tahfidz-tabel-evaluasi-hafalan-santri.jpeg",
+        title: "Aula Tahfizh & Papan Evaluasi Pencapaian Hafalan Santri",
+        category: "tahfidz",
+        categoryLabel: "Tahfizh & Halaqah"
+    },
+    {
+        file: "kajian-santri-putra-aula-pesantren.jpeg",
+        title: "Kajian Diniyah Santri Putra di Aula Pesantren",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "kajian-kitab-santriwati-bersama-ustadz.jpeg",
+        title: "Pendalaman Materi Fiqih & Aqidah Akhlak Santriwati",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "santriwati-membaca-kitab-di-kelas.jpeg",
+        title: "Kegiatan Belajar Madrasah Diniyah Santriwati di Kelas",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "santriwati-menulis-catatan-kelas.jpeg",
+        title: "Ketekunan Santriwati Mencatat Pelajaran Diniyah",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "kegiatan-belajar-kelas-tahfidz-sekat-putra-putri.jpeg",
+        title: "Suasana Belajar Kondusif dengan Hijab Pemisah Putra-Putri",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "suasana-kelas-santri-putra-putri-terpisah.jpeg",
+        title: "Ketertiban Belajar Kelas Tahfizh & Diniyah",
+        category: "kajian",
+        categoryLabel: "Kajian Diniyah"
+    },
+    {
+        file: "santri-cilik-menyimak-pengajian-1.jpeg",
+        title: "Santri Usia Dini Antusias Menyimak Pengajian Al-Qur'an",
+        category: "kajian",
+        categoryLabel: "Pembinaan Usia Dini"
+    },
+    {
+        file: "pembelajaran-komputer-santri-anak.jpeg",
+        title: "Pengenalan Komputer Sejak Dini bagi Santri Anak",
+        category: "digital",
+        categoryLabel: "Komputer & Digital"
+    },
+    {
+        file: "pendampingan-belajar-laptop-oleh-ustadz.jpeg",
+        title: "Pendampingan Intensif Praktik Laptop oleh Ustadz",
+        category: "digital",
+        categoryLabel: "Komputer & Digital"
+    },
+    {
+        file: "ekstrakurikuler-hadroh-rebana-santriwati.jpeg",
+        title: "Ekstrakurikuler Seni Rebana & Sholawat Santriwati",
+        category: "ekskul",
+        categoryLabel: "Ekstrakurikuler"
+    },
+    {
+        file: "latihan-rebana-santriwati-bimbingan-ustadz.jpeg",
+        title: "Latihan Rutin Hadroh & Vokal Qasidah Bersama Pembina",
+        category: "ekskul",
+        categoryLabel: "Ekstrakurikuler"
+    },
+    {
+        file: "santriwati-bershalawat-qasidah-aula.jpeg",
+        title: "Lantunan Sholawat & Qasidah Santriwati di Aula Pondok",
+        category: "ekskul",
+        categoryLabel: "Ekstrakurikuler"
+    },
+    {
+        file: "peringatan-maulid-nabi-ponpes-zadil-quran.jpeg",
+        title: "Peringatan Maulid Nabi Muhammad SAW di PPTQ Zadil Qur'an",
+        category: "ekskul",
+        categoryLabel: "Hari Besar Islam"
+    },
+    {
+        file: "acara-tasyakuran-dan-doa-bersama-santriwati.jpeg",
+        title: "Tasyakuran & Doa Bersama Keluarga Besar Santri",
+        category: "ekskul",
+        categoryLabel: "Kegiatan Asrama"
+    }
+];
+
+let currentGalleryCategory = 'all';
+let isGalleryExpanded = false;
+
+function renderLandingGallery() {
+    const grid = document.getElementById('landingGalleryGrid');
+    const toggleWrap = document.getElementById('landingGalleryToggleWrap');
+    const toggleText = document.getElementById('btnToggleGalleryText');
+    if (!grid) return;
+
+    const filtered = currentGalleryCategory === 'all'
+        ? LANDING_GALLERY_ITEMS
+        : LANDING_GALLERY_ITEMS.filter(item => item.category === currentGalleryCategory);
+
+    const defaultLimit = 8;
+    const itemsToShow = (currentGalleryCategory === 'all' && !isGalleryExpanded)
+        ? filtered.slice(0, defaultLimit)
+        : filtered;
+
+    if (toggleWrap) {
+        if (currentGalleryCategory === 'all' && filtered.length > defaultLimit) {
+            toggleWrap.classList.remove('hidden');
+            if (toggleText) {
+                toggleText.textContent = isGalleryExpanded
+                    ? 'Tampilkan Lebih Ringkas (8 Foto Utama)'
+                    : `Lihat Seluruh ${filtered.length} Foto Kegiatan Santri`;
+            }
+        } else {
+            toggleWrap.classList.add('hidden');
+        }
+    }
+
+    grid.innerHTML = itemsToShow.map((item, idx) => {
+        const imgUrl = `aset%20grafis/${encodeURIComponent(item.file)}`;
+        return `
+            <div onclick="openGalleryLightbox('${imgUrl}', '${item.title.replace(/'/g, "\\'")}', '${item.categoryLabel}')" class="group cursor-pointer bg-gray-50 dark:bg-slate-900/70 rounded-2xl overflow-hidden border border-gray-200/80 dark:border-darkborder shadow-xs hover:shadow-xl transition duration-300 flex flex-col">
+                <div class="relative aspect-4/3 overflow-hidden bg-gray-200 dark:bg-slate-800">
+                    <img src="${imgUrl}" alt="${item.title}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition flex items-center justify-center">
+                        <span class="w-10 h-10 rounded-full bg-white/90 text-gray-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition shadow-md">
+                            <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+                        </span>
+                    </div>
+                    <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-black/65 text-white backdrop-blur-xs">
+                        ${item.categoryLabel}
+                    </span>
+                </div>
+                <div class="p-4 flex-1 flex items-center">
+                    <h4 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-[#9a2024] dark:group-hover:text-[#f29fa3] transition leading-snug">
+                        ${item.title}
+                    </h4>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterLandingGallery(category) {
+    currentGalleryCategory = category;
+    ['all', 'tahfidz', 'kajian', 'digital', 'ekskul'].forEach(cat => {
+        const btn = document.getElementById('galBtn-' + cat);
+        if (!btn) return;
+        if (cat === category) {
+            btn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-[#9a2024] text-white shadow-xs transition";
+        } else {
+            btn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition";
+        }
+    });
+    renderLandingGallery();
+}
+
+function toggleLandingGalleryExpand() {
+    isGalleryExpanded = !isGalleryExpanded;
+    renderLandingGallery();
+}
+
+function openGalleryLightbox(imgUrl, title, categoryLabel) {
+    const modal = document.getElementById('galleryLightboxModal');
+    const imgEl = document.getElementById('lightboxImage');
+    const titleEl = document.getElementById('lightboxTitle');
+    const badgeEl = document.getElementById('lightboxCategoryBadge');
+    if (!modal || !imgEl) return;
+
+    imgEl.src = imgUrl;
+    if (titleEl) titleEl.textContent = title || 'Dokumentasi Kegiatan Santri';
+    if (badgeEl) badgeEl.textContent = categoryLabel || 'Galeri Pesantren';
+    modal.classList.remove('hidden');
+}
+
+function closeGalleryLightbox(event) {
+    const modal = document.getElementById('galleryLightboxModal');
+    if (modal) modal.classList.add('hidden');
+}
+
 function submitPsbForm(event) {
     event.preventDefault();
     const getVal = (id) => {
@@ -152,5 +401,6 @@ window.addEventListener('DOMContentLoaded', () => {
     fetchInitialBranding();
     const hasSession = checkExistingSession();
     updateLandingNavAuthButton(hasSession);
+    renderLandingGallery();
 });
 

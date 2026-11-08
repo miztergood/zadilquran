@@ -13,8 +13,13 @@ function switchLoginTab(tab) {
 
     if (formStaff) formStaff.classList.toggle('hidden', tab !== 'staff');
     if (formWali) formWali.classList.toggle('hidden', tab !== 'wali');
-    if (tabStaff) tabStaff.className = tab === 'staff' ? 'flex-1 text-center py-2 tab-active transition' : 'flex-1 text-center py-2 tab-inactive transition hover:bg-gray-50 dark:hover:bg-slate-800';
-    if (tabWali) tabWali.className = tab === 'wali' ? 'flex-1 text-center py-2 tab-active transition' : 'flex-1 text-center py-2 tab-inactive transition hover:bg-gray-50 dark:hover:bg-slate-800';
+
+    const activeStaff = 'py-2.5 px-3 rounded-lg transition text-center bg-white dark:bg-darkcard text-[#9a2024] dark:text-white shadow-xs';
+    const activeWali = 'py-2.5 px-3 rounded-lg transition text-center bg-white dark:bg-darkcard text-[#1c6b45] dark:text-white shadow-xs';
+    const inactive = 'py-2.5 px-3 rounded-lg transition text-center text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white';
+
+    if (tabStaff) tabStaff.className = tab === 'staff' ? activeStaff : inactive;
+    if (tabWali) tabWali.className = tab === 'wali' ? activeWali : inactive;
 }
 
 function handleLogin(e, type) {
