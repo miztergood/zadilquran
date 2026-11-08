@@ -42,6 +42,8 @@ export default {
         mappedFile = '/ustadz.html';
       } else if (cleanPath === '/wali' || cleanPath === '/progres') {
         mappedFile = '/wali.html';
+      } else if (cleanPath === '/pendaftaran' || cleanPath === '/psb' || cleanPath === '/daftar') {
+        mappedFile = '/pendaftaran.html';
       } else if (cleanPath === '/landingpage' || cleanPath === '/home' || cleanPath === '/beranda') {
         mappedFile = '/index.html';
       } else if (!url.pathname.includes('.')) {
