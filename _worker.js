@@ -10,7 +10,7 @@
  */
 
 // >>> TEMPELKAN URL APPS SCRIPT ANDA DI SINI <<<
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_placeholder/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzd4Tacd4r0H3UM3HIztU66zqP-pNQmWnU5ediQz-a41WLsakQENvT4hhfJzXEb7kC4Ng/exec';
 
 export default {
   async fetch(request, env, ctx) {

@@ -186,37 +186,61 @@ Tata letak kolom ganda: Kolom kiri formulir pintar (*Smart Assist*), kolom kanan
 
 ---
 
-## 7. Layar Portal Wali Santri (`/wali`)
+## 7. Layar Portal Wali Santri (`/wali`) - Mobile First Viewport
+
+Dirancang khusus dengan prinsip *Mobile-First*. Pada layar desktop terpusat rapi dalam kontainer `max-w-md mx-auto` menyerupai antarmuka aplikasi seluler:
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 🎓 MUHAMMAD ZAKI                                                    │ │
-│ │    ID Santri: ST-2026-X8K9                                          │ │
-│ │                                                                     │ │
-│ │    TOTAL SETORAN: 24 Setoran         USTADZ: Ustadz Abdullah        │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│                                                                         │
-│ Riwayat Setoran Terbaru:                                                │
-│                                                                         │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 🟢 An-Nazi'at                                         HAFALAN BARU  │ │
-│ │    Juz 30 • Ayat 1 - 46 • Halaman 583                               │ │
-│ │    📅 08 Nov 2026, 10:15                          Predikat: Lancar  │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-│ ┌─────────────────────────────────────────────────────────────────────┐ │
-│ │ 🟢 An-Naba'                                           HAFALAN BARU  │ │
-│ │    Juz 30 • Ayat 1 - 40 • Halaman 582                               │ │
-│ │    📅 05 Nov 2026, 09:30                          Predikat: Lancar  │ │
-│ └─────────────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│ [Logo] ZADIL QURAN • WALI      [🌙] [Ganti ID Santri 🚪]│ (Sticky Top Bar)
+├────────────────────────────────────────────────────────┤
+│ ┌────────────────────────────────────────────────────┐ │
+│ │ [MZ]  MUHAMMAD ZAKI                                │ │
+│ │       ID: ST-2026-X8K9 [📋 Salin]                  │ │ (Hero Gradient
+│ │       Pembimbing: Ustadz Abdullah                  │ │  Maroon to Green)
+│ ├────────────────────────────────────────────────────┤ │
+│ │  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ │ │
+│ │  │      24      │ │      18      │ │      6      │ │ │ (3 Metric Pills)
+│ │  │ Total Setoran│ │ Hafalan Baru │ │  Muroja'ah  │ │ │
+│ │  └──────────────┘ └──────────────┘ └─────────────┘ │ │
+│ └────────────────────────────────────────────────────┘ │
+│                                                        │
+│ [ 💬 Bagikan Capaian ke WhatsApp                     ] │ (One-Tap Share)
+│                                                        │
+│ [ Semua (24) ] [ Baru (18) ] [ Muroja'ah (6) ]         │ (Filter Pills)
+│ [ 🔍 Cari nama surat Al-Qur'an...                    ] │ (Realtime Search)
+│                                                        │
+│ Linimasa Riwayat Hafalan (Terbaru):                    │
+│                                                        │
+│ ┌──┬─────────────────────────────────────────────────┐ │
+│ │  │ 79. An-Nazi'at                  [ HAFALAN BARU ]│ │
+│ │🟢│ Juz 30 • Ayat 1-46 • Halaman 583                │ │
+│ │  │ 📅 08 Nov 2026, 10:15       [ 🟢 Lancar ]       │ │
+│ │  │ ┌─────────────────────────────────────────────┐ │ │
+│ │  │ │ 💬 "Makhraj dan tajwid sangat fasih"        │ │ │ (Quote Bubble)
+│ │  │ └─────────────────────────────────────────────┘ │ │
+│ └──┴─────────────────────────────────────────────────┘ │
+│                                                        │
+│ ┌──┬─────────────────────────────────────────────────┐ │
+│ │  │ 78. An-Naba'                    [ MUROJA'AH    ]│ │
+│ │🟢│ Juz 30 • Ayat 1-40 • Halaman 582                │ │
+│ │  │ 📅 05 Nov 2026, 09:30       [ 🟢 Lancar ]       │ │
+│ └──┴─────────────────────────────────────────────────┘ │
+│                                                        │
+├────────────────────────────────────────────────────────┤
+│   [🏠 Beranda]   [💬 Share]   [🔄 Refresh]   [🚪 Keluar]│ (Bottom Bar)
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 8. Tata Letak Responsif Ponsel (Mobile View)
+## 8. Tata Letak Responsif Ponsel (Mobile View) & Ergonomi Halaqah
 
-Pada layar ponsel (< 768px):
-- Sidebar beralih menjadi Drawer Menu yang meluncur dari kiri dengan tombol hamburger di bilah atas (*top bar*).
-- Grid 2-kolom pada Dashboard, Workspace Ustadz, dan Pengaturan otomatis tersusun vertikal (1 kolom).
-- Tombol sentuh memiliki tinggi minimal 44 piksel dengan jarak pemisah yang memadai untuk reflek jari ustadz saat menyimak di halaqah.
+1. **Role Wali Santri**:
+   - Berjalan dalam tampilan aplikasi seluler native (*native mobile app style*).
+   - Sidebar desktop dieliminasi sepenuhnya agar perhatian orang tua berfokus pada perkembangan anak.
+   - Dilengkapi bilah bawah (*floating bottom bar*) yang mudah dijangkau satu jempol (*one-thumb reach*).
+2. **Role Ustadz & Superadmin**:
+   - Pada layar ponsel (< 768px), sidebar beralih menjadi Drawer Menu yang meluncur halus dari kiri dengan tombol pemicu di bilah atas (*top bar*).
+   - Grid 2-kolom pada Workspace Ustadz dan Dashboard tersusun vertikal (1 kolom) agar formulir input ayat dan pemilih surat Al-Qur'an tetap lapang.
+   - Seluruh tombol memiliki tinggi minimal 44 piksel untuk kemudahan sentuh ustadz di halaqah.

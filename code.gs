@@ -165,7 +165,7 @@ function setupDatabase() {
       sheet.appendRow(SHEET_CONFIG[sheetName]);
       sheet.setFrozenRows(1);
       sheet.getRange(1, 1, 1, SHEET_CONFIG[sheetName].length)
-           .setBackground("#10b981").setFontColor("white").setFontWeight("bold");
+           .setBackground("#9a2024").setFontColor("white").setFontWeight("bold");
     }
   });
 
@@ -277,7 +277,7 @@ function fetchAppData(token) {
 function fetchWaliData(idSantri) {
   return safeExecute(function() {
     const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Nama_Pondok");
-    const setoran = getSheetDataAsObjects("Data_Setoran").filter(s => s.ID_Santri === idSantri);
+    const setoran = getSheetDataAsObjects("Data_Setoran").filter(s => s.ID_Santri === idSantri).reverse();
     const santri = getSheetDataAsObjects("Data_Santri").find(s => s.ID_Santri === idSantri);
     const ustadz = getSheetDataAsObjects("Users_Ustadz").find(u => u.ID_Ustadz === (santri ? santri.ID_Ustadz : ""));
     

@@ -99,11 +99,26 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
    - Badge warna pembeda antara Hafalan Baru dan Muroja'ah serta ikon predikat kelancaran.
 
 ### 4.4 Modul Portal Wali Santri (`/wali`)
-1. **Kartu Profil Santri**:
-   - Menampilkan nama santri, ID unik santri, nama ustadz pembimbing, dan total akumulasi setoran yang telah diselesaikan.
-2. **Linimasa Riwayat Setoran Anak**:
-   - Kartu riwayat setiap kali setoran disimak oleh ustadz: nama surat, juz, rentang ayat, halaman mushaf, tanggal, predikat kelancaran, dan pesan evaluasi dari ustadz.
-   - Tampilan status kosong (*empty state*) yang santun jika santri baru terdaftar dan belum memiliki riwayat setoran.
+1. **Desain Mobile-First Native Viewport**:
+   - Tampilan khusus mobile-first: Mengisi 100% layar pada ponsel pintar dan terpusat rapi dalam kontainer `max-w-md mx-auto` pada desktop/tablet tanpa gangguan sidebar navigasi pengurus.
+   - Bilah navigasi atas (*sticky top bar*) menampilkan logo resmi lembaga `logo.jpg`, nama aplikasi, tombol dark mode, dan tombol ganti ID santri.
+2. **Kartu Profil Santri Hero Gradient**:
+   - Desain kartu hero bergradien Crimson Maroon (`#9a2024`) ke Pine Green (`#1c6b45`).
+   - Menampilkan inisial santri, nama lengkap santri, ID unik santri dengan fitur sentuh salin instan (*tap-to-copy*), dan nama ustadz pembimbing.
+3. **Tiga Metrik Capaian Hafalan**:
+   - Kotak ringkasan cepat: Total Setoran, Hafalan Baru, dan Muroja'ah.
+4. **Fitur Berbagi Capaian ke WhatsApp**:
+   - Tombol satu sentuhan (*One-Tap Share*) yang menyusun format pesan rapi berisi nama santri, total setoran, dan daftar capaian terakhir untuk dikirimkan langsung ke orang tua/keluarga besar via WhatsApp.
+5. **Filter Cepat & Pencarian Real-Time**:
+   - Tab tombol pil: Semua, Hafalan Baru, Muroja'ah.
+   - Pencarian instan berdasarkan nama surat Al-Qur'an.
+6. **Linimasa Riwayat Setoran Anak (Feed Cards)**:
+   - Garis indikator status di sisi kiri kartu: Hijau (Lancar), Kuning (Kurang Lancar), Merah (Ulang).
+   - Menampilkan nama surat Al-Qur'an, juz, rentang ayat, nomor halaman mushaf Madinah, waktu setoran, dan badge predikat.
+   - Gelembung catatan evaluasi ustadz (*quote bubble*) berwarna hijau teduh untuk memberikan nasihat perbaikan tajwid/makhraj.
+   - Tampilan status kosong (*empty state*) yang santun dan rapi jika belum ada rekaman setoran.
+7. **Bilah Navigasi Bawah Melayang (Floating Bottom Bar)**:
+   - Ditempatkan di bagian bawah layar ponsel untuk navigasi ergonomis satu jempol (*one-thumb navigation*): Beranda, Bagikan, Segarkan, dan Keluar.
 
 ---
 
@@ -111,13 +126,15 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
 
 1. **Kecepatan & Responsivitas**:
    - Seluruh aset statis dilayani dari Cloudflare Global CDN dalam hitungan milidetik.
-   - Panggilan API ke Google Apps Script di-cache dan diteruskan secara efisien oleh Edge Worker.
-2. **Kesesuaian Perangkat (Mobile-Friendly)**:
-   - Antarmuka dirancang optimal untuk penggunaan tablet dan ponsel pintar ustadz saat berada di aula halaqah tahfidz.
-   - Tombol sentuh memiliki ukuran ergonomis minimum 44 x 44 piksel.
-3. **Kenyamanan Visual (Anti-Slop Design)**:
+   - Panggilan API ke Google Apps Script di-cache dan diteruskan secara efisien oleh Edge Worker (`_worker.js`).
+2. **Kesesuaian Perangkat (Mobile-Friendly & Mobile-First)**:
+   - Portal wali santri menerapkan prinsip ketat *mobile-first design* untuk kenyamanan orang tua yang mengakses via smartphone.
+   - Antarmuka ustadz dirancang optimal untuk penggunaan tablet dan ponsel pintar saat menyimak di aula halaqah tahfidz.
+   - Seluruh elemen sentuh memenuhi standar ergonomis minimum 44 x 44 piksel.
+3. **Kenyamanan Visual (Anti-Slop Institutional Palette)**:
    - Menghindari warna neon silau dan hitam pekat murni (`#000000`).
-   - Menggunakan palet bernuansa islami modern (Emerald dan Deep Slate).
+   - Menerapkan palet resmi lembaga: Primary Crimson Maroon (`#9a2024`) dan Secondary Pine Green (`#1c6b45`).
+   - Menggunakan logo resmi `logo.jpg` berdimensi bujur sangkar berkualitas tinggi.
    - Mendukung Dark Mode otomatis untuk penggunaan di malam hari setelah salat Maghrib dan Isya.
 4. **Keandalan & Ketahanan Data**:
    - Data tersimpan secara permanen di Google Sheets milik yayasan sendiri.

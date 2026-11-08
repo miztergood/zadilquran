@@ -21,6 +21,7 @@ ZADIL QURAN/
 ├── code.gs                     # Backend Google Apps Script (doGet, doPost, Setup & CRUD Engine)
 ├── config.js                   # Konfigurasi Klien (Endpoint Proxy & Kunci LocalStorage)
 ├── index.html                  # Antarmuka Tunggal (SPA Tailwind, TomSelect, Quran DB)
+├── logo.jpg                    # Logo Resmi Lembaga Zadil Quran
 └── .gitignore                  # Filter File Pengabaian Git
 ```
 
@@ -143,10 +144,13 @@ Aplikasi menggunakan router berbasis HTML5 History API (`window.history.pushStat
 5. Ustadz menentukan nomor surat, cakupan ayat, halaman, dan predikat kelancaran (`Lancar`, `Kurang Lancar`, `Ulang`).
 6. Setoran disimpan ke Google Sheets melalui `/api`.
 
-### 5.3 Alur Pantauan Wali Santri
+### 5.3 Alur Pantauan Wali Santri (Mobile-First Experience)
 1. Wali santri memasukkan ID Unik anak (contoh: `ST-2026-X8K9`).
-2. Sistem memuat profil santri, nama ustadz pembimbing, total setoran tercatat, serta linimasa kartu hafalan terbaru.
-3. Setiap kartu menampilkan nama surat, juz, ayat, halaman, tanggal, predikat, dan catatan evaluasi ustadz.
+2. Sistem mendeteksi role `walisantri` dan menyembunyikan sidebar navigasi desktop pengurus, beralih penuh ke antarmuka aplikasi ponsel (*mobile app viewport* `max-w-md mx-auto`).
+3. Sistem memuat profil santri dalam kartu hero gradien Maroon-Hijau (`#9a2024` ke `#1c6b45`), ringkasan 3 metrik (Total, Baru, Muroja'ah), dan linimasa setoran terbaru (diurutkan dari yang paling baru di posisi atas).
+4. Wali santri dapat memfilter riwayat berdasarkan jenis setoran (Semua, Baru, Muroja'ah) atau mencari surat Al-Qur'an secara real-time.
+5. Wali santri dapat mengklik tombol "Bagikan Capaian ke WhatsApp" untuk membagikan rekap ke keluarga dengan sekali ketuk.
+6. Riwayat menampilkan indikator garis status kelancaran, juz, rentang ayat, nomor halaman mushaf, serta gelembung evaluasi tajwid/makhraj dari ustadz.
 
 ---
 

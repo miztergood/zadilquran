@@ -9,20 +9,25 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
 - **Role & Hak Akses Bertingkat**:
   - **Superadmin**: Kelola akun ustadz, kelola data santri & wali, statistik pencapaian hafalan, dan pengaturan identitas lembaga.
   - **Ustadz**: Formulir cerdas pencatatan setoran hafalan baru & muroja'ah santri binaan dengan database 114 Surat & 30 Juz Al-Qur'an serta riwayat setoran real-time.
-  - **Wali Santri**: Portal khusus wali murid untuk memantau perkembangan hafalan, predikat kelancaran, juz, ayat, dan catatan evaluasi dari ustadz.
+  - **Wali Santri (Mobile-First)**: Portal khusus orang tua dengan tata letak aplikasi ponsel terpusat (`max-w-md mx-auto`), kartu hero bergradien, ringkasan 3 metrik, tombol satu ketukan bagikan ke WhatsApp, filter pil, dan evaluasi ustadz.
+- **Identitas Visual Lembaga**:
+  - Warna Utama: Crimson Maroon (`#9a2024`).
+  - Warna Sekunder: Pine Green (`#1c6b45`).
+  - Logo Resmi: `logo.jpg` (dimensi bujur sangkar resolusi tinggi).
 - **Routing URL Slug Bersih (Clean Slugs / SPA Navigation)**:
-  - `/login` : Layar autentikasi pengurus/ustadz & wali santri.
+  - `/login` : Layar autentikasi pengurus/ustadz & wali santri (bersih tanpa setup API).
   - `/admin` atau `/admin/dashboard` : Ringkasan statistik & metrik hafalan pondok.
   - `/admin/ustadz` : Manajemen data akun ustadz pembimbing.
   - `/admin/santri` : Manajemen pendaftaran santri & pembagian kelompok ustadz.
   - `/admin/pengaturan` : Pengaturan nama lembaga, ubah password, dan konfigurasi API Apps Script.
   - `/ustadz` atau `/setoran` : Portal kartu pintar input setoran ustadz.
-  - `/wali` atau `/progres` : Portal kartu pantauan wali santri.
+  - `/wali` atau `/progres` : Portal kartu pantauan wali santri (Mobile-First).
   - `/menu` : Pusat navigasi cepat.
 - **Cloudflare Pages Reverse Proxy (`_worker.js`)**:
   - Mengatasi kendala CORS (*Cross-Origin Resource Sharing*) secara otomatis.
   - Menangani pengalihan *HTTP 302 Redirect* khas Google Apps Script secara transparan.
   - Mendukung SPA Fallback Routing sehingga navigasi langsung ke URL slug (`/admin`, `/ustadz`, dll.) tidak mengalami *404 Not Found*.
+  - Mengisolasi URL Apps Script di sisi server sehingga antarmuka pengguna depan tetap bersih.
 - **Penyimpanan Offline & Session Persistence**:
   - Sesi login tetap tersimpan di `localStorage` saat halaman di-refresh.
   - Dukungan Dark Mode otomatis mengikuti sistem atau pilihan manual.
@@ -38,6 +43,11 @@ Aplikasi web modern berbasis **Cloudflare Pages** (Frontend SPA & Edge Proxy Wor
 ├── config.js          # Konfigurasi client-side (URL Proxy, default endpoint, keys)
 ├── code.gs            # Backend Google Apps Script (doGet, doPost, Auth, CRUD & Database Engine)
 ├── index.html         # Frontend Single Page Application (Tailwind CSS, FontAwesome, TomSelect)
+├── logo.jpg           # Logo resmi lembaga bujur sangkar resolusi tinggi
+├── PRD.md             # Product Requirements Document
+├── DESIGN_SISTEM.md   # Desain sistem & standar estetika anti-slop
+├── plan.md            # Rencana pengembangan & arsitektur teknis
+├── wireframes.md      # Sketsa visual wireframe antarmuka seluruh layar
 ├── .gitignore         # Daftar file yang diabaikan oleh Git
 └── README.md          # Dokumentasi lengkap instalasi & panduan deployment
 ```

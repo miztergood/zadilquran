@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zadil Quran - Sistem Manajemen Tahfidz</title>
+    <!-- Logo Favicon -->
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <link rel="apple-touch-icon" href="logo.jpg">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.default.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Config File -->
     <script src="config.js"></script>
@@ -22,8 +26,35 @@
                 extend: { 
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: { 
-                        emerald: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857', 900: '#064e3b' },
-                        darkbg: '#0f172a', darkcard: '#1e293b', darkborder: '#334155' 
+                        primary: { 
+                            50: '#fdf2f2', 
+                            100: '#fde8e8', 
+                            200: '#f9c5c7', 
+                            300: '#f29fa3', 
+                            400: '#e56b71', 
+                            500: '#9a2024', 
+                            600: '#871a1e', 
+                            700: '#731417', 
+                            800: '#5f1013', 
+                            900: '#480a0c',
+                            DEFAULT: '#9a2024'
+                        },
+                        secondary: { 
+                            50: '#edf7f2', 
+                            100: '#d7efe3', 
+                            200: '#b2dfc8', 
+                            300: '#83c9a6', 
+                            400: '#52ad82', 
+                            500: '#1c6b45', 
+                            600: '#165737', 
+                            700: '#12452c', 
+                            800: '#0e3421', 
+                            900: '#092316',
+                            DEFAULT: '#1c6b45'
+                        },
+                        darkbg: '#0f172a', 
+                        darkcard: '#1e293b', 
+                        darkborder: '#334155' 
                     } 
                 } 
             }
@@ -32,12 +63,13 @@
     <style>
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #059669; }
-        .tab-active { border-bottom-width: 2px; border-color: #059669; color: #059669; font-weight: 600; }
-        .dark .tab-active { border-color: #10b981; color: #10b981; }
+        ::-webkit-scrollbar-thumb { background: #9a2024; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #731417; }
+        .tab-active { border-bottom-width: 2px; border-color: #9a2024; color: #9a2024; font-weight: 600; }
+        .dark .tab-active { border-color: #e56b71; color: #e56b71; }
         .tab-inactive { color: #6b7280; } .dark .tab-inactive { color: #9ca3af; }
-        .smart-tab-active { background-color: #10b981; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
+        .smart-tab-active { background-color: #9a2024; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(154, 32, 36, 0.4); }
+        .smart-tab-secondary-active { background-color: #1c6b45; color: white; font-weight: 600; box-shadow: 0 4px 6px -1px rgba(28, 107, 69, 0.4); }
         .smart-tab-inactive { background-color: #f3f4f6; color: #4b5563; }
         .dark .smart-tab-inactive { background-color: #334155; color: #cbd5e1; }
         .theme-transition { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
@@ -45,31 +77,29 @@
         /* TomSelect Dark Mode Fixes */
         .ts-control { border-radius: 0.5rem; border-color: #d1d5db; padding: 0.6rem 0.75rem; font-family: 'Inter', sans-serif; background-color: #f9fafb; }
         .dark .ts-control { background-color: #1e293b; border-color: #334155; color: white; }
-        .ts-control.focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+        .ts-control.focus { border-color: #9a2024; box-shadow: 0 0 0 2px rgba(154, 32, 36, 0.2); }
         .ts-dropdown { border-radius: 0.5rem; font-family: 'Inter', sans-serif; }
         .dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: white; }
-        .dark .ts-dropdown .option:hover, .dark .ts-dropdown .option.active { background-color: #334155; color: #10b981; }
+        .dark .ts-dropdown .option:hover, .dark .ts-dropdown .option.active { background-color: #334155; color: #e56b71; }
         .ts-control > input { color: inherit !important; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans antialiased h-screen flex flex-col overflow-hidden theme-transition">
 
     <!-- ==================== LOGIN VIEW ==================== -->
-    <div id="loginView" class="fixed inset-0 bg-emerald-900 dark:bg-slate-950 flex items-center justify-center z-50 transition-colors duration-300">
+    <div id="loginView" class="fixed inset-0 bg-[#480a0c] dark:bg-slate-950 flex items-center justify-center z-50 transition-colors duration-300">
         <button onclick="toggleDarkMode()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm shadow-lg">
             <i class="fa-solid fa-moon dark:hidden"></i>
             <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
         </button>
 
-        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col mx-4 border border-transparent dark:border-darkborder theme-transition">
-            <div class="bg-emerald-600 dark:bg-emerald-800 p-6 text-center theme-transition relative overflow-hidden">
+        <div class="bg-white dark:bg-darkcard rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col mx-4 border border-transparent dark:border-darkborder theme-transition">
+            <div class="bg-gradient-to-r from-[#9a2024] via-[#731417] to-[#1c6b45] p-6 text-center theme-transition relative overflow-hidden text-white">
                 <div class="absolute top-0 right-0 p-4 opacity-10 transform translate-x-4 -translate-y-4"><i class="fa-solid fa-mosque text-8xl"></i></div>
                 <div class="relative z-10">
-                    <div class="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
-                        <i class="fa-solid fa-book-quran text-3xl text-emerald-600 dark:text-emerald-400"></i>
-                    </div>
-                    <h1 class="text-2xl font-bold text-white tracking-wide brand-name-display">Zadil Quran</h1>
-                    <p class="text-emerald-100 text-sm mt-1">Sistem Manajemen Pantauan Hafalan</p>
+                    <img src="logo.jpg" alt="Logo Zadil Quran" class="w-20 h-20 rounded-2xl object-cover shadow-lg mx-auto mb-3 border-2 border-white/30 bg-white">
+                    <h1 class="text-2xl font-bold tracking-wide brand-name-display text-white">Zadil Quran</h1>
+                    <p class="text-white/80 text-xs mt-1">Sistem Manajemen Pantauan Hafalan</p>
                 </div>
             </div>
             
@@ -83,30 +113,30 @@
                     <div>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-regular fa-user text-gray-400"></i></div>
-                            <input type="text" id="staffUsername" class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="Username (admin / ustadz)" required>
+                            <input type="text" id="staffUsername" class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none transition text-sm" placeholder="Username (admin / ustadz)" required>
                         </div>
                     </div>
                     <div>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-lock text-gray-400"></i></div>
-                            <input type="password" id="staffPassword" class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="Password" required>
+                            <input type="password" id="staffPassword" class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none transition text-sm" placeholder="Password" required>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-emerald-500/30">Masuk Dashboard</button>
+                    <button type="submit" class="w-full bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-[#9a2024]/30 text-sm active:scale-98">Masuk Dashboard</button>
                 </form>
 
                 <form id="formLoginWali" onsubmit="handleLogin(event, 'wali')" class="space-y-4 hidden">
-                    <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 p-3 rounded-lg text-sm mb-4 flex gap-3 shadow-sm">
-                        <i class="fa-solid fa-circle-info mt-0.5"></i>
-                        <p>Masukkan ID Unik Santri untuk melihat progres hafalan putra/putri Anda.</p>
+                    <div class="bg-[#edf7f2] dark:bg-[#12452c]/30 border border-[#b2dfc8] dark:border-[#12452c] text-[#1c6b45] dark:text-[#83c9a6] p-3 rounded-xl text-xs mb-4 flex gap-3 shadow-xs">
+                        <i class="fa-solid fa-circle-info mt-0.5 text-sm"></i>
+                        <p>Masukkan ID Unik Santri untuk melihat riwayat dan capaian hafalan putra/putri Anda secara langsung.</p>
                     </div>
                     <div>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-id-card text-gray-400"></i></div>
-                            <input type="text" id="waliIdSantri" class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none uppercase transition font-mono tracking-wider" placeholder="Contoh: ST-2026-X8K9Z" required>
+                            <input type="text" id="waliIdSantri" class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder text-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none uppercase transition font-mono tracking-wider text-sm font-semibold" placeholder="Contoh: ST-2026-X8K9Z" required>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-lg transition shadow-lg shadow-emerald-500/30">Lihat Progres Anak</button>
+                    <button type="submit" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-[#1c6b45]/30 text-sm active:scale-98">Lihat Progres Anak</button>
                 </form>
 
                 <div class="mt-6 pt-4 border-t border-gray-100 dark:border-darkborder text-center text-xs text-gray-400">
@@ -118,22 +148,22 @@
 
     <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
     <div id="mainLayout" class="hidden h-full flex flex-col md:flex-row w-full">
-        <aside id="sidebar" class="bg-emerald-900 dark:bg-slate-900 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-xl flex flex-col border-r border-transparent dark:border-darkborder theme-transition">
-            <div class="p-5 flex items-center gap-3 border-b border-emerald-800 dark:border-darkborder">
-                <i class="fa-solid fa-book-quran text-2xl text-emerald-400"></i>
-                <span class="text-xl font-bold tracking-wider brand-name-display cursor-pointer" onclick="navigateTo('/')">Zadil Quran</span>
-                <button onclick="toggleSidebar()" class="md:hidden ml-auto text-emerald-300"><i class="fa-solid fa-times text-xl"></i></button>
+        <aside id="sidebar" class="bg-[#480a0c] dark:bg-slate-950 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-xl flex flex-col border-r border-[#631316] dark:border-darkborder theme-transition">
+            <div class="p-4 flex items-center gap-3 border-b border-[#631316] dark:border-darkborder">
+                <img src="logo.jpg" alt="Logo Zadil Quran" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 bg-white">
+                <span class="text-lg font-bold tracking-wider brand-name-display cursor-pointer" onclick="navigateTo('/')">Zadil Quran</span>
+                <button onclick="toggleSidebar()" class="md:hidden ml-auto text-white/70 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
             
-            <div class="p-4 border-b border-emerald-800 dark:border-darkborder bg-emerald-950/30 dark:bg-black/20 flex items-center justify-between">
+            <div class="p-4 border-b border-[#631316] dark:border-darkborder bg-black/20 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold shadow-md" id="userInitial">A</div>
+                    <div class="w-10 h-10 rounded-full bg-[#1c6b45] flex items-center justify-center text-white font-bold shadow-md" id="userInitial">A</div>
                     <div>
                         <p class="text-sm font-medium line-clamp-1" id="userNameDisplay">Nama User</p>
-                        <p class="text-xs text-emerald-400 dark:text-emerald-500 capitalize" id="userRoleDisplay">Role</p>
+                        <p class="text-xs text-emerald-300 capitalize" id="userRoleDisplay">Role</p>
                     </div>
                 </div>
-                <button onclick="toggleDarkMode()" class="text-emerald-200 hover:text-white p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
+                <button onclick="toggleDarkMode()" class="text-white/70 hover:text-white p-2 rounded-lg bg-white/5 hover:bg-white/10 transition">
                     <i class="fa-solid fa-moon dark:hidden"></i>
                     <i class="fa-solid fa-sun hidden dark:block text-yellow-300"></i>
                 </button>
@@ -141,8 +171,8 @@
 
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebarMenu"></nav>
 
-            <div class="p-4 border-t border-emerald-800 dark:border-darkborder">
-                <button onclick="logout()" class="flex items-center gap-3 w-full p-2 rounded-lg text-emerald-200 hover:bg-red-500 hover:text-white transition group">
+            <div class="p-4 border-t border-[#631316] dark:border-darkborder">
+                <button onclick="logout()" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-red-600 hover:text-white transition group text-sm">
                     <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
                     <span>Keluar</span>
                 </button>
@@ -150,11 +180,12 @@
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-            <header class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-sm h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 theme-transition">
-                <div class="flex items-center gap-2 text-emerald-700 dark:text-emerald-500 font-bold cursor-pointer" onclick="navigateTo('/')">
-                    <i class="fa-solid fa-book-quran"></i> <span class="brand-name-display">Zadil Quran</span>
+            <header id="mobileAdminHeader" class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-xs h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 theme-transition">
+                <div class="flex items-center gap-2.5 text-[#9a2024] dark:text-[#f29fa3] font-bold cursor-pointer" onclick="navigateTo('/')">
+                    <img src="logo.jpg" alt="Logo" class="w-8 h-8 rounded-lg object-cover">
+                    <span class="brand-name-display text-base">Zadil Quran</span>
                 </div>
-                <button onclick="toggleSidebar()" class="text-gray-600 dark:text-gray-300 hover:text-emerald-600 p-2"><i class="fa-solid fa-bars text-xl"></i></button>
+                <button onclick="toggleSidebar()" class="text-gray-600 dark:text-gray-300 hover:text-[#9a2024] p-2"><i class="fa-solid fa-bars text-xl"></i></button>
             </header>
 
             <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative" id="contentArea"></div>
@@ -164,7 +195,7 @@
 
     <!-- ==================== MODALS ==================== -->
     <div id="modalUstadz" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
-        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalUstadzContent">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalUstadzContent">
             <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
                 <h3 class="font-bold text-lg" id="titleModalUstadz">Tambah Ustadz Baru</h3>
                 <button onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -172,52 +203,52 @@
             <form id="formTambahUstadz" onsubmit="saveUstadz(event)" class="p-5 space-y-4">
                 <div>
                     <label class="block text-sm font-medium mb-1">Nama Lengkap Ustadz</label>
-                    <input type="text" id="inputUstadzName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                    <input type="text" id="inputUstadzName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Username Login <button type="button" onclick="generateUstadzCreds()" class="text-xs text-blue-500 ml-2 hover:underline"><i class="fa-solid fa-rotate mr-1"></i>Generate Ulang</button></label>
-                    <input type="text" id="inputUstadzUsername" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono" required>
+                    <input type="text" id="inputUstadzUsername" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none font-mono text-sm" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Password</label>
-                    <input type="text" id="inputUstadzPassword" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none font-mono" required>
+                    <input type="text" id="inputUstadzPassword" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none font-mono text-sm" required>
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
-                    <button type="button" onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg shadow-md">Simpan Data</button>
+                    <button type="button" onclick="closeModal('modalUstadz', 'modalUstadzContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-xl transition text-sm">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-[#9a2024] text-white font-medium hover:bg-[#871a1e] rounded-xl shadow-md text-sm">Simpan Data</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="modalSantri" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
-        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalSantriContent">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md mx-4 transform scale-95 transition-transform" id="modalSantriContent">
             <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
                 <h3 class="font-bold text-lg" id="titleModalSantri">Tambah Santri Baru</h3>
                 <button onclick="closeModal('modalSantri', 'modalSantriContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form id="formTambahSantri" onsubmit="saveSantri(event)" class="p-5 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1">ID Unik <span class="text-xs text-emerald-600 font-normal">(Auto Generate/ReadOnly)</span></label>
-                    <input type="text" id="inputSantriId" class="w-full px-3 py-2 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg font-mono font-bold text-emerald-700 dark:text-emerald-400 outline-none cursor-not-allowed" readonly placeholder="Memuat ID Baru...">
+                    <label class="block text-sm font-medium mb-1">ID Unik <span class="text-xs text-[#1c6b45] font-normal">(Auto Generate/ReadOnly)</span></label>
+                    <input type="text" id="inputSantriId" class="w-full px-3 py-2 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl font-mono font-bold text-[#9a2024] dark:text-[#f29fa3] outline-none cursor-not-allowed text-sm" readonly placeholder="Memuat ID Baru...">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Nama Lengkap Santri</label>
-                    <input type="text" id="inputSantriName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                    <input type="text" id="inputSantriName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Nama Wali Santri</label>
-                    <input type="text" id="inputWaliName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                    <input type="text" id="inputWaliName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Ustadz Pembimbing (Opsional)</label>
-                    <select id="inputUstadzId" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg outline-none focus:border-emerald-500 text-sm">
+                    <select id="inputUstadzId" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none focus:border-[#9a2024] text-sm">
                         <option value="">-- Belum Ditentukan --</option>
                     </select>
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
-                    <button type="button" onclick="closeModal('modalSantri', 'modalSantriContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg transition">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white font-medium hover:bg-emerald-700 rounded-lg shadow-md">Simpan Data</button>
+                    <button type="button" onclick="closeModal('modalSantri', 'modalSantriContent')" class="px-4 py-2 font-medium bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-xl transition text-sm">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-[#9a2024] text-white font-medium hover:bg-[#871a1e] rounded-xl shadow-md text-sm">Simpan Data</button>
                 </div>
             </form>
         </div>
@@ -231,45 +262,45 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div onclick="navigateTo('/admin/santri')" class="bg-white dark:bg-darkcard rounded-xl p-5 shadow-sm border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
-                <div class="absolute right-0 top-0 bottom-0 w-2 bg-emerald-500 transition-all opacity-100"></div>
-                <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-users"></i></div>
-                <div class="z-10"><p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Santri</p><p class="text-3xl font-bold" id="statSantri">-</p></div>
+            <div onclick="navigateTo('/admin/santri')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-[#9a2024] transition-all opacity-100"></div>
+                <div class="w-14 h-14 bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] rounded-2xl flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-users"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Total Santri</p><p class="text-3xl font-extrabold mt-0.5" id="statSantri">-</p></div>
             </div>
-            <div onclick="navigateTo('/admin/ustadz')" class="bg-white dark:bg-darkcard rounded-xl p-5 shadow-sm border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
-                <div class="absolute right-0 top-0 bottom-0 w-2 bg-blue-500 transition-all opacity-100"></div>
-                <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-user-tie"></i></div>
-                <div class="z-10"><p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Ustadz</p><p class="text-3xl font-bold" id="statUstadz">-</p></div>
+            <div onclick="navigateTo('/admin/ustadz')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
+                <div class="absolute right-0 top-0 bottom-0 w-2 bg-[#1c6b45] transition-all opacity-100"></div>
+                <div class="w-14 h-14 bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] rounded-2xl flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Total Ustadz</p><p class="text-3xl font-extrabold mt-0.5" id="statUstadz">-</p></div>
             </div>
-            <div class="bg-white dark:bg-darkcard rounded-xl p-5 shadow-sm border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group">
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group">
                 <div class="absolute right-0 top-0 bottom-0 w-2 bg-amber-500 transition-all opacity-100"></div>
-                <div class="w-14 h-14 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-book-open"></i></div>
-                <div class="z-10"><p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Setoran</p><p class="text-3xl font-bold" id="statSetoran">-</p></div>
+                <div class="w-14 h-14 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-2xl z-10"><i class="fa-solid fa-book-open"></i></div>
+                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Total Setoran</p><p class="text-3xl font-extrabold mt-0.5" id="statSetoran">-</p></div>
             </div>
         </div>
 
         <!-- Quick Menu Navigasi Sesuai Permintaan Slug/Routing -->
         <div class="mb-8">
-            <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-compass text-emerald-500"></i> Menu & Navigasi Cepat
+            <h3 class="text-base font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-compass text-[#9a2024]"></i> Menu & Navigasi Cepat
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <button onclick="navigateTo('/admin/ustadz')" class="p-4 bg-white dark:bg-darkcard rounded-xl border border-gray-100 dark:border-darkborder shadow-sm hover:border-emerald-500 dark:hover:border-emerald-500 text-left transition group">
-                    <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                <button onclick="navigateTo('/admin/ustadz')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#1c6b45] dark:hover:border-[#1c6b45] text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
                     <p class="font-bold text-gray-800 dark:text-white text-sm">Kelola Ustadz (/admin/ustadz)</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tambah & atur akun pembimbing</p>
                 </button>
-                <button onclick="navigateTo('/admin/santri')" class="p-4 bg-white dark:bg-darkcard rounded-xl border border-gray-100 dark:border-darkborder shadow-sm hover:border-blue-500 dark:hover:border-blue-500 text-left transition group">
-                    <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                <button onclick="navigateTo('/admin/santri')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#9a2024] dark:hover:border-[#9a2024] text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-users"></i>
                     </div>
                     <p class="font-bold text-gray-800 dark:text-white text-sm">Kelola Santri (/admin/santri)</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Daftar santri & plot ustadz</p>
                 </button>
-                <button onclick="navigateTo('/admin/pengaturan')" class="p-4 bg-white dark:bg-darkcard rounded-xl border border-gray-100 dark:border-darkborder shadow-sm hover:border-amber-500 dark:hover:border-amber-500 text-left transition group">
-                    <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+                <button onclick="navigateTo('/admin/pengaturan')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-gray-400 dark:hover:border-slate-500 text-left transition group">
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-gear"></i>
                     </div>
                     <p class="font-bold text-gray-800 dark:text-white text-sm">Pengaturan Sistem (/admin/pengaturan)</p>
@@ -285,13 +316,13 @@
                 <h2 class="text-2xl font-bold">Data Ustadz</h2>
                 <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Daftar pembimbing dan santri yang dibimbing.</p>
             </div>
-            <button onclick="openModalUstadz()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Ustadz</button>
+            <button onclick="openModalUstadz()" class="bg-[#1c6b45] hover:bg-[#165737] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Ustadz</button>
         </div>
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder overflow-hidden">
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
             <div class="p-4 border-b border-gray-100 dark:border-darkborder flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
                 <div class="relative w-full max-w-sm">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
-                    <input type="text" oninput="handleSearch('ustadz', this.value)" placeholder="Cari ustadz / username..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" oninput="handleSearch('ustadz', this.value)" placeholder="Cari ustadz / username..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -317,13 +348,13 @@
                 <h2 class="text-2xl font-bold">Data Santri</h2>
                 <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Daftar santri, nama wali, dan ustadz pembimbing.</p>
             </div>
-            <button onclick="openModalSantri()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Santri</button>
+            <button onclick="openModalSantri()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition shadow-sm"><i class="fa-solid fa-plus mr-2"></i>Tambah Santri</button>
         </div>
-        <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder overflow-hidden">
+        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
             <div class="p-4 border-b border-gray-100 dark:border-darkborder flex justify-between items-center bg-gray-50/50 dark:bg-slate-800/30">
                 <div class="relative w-full max-w-sm">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
-                    <input type="text" oninput="handleSearch('santri', this.value)" placeholder="Cari santri / ID / wali..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <input type="text" oninput="handleSearch('santri', this.value)" placeholder="Cari santri / ID / wali..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
                 </div>
             </div>
             <div class="overflow-x-auto">
@@ -348,44 +379,44 @@
         <div class="mb-6"><h2 class="text-2xl font-bold">Pengaturan Sistem</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Konfigurasi lembaga, password superadmin, dan backend Apps Script.</p></div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-6">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-building-columns mr-2 text-emerald-500"></i>Identitas Lembaga</h3>
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-building-columns mr-2 text-[#9a2024]"></i>Identitas Lembaga</h3>
                 <form onsubmit="savePondokName(event)" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Nama Pondok / Aplikasi</label>
-                        <input type="text" id="inputPondokName" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                        <input type="text" id="inputPondokName" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
                     </div>
-                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-sm">Simpan Identitas</button>
+                    <button type="submit" class="bg-[#9a2024] hover:bg-[#871a1e] text-white font-medium py-2.5 px-4 rounded-xl transition shadow-sm text-sm">Simpan Identitas</button>
                 </form>
             </div>
 
-            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-6">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-shield-halved mr-2 text-blue-500"></i>Ganti Password Admin</h3>
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-shield-halved mr-2 text-[#1c6b45]"></i>Ganti Password Admin</h3>
                 <form onsubmit="saveAdminPassword(event)" class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Password Saat Ini</label>
-                        <input type="password" id="oldPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                        <input type="password" id="oldPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Password Baru</label>
-                        <input type="password" id="newPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                        <input type="password" id="newPassword" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
                     </div>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition shadow-sm">Ubah Password</button>
+                    <button type="submit" class="bg-[#1c6b45] hover:bg-[#165737] text-white font-medium py-2.5 px-4 rounded-xl transition shadow-sm text-sm">Ubah Password</button>
                 </form>
             </div>
 
             <!-- Kartu Integrasi Backend & Cloudflare -->
-            <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-6 lg:col-span-2">
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6 lg:col-span-2">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b pb-2 dark:border-darkborder">
-                    <h3 class="font-bold text-lg"><i class="fa-solid fa-cloud-arrow-up mr-2 text-emerald-500"></i>Backend Google Apps Script & Cloudflare Pages</h3>
+                    <h3 class="font-bold text-lg"><i class="fa-solid fa-cloud-arrow-up mr-2 text-[#1c6b45]"></i>Backend Google Apps Script & Cloudflare Pages</h3>
                     <span id="apiStatusBadge" class="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-medium">Status API: Belum Diuji</span>
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Frontend terhubung ke backend secara transparan melalui reverse proxy Cloudflare Pages (<code>/api</code>). URL Web App Apps Script dikonfigurasi terpusat di file <code>_worker.js</code> atau Cloudflare Environment Variable <code>APPS_SCRIPT_URL</code>.
                 </p>
                 <div class="flex flex-wrap gap-3 pt-1">
-                    <button type="button" onclick="testBackendConnection()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-network-wired"></i>Tes Koneksi API</button>
-                    <button type="button" onclick="initSetupDatabaseFromUI()" class="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-4 rounded-lg transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-database"></i>Inisialisasi Database Sheets</button>
+                    <button type="button" onclick="testBackendConnection()" class="bg-[#1c6b45] hover:bg-[#165737] text-white font-medium py-2.5 px-4 rounded-xl transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-network-wired"></i>Tes Koneksi API</button>
+                    <button type="button" onclick="initSetupDatabaseFromUI()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white font-medium py-2.5 px-4 rounded-xl transition text-sm shadow-sm flex items-center gap-2"><i class="fa-solid fa-database"></i>Inisialisasi Database Sheets</button>
                 </div>
             </div>
         </div>
@@ -396,16 +427,16 @@
         <div class="mb-6"><h2 class="text-2xl font-bold">Workspace Ustadz</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kartu Pintar Input Setoran & Riwayat Santri Binaan</p></div>
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             <div class="xl:col-span-5">
-                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-lg border border-gray-100 dark:border-darkborder overflow-hidden sticky top-6">
-                    <div class="p-4 bg-emerald-100/50 dark:bg-emerald-900/30 border-b border-emerald-200 dark:border-emerald-800/50 flex items-center justify-between">
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-2"><i class="fa-solid fa-pen-nib"></i> Form Input Setoran</span>
-                        <span class="text-xs bg-emerald-600 text-white px-2 py-0.5 rounded-full font-medium">Smart Assist</span>
+                <div class="bg-white dark:bg-darkcard rounded-3xl shadow-lg border border-gray-100 dark:border-darkborder overflow-hidden sticky top-6">
+                    <div class="p-4 bg-[#fdf2f2] dark:bg-[#480a0c]/40 border-b border-[#f9c5c7] dark:border-[#731417]/50 flex items-center justify-between">
+                        <span class="font-bold text-[#9a2024] dark:text-[#f29fa3] text-sm flex items-center gap-2"><i class="fa-solid fa-pen-nib"></i> Form Input Setoran</span>
+                        <span class="text-xs bg-[#1c6b45] text-white px-2.5 py-0.5 rounded-full font-medium">Smart Assist</span>
                     </div>
 
                     <form id="formSmartSetoran" onsubmit="saveSetoran(event)" class="p-5 space-y-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tanggal & Jam</label>
-                            <input type="datetime-local" id="smartDate" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none" required>
+                            <input type="datetime-local" id="smartDate" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm focus:ring-2 focus:ring-[#9a2024] outline-none" required>
                         </div>
 
                         <div>
@@ -413,18 +444,18 @@
                             <select id="smartSantri" required placeholder="Cari nama santri..."></select>
                         </div>
 
-                        <div id="smartPinContainer" class="hidden bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-xl p-3 flex items-center justify-between gap-3">
+                        <div id="smartPinContainer" class="hidden bg-[#edf7f2] dark:bg-[#092316]/50 border border-[#b2dfc8] dark:border-[#12452c] rounded-2xl p-3 flex items-center justify-between gap-3">
                             <div class="flex items-center gap-2.5 overflow-hidden">
-                                <i class="fa-solid fa-thumbtack text-emerald-600 dark:text-emerald-400 transform -rotate-45"></i>
-                                <span class="text-xs text-emerald-800 dark:text-emerald-200 truncate font-medium" id="smartPinText">Lanjutan Terakhir...</span>
+                                <i class="fa-solid fa-thumbtack text-[#1c6b45] dark:text-[#83c9a6] transform -rotate-45"></i>
+                                <span class="text-xs text-[#1c6b45] dark:text-[#83c9a6] truncate font-medium" id="smartPinText">Lanjutan Terakhir...</span>
                             </div>
-                            <button type="button" onclick="applySmartPin()" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium whitespace-nowrap shadow-sm transition">Pakai</button>
+                            <button type="button" onclick="applySmartPin()" class="px-2.5 py-1 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-lg text-xs font-medium whitespace-nowrap shadow-xs transition">Pakai</button>
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Jenis Setoran</label>
                             <div class="flex bg-gray-100 dark:bg-slate-800 p-1 rounded-xl">
-                                <button type="button" id="btnTabBaru" onclick="switchSmartTab('Hafalan Baru')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-active">Hafalan Baru</button>
+                                <button type="button" id="btnTabBaru" onclick="switchSmartTab('Hafalan Baru')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-secondary-active">Hafalan Baru</button>
                                 <button type="button" id="btnTabMurojaah" onclick="switchSmartTab('Murojaah')" class="flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive ml-2">Muroja'ah</button>
                             </div>
                             <input type="hidden" id="smartType" value="Hafalan Baru">
@@ -433,7 +464,7 @@
                         <div class="grid grid-cols-12 gap-3">
                             <div class="col-span-5">
                                 <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Juz</label>
-                                <select id="smartJuz" onchange="populateSurat()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none">
+                                <select id="smartJuz" onchange="populateSurat()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
                                     <option value="all">Semua</option>
                                 </select>
                             </div>
@@ -443,79 +474,200 @@
                             </div>
                         </div>
 
-                        <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-gray-100 dark:border-darkborder space-y-3">
+                        <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-2xl border border-gray-100 dark:border-darkborder space-y-3">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cakupan Ayat</span>
                                 <label class="flex items-center gap-1.5 cursor-pointer">
-                                    <input type="checkbox" id="chkFullSurat" onchange="toggleFullSurat()" class="rounded text-emerald-600 focus:ring-emerald-500" disabled>
+                                    <input type="checkbox" id="chkFullSurat" onchange="toggleFullSurat()" class="rounded text-[#9a2024] focus:ring-[#9a2024]" disabled>
                                     <span class="text-xs text-gray-600 dark:text-gray-400 font-medium">1 Surat Penuh</span>
                                 </label>
                             </div>
                             <div class="flex items-center gap-2">
-                                <input type="number" id="smartAyatStart" placeholder="Mulai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none text-center font-bold" disabled required>
+                                <input type="number" id="smartAyatStart" placeholder="Mulai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none text-center font-bold" disabled required>
                                 <span class="text-gray-400 font-bold">-</span>
-                                <input type="number" id="smartAyatEnd" placeholder="Sampai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none text-center font-bold" disabled required>
+                                <input type="number" id="smartAyatEnd" placeholder="Sampai" min="1" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none text-center font-bold" disabled required>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Halaman Mushaf</label>
-                                <input type="text" id="smartHal" placeholder="Contoh: 582" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none">
+                                <input type="text" id="smartHal" placeholder="Contoh: 582" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Penilaian</label>
                                 <div class="grid grid-cols-3 gap-1 pt-0.5">
-                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Lancar" checked class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-xs font-bold peer-checked:bg-emerald-500 peer-checked:text-white transition">Lancar</div></label>
-                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Kurang Lancar" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-xs font-bold peer-checked:bg-yellow-500 peer-checked:text-white transition">Kurang</div></label>
-                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Ulang" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-xs font-bold peer-checked:bg-red-500 peer-checked:text-white transition">Ulang</div></label>
+                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Lancar" checked class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-[#1c6b45] peer-checked:text-white transition">Lancar</div></label>
+                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Kurang Lancar" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-yellow-500 peer-checked:text-white transition">Kurang</div></label>
+                                    <label class="cursor-pointer text-center"><input type="radio" name="smartPredikat" value="Ulang" class="peer sr-only"><div class="py-1.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-xs font-bold peer-checked:bg-red-500 peer-checked:text-white transition">Ulang</div></label>
                                 </div>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Catatan Ustadz (Opsional)</label>
-                            <input type="text" id="smartCatatan" placeholder="Contoh: Tajwid makhraj nun mati diperhatikan" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-lg text-sm outline-none">
+                            <input type="text" id="smartCatatan" placeholder="Contoh: Tajwid makhraj nun mati diperhatikan" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm outline-none">
                         </div>
 
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-lg shadow-emerald-500/20 text-sm flex items-center justify-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Simpan Setoran</button>
+                        <button type="submit" class="w-full bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold py-3 rounded-2xl transition shadow-lg shadow-[#9a2024]/20 text-sm flex items-center justify-center gap-2 active:scale-98"><i class="fa-solid fa-floppy-disk"></i> Simpan Setoran</button>
                     </form>
                 </div>
             </div>
 
             <div class="xl:col-span-7">
-                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-sm border border-gray-100 dark:border-darkborder p-5">
-                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-emerald-500"></i> Riwayat Setoran Terakhir Anda</h3>
+                <div class="bg-white dark:bg-darkcard rounded-3xl shadow-xs border border-gray-100 dark:border-darkborder p-5">
+                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-[#9a2024]"></i> Riwayat Setoran Terakhir Anda</h3>
                     <div id="listSetoranUstadz" class="space-y-3"></div>
                 </div>
             </div>
         </div>
     </template>
 
+    <!-- ==================== TEMPLATE WALI SANTRI (MOBILE-FIRST) ==================== -->
     <template id="tpl-walisantri">
-        <div class="max-w-3xl mx-auto">
-            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-6 text-white shadow-xl mb-6 relative overflow-hidden">
-                <div class="absolute right-0 bottom-0 opacity-10 translate-x-6 translate-y-6"><i class="fa-solid fa-quran text-9xl"></i></div>
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-12 h-12 bg-white/20 rounded-xl backdrop-blur-sm flex items-center justify-center text-2xl font-bold"><i class="fa-solid fa-user-graduate"></i></div>
-                        <div>
-                            <h2 class="text-2xl font-bold" id="waliAnakName">Nama Santri</h2>
-                            <p class="text-xs text-emerald-100 font-mono tracking-wider" id="waliAnakId">ST-XXXX</p>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/20">
-                        <div><p class="text-xs text-emerald-100 uppercase tracking-wider mb-1">Total Pencapaian</p><p class="text-2xl font-bold" id="waliTotalSetoran">0 <span class="text-sm font-normal text-emerald-100">Setoran</span></p></div>
-                        <div class="text-right"><p class="text-xs text-emerald-100 uppercase tracking-wider mb-1">Ustadz Pembimbing</p><p class="font-medium text-sm bg-white/20 px-2 py-1 rounded inline-block" id="waliUstadzName">Ustadz</p></div>
+        <div class="max-w-md mx-auto w-full min-h-screen bg-gray-50 dark:bg-darkbg pb-24 relative">
+            <!-- Top Mobile App Bar -->
+            <header class="sticky top-0 z-30 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-b border-gray-100 dark:border-darkborder px-4 py-3 flex items-center justify-between shadow-xs">
+                <div class="flex items-center gap-2.5">
+                    <img src="logo.jpg" alt="Logo Zadil Quran" class="w-8 h-8 rounded-lg object-cover shadow-xs border border-gray-100 dark:border-darkborder">
+                    <div>
+                        <h1 class="text-sm font-bold text-gray-800 dark:text-white leading-tight brand-name-display">Zadil Quran</h1>
+                        <p class="text-[10px] text-[#1c6b45] dark:text-[#83c9a6] font-medium leading-tight">Portal Pantauan Wali Santri</p>
                     </div>
                 </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center transition active:scale-95" title="Ganti Mode">
+                        <i class="fa-solid fa-moon dark:hidden text-xs"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-yellow-400 text-xs"></i>
+                    </button>
+                    <button onclick="logout()" class="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center transition active:scale-95" title="Ganti Santri / Keluar">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="p-4 space-y-4">
+                <!-- Hero Profil Card Santri (Warna Utama #9a2024 & Secondary #1c6b45) -->
+                <div class="bg-gradient-to-br from-[#9a2024] via-[#731417] to-[#1c6b45] rounded-3xl p-5 text-white shadow-xl relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none">
+                        <i class="fa-solid fa-book-quran text-9xl"></i>
+                    </div>
+                    
+                    <div class="relative z-10 space-y-3.5">
+                        <div class="flex items-center justify-between">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-white/20 backdrop-blur-sm tracking-wide">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-300"></span> Santri Aktif
+                            </span>
+                            <button onclick="initApp('wali')" class="text-xs text-white/80 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2.5 py-1 rounded-lg backdrop-blur-sm transition active:scale-95">
+                                <i class="fa-solid fa-rotate text-[10px]"></i> Segarkan
+                            </button>
+                        </div>
+
+                        <div class="flex items-center gap-3.5 pt-1">
+                            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 text-white font-bold text-2xl flex items-center justify-center shadow-inner" id="waliAnakInitial">
+                                S
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h2 class="text-xl font-bold tracking-tight text-white truncate" id="waliAnakName">Nama Santri</h2>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-mono bg-black/25 px-2 py-0.5 rounded tracking-wider text-emerald-200" id="waliAnakId">ST-XXXX</span>
+                                    <button onclick="copySantriId()" class="text-xs text-white/70 hover:text-white transition" title="Salin ID Santri">
+                                        <i class="fa-regular fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/15 grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-white/70 block text-[10px]">Ustadz Pembimbing</span>
+                                <span class="font-semibold text-white truncate block" id="waliUstadzName">Ustadz</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-white/70 block text-[10px]">Nama Wali</span>
+                                <span class="font-semibold text-white truncate block" id="waliOrangtuaName">Wali</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tiga Kartu Metrik Capaian -->
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3 border border-gray-100 dark:border-darkborder shadow-xs text-center">
+                        <p class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</p>
+                        <p class="text-xl font-extrabold text-gray-800 dark:text-white mt-0.5" id="waliTotalSetoran">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3 border border-[#b2dfc8] dark:border-[#12452c] shadow-xs text-center">
+                        <p class="text-[10px] font-semibold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider">Baru</p>
+                        <p class="text-xl font-extrabold text-[#1c6b45] dark:text-[#83c9a6] mt-0.5" id="waliTotalBaru">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3 border border-[#f9c5c7] dark:border-[#731417]/50 shadow-xs text-center">
+                        <p class="text-[10px] font-semibold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider">Muroja'ah</p>
+                        <p class="text-xl font-extrabold text-[#9a2024] dark:text-[#f29fa3] mt-0.5" id="waliTotalMurojaah">0</p>
+                    </div>
+                </div>
+
+                <!-- Tombol Bagikan ke WhatsApp -->
+                <button onclick="shareProgressWa()" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white py-3 px-4 rounded-2xl font-semibold text-sm shadow-md shadow-[#1c6b45]/20 flex items-center justify-center gap-2.5 transition active:scale-98">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span>Bagikan Capaian ke WhatsApp Keluarga</span>
+                </button>
+
+                <!-- Filter & Pencarian Surat Mobile -->
+                <div class="space-y-2 pt-1">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-[#9a2024]"></i> Linimasa Setoran
+                        </h3>
+                        <span class="text-xs text-gray-400" id="waliCountDisplay">Memuat...</span>
+                    </div>
+
+                    <div class="flex gap-1.5 overflow-x-auto pb-1" id="waliFilterButtons">
+                        <button onclick="setWaliFilter('all')" id="btnFilterAll" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#9a2024] text-white shadow-xs transition">Semua</button>
+                        <button onclick="setWaliFilter('baru')" id="btnFilterBaru" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition">Hafalan Baru</button>
+                        <button onclick="setWaliFilter('murojaah')" id="btnFilterMurojaah" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition">Muroja'ah</button>
+                    </div>
+
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                        <input type="text" id="waliSearchSuratInput" oninput="handleWaliSearch(this.value)" placeholder="Cari surat atau juz..." class="w-full pl-8 pr-3 py-2 bg-white dark:bg-darkcard border border-gray-200 dark:border-darkborder rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
+                    </div>
+                </div>
+
+                <!-- Feed Setoran Mobile -->
+                <div class="space-y-3" id="waliSetoranList"></div>
+
+                <!-- Empty State -->
+                <div id="waliEmptyState" class="hidden text-center py-12 px-4 bg-white dark:bg-darkcard rounded-3xl border border-dashed border-gray-200 dark:border-darkborder">
+                    <div class="w-16 h-16 bg-[#edf7f2] dark:bg-[#12452c]/40 rounded-full flex items-center justify-center mx-auto mb-3 text-[#1c6b45] dark:text-[#83c9a6]">
+                        <i class="fa-solid fa-seedling text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 dark:text-white text-sm">Belum Ada Catatan Setoran</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">
+                        Data rekaman setoran ananda akan muncul di sini segera setelah disimak dan dinilai oleh Ustadz pembimbing.
+                    </p>
+                </div>
             </div>
-            <div class="flex items-center justify-between mb-4 px-1"><h3 class="font-bold text-lg border-b-2 border-emerald-500 pb-1 inline-block">Riwayat Setoran Terbaru</h3></div>
-            <div class="space-y-4" id="waliSetoranList"></div>
-            <div id="waliEmptyState" class="hidden text-center py-12 bg-white dark:bg-darkcard rounded-2xl border border-dashed border-gray-300 dark:border-darkborder mt-4">
-                <div class="w-20 h-20 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-seedling text-3xl text-emerald-400"></i></div>
-                <p class="font-medium text-gray-700 dark:text-gray-300">Belum ada catatan progres.</p>
-            </div>
+
+            <!-- Sticky Bottom Navigation Bar (Ergonomi Satu Jempol) -->
+            <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-100 dark:border-darkborder py-2.5 px-6 flex items-center justify-around shadow-lg max-w-md mx-auto">
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="flex flex-col items-center gap-0.5 text-[#9a2024] dark:text-[#f29fa3] text-xs font-semibold">
+                    <i class="fa-solid fa-house text-base"></i>
+                    <span class="text-[10px]">Beranda</span>
+                </button>
+                <button onclick="shareProgressWa()" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:text-[#1c6b45] text-xs transition">
+                    <i class="fa-brands fa-whatsapp text-base"></i>
+                    <span class="text-[10px]">Bagikan</span>
+                </button>
+                <button onclick="initApp('wali')" class="flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 hover:text-gray-800 text-xs transition">
+                    <i class="fa-solid fa-rotate-right text-base"></i>
+                    <span class="text-[10px]">Refresh</span>
+                </button>
+                <button onclick="logout()" class="flex flex-col items-center gap-0.5 text-red-500 hover:text-red-600 text-xs transition">
+                    <i class="fa-solid fa-right-from-bracket text-base"></i>
+                    <span class="text-[10px]">Keluar</span>
+                </button>
+            </nav>
         </div>
     </template>
 
@@ -532,7 +684,7 @@
                 });
             }
 
-            // 2. Lingkungan Cloudflare Pages (melalui /api atau URL Apps Script langsung)
+            // 2. Lingkungan Cloudflare Pages (melalui /api reverse proxy)
             const apiUrl = getApiUrl();
             try {
                 const response = await fetch(apiUrl, {
@@ -559,7 +711,7 @@
                     title: 'Koneksi Backend Terkendala',
                     html: `<div class="text-left text-sm space-y-2">
                         <p>Gagal menghubungi backend Google Apps Script: <b>${err.message}</b></p>
-                        <p class="text-xs text-gray-500">Pastikan backend Google Apps Script sudah di-deploy sebagai Web App (Who has access: Anyone) dan URL sudah dikonfigurasi di Cloudflare Pages atau Pengaturan.</p>
+                        <p class="text-xs text-gray-500">Pastikan backend Google Apps Script sudah di-deploy sebagai Web App dan APPS_SCRIPT_URL di file _worker.js sudah terisi dengan benar.</p>
                     </div>`,
                     confirmButtonText: 'Tutup'
                 });
@@ -571,6 +723,10 @@
         let state = { ustadz: [], santri: [], setoran: [], appName: "Zadil Quran", currentAdminMenu: 'dashboard' };
         let sessionData = null;
         let editModeId = null;
+
+        // Wali Santri State
+        let waliFilter = 'all';
+        let waliSearchQuery = '';
 
         // ==================== ROUTING / SLUG ENGINE ====================
         function normalizePath(path) {
@@ -740,8 +896,8 @@
                 <div class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 w-full">
                     <span>Halaman ${conf.page} dari ${totalPages}</span>
                     <div class="flex gap-2">
-                        <button onclick="changePage('${configKey}', -1, ${totalPages})" class="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-darkborder rounded hover:bg-gray-50 dark:hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" ${conf.page <= 1 ? 'disabled' : ''}>Prev</button>
-                        <button onclick="changePage('${configKey}', 1, ${totalPages})" class="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-darkborder rounded hover:bg-gray-50 dark:hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" ${conf.page >= totalPages ? 'disabled' : ''}>Next</button>
+                        <button onclick="changePage('${configKey}', -1, ${totalPages})" class="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-darkborder rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs" ${conf.page <= 1 ? 'disabled' : ''}>Prev</button>
+                        <button onclick="changePage('${configKey}', 1, ${totalPages})" class="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-200 dark:border-darkborder rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-xs" ${conf.page >= totalPages ? 'disabled' : ''}>Next</button>
                     </div>
                 </div>
             `;
@@ -931,20 +1087,37 @@
         }
 
         function initApp(loginType) {
-            Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
-            
-            const name = sessionData.role === 'walisantri' ? `Wali: ${sessionData.santri.Nama_Wali}` : sessionData.name;
-            document.getElementById('userNameDisplay').textContent = name;
-            document.getElementById('userRoleDisplay').textContent = sessionData.role;
-            document.getElementById('userInitial').textContent = name.charAt(0).toUpperCase();
-            
-            if(sessionData.role === 'superadmin' && !state.currentAdminMenu) { 
-                state.currentAdminMenu = 'dashboard'; 
+            if (!sessionData) return;
+
+            const isWali = sessionData.role === 'walisantri';
+            const sidebar = document.getElementById('sidebar');
+            const mobileHeader = document.getElementById('mobileAdminHeader');
+            const contentArea = document.getElementById('contentArea');
+
+            // Modus Mobile-First Khusus Peran Wali Santri
+            if (isWali) {
+                if (sidebar) sidebar.classList.add('hidden');
+                if (mobileHeader) mobileHeader.classList.add('hidden');
+                if (contentArea) contentArea.className = 'flex-1 overflow-y-auto p-0 bg-gray-50 dark:bg-darkbg';
+            } else {
+                if (sidebar) sidebar.classList.remove('hidden');
+                if (mobileHeader) mobileHeader.classList.remove('hidden');
+                if (contentArea) contentArea.className = 'flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative';
+                
+                const name = sessionData.name;
+                document.getElementById('userNameDisplay').textContent = name;
+                document.getElementById('userRoleDisplay').textContent = sessionData.role;
+                document.getElementById('userInitial').textContent = name.charAt(0).toUpperCase();
+                
+                if(sessionData.role === 'superadmin' && !state.currentAdminMenu) { 
+                    state.currentAdminMenu = 'dashboard'; 
+                }
+                buildSidebarMenu();
             }
-            buildSidebarMenu();
 
             const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
             if(loginType === 'staff') {
+                Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
                 apiCall('fetchAppData', token).then(res => {
                     Swal.close();
                     if(res.status === 'success') {
@@ -956,6 +1129,7 @@
                     }
                 }).catch(() => Swal.close());
             } else {
+                Swal.fire({ title: 'Memuat Progres Anak...', didOpen: () => Swal.showLoading() });
                 apiCall('fetchWaliData', sessionData.id).then(res => {
                     Swal.close();
                     if(res.status === 'success') {
@@ -972,10 +1146,9 @@
             menu.innerHTML = '';
             const cItem = (id, icon, text, path) => {
                 const isActive = (sessionData.role === 'superadmin' && state.currentAdminMenu === id) ||
-                                 (sessionData.role === 'ustadz' && id === 'workspace') ||
-                                 (sessionData.role === 'walisantri' && id === 'progres');
-                const activeClass = isActive ? "bg-emerald-800 text-white shadow-inner" : "text-emerald-100 hover:bg-emerald-800/50 dark:hover:bg-slate-800";
-                return `<div onclick="navigateTo('${path}')" class="flex items-center gap-3 w-full p-3 rounded-lg font-medium transition cursor-pointer ${activeClass}"><i class="fa-solid ${icon} w-5 text-center"></i> <span>${text}</span></div>`;
+                                 (sessionData.role === 'ustadz' && id === 'workspace');
+                const activeClass = isActive ? "bg-[#9a2024] text-white shadow-inner font-semibold" : "text-white/80 hover:bg-white/10";
+                return `<div onclick="navigateTo('${path}')" class="flex items-center gap-3 w-full p-3 rounded-xl transition cursor-pointer text-sm ${activeClass}"><i class="fa-solid ${icon} w-5 text-center"></i> <span>${text}</span></div>`;
             };
             if (sessionData.role === 'superadmin') {
                 menu.innerHTML += cItem('dashboard', 'fa-gauge', 'Dashboard Global', '/admin');
@@ -984,8 +1157,6 @@
                 menu.innerHTML += cItem('pengaturan', 'fa-gear', 'Pengaturan', '/admin/pengaturan');
             } else if (sessionData.role === 'ustadz') {
                 menu.innerHTML += cItem('workspace', 'fa-pen-clip', 'Input Setoran', '/ustadz');
-            } else {
-                menu.innerHTML += cItem('progres', 'fa-chart-line', 'Progres Anak', '/wali');
             }
         }
 
@@ -1014,7 +1185,7 @@
             if(tplElement) {
                 container.appendChild(tplElement.content.cloneNode(true));
             } else {
-                container.innerHTML = '<p class="text-red-500">Error: Layout tidak ditemukan.</p>';
+                container.innerHTML = '<p class="text-red-500 p-4">Error: Layout tidak ditemukan.</p>';
                 return;
             }
             
@@ -1051,14 +1222,14 @@
                     const jmlSantri = state.santri.filter(s=>s.ID_Ustadz===u.ID_Ustadz).length;
                     tb.innerHTML += `
                         <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
-                            <td class="p-4 font-bold">${u.Nama}</td>
-                            <td class="p-4 font-mono text-sm">${u.Username}</td>
-                            <td class="p-4">${jmlSantri} Santri</td>
+                            <td class="p-4 font-bold text-gray-900 dark:text-white">${u.Nama}</td>
+                            <td class="p-4 font-mono text-xs text-gray-600 dark:text-gray-400">${u.Username}</td>
+                            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]">${jmlSantri} Santri</span></td>
                             <td class="p-4 text-center">
                                 <div class="flex justify-center gap-2">
-                                    <button onclick="openModalUstadz('${u.ID_Ustadz}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 p-2 rounded-md transition shadow-sm" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="openModalUstadz('${u.ID_Ustadz}', true)" class="text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 p-2 rounded-md transition shadow-sm" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
-                                    <button onclick="deleteAction('Users_Ustadz', '${u.ID_Ustadz}', '${u.Nama}')" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 dark:hover:bg-red-900/50 p-2 rounded-md transition shadow-sm" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="openModalUstadz('${u.ID_Ustadz}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg transition shadow-xs" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="openModalUstadz('${u.ID_Ustadz}', true)" class="text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 p-2 rounded-lg transition shadow-xs" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+                                    <button onclick="deleteAction('Users_Ustadz', '${u.ID_Ustadz}', '${u.Nama}')" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 p-2 rounded-lg transition shadow-xs" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             </td>
                         </tr>`;
@@ -1079,15 +1250,15 @@
                     const u = state.ustadz.find(us=>us.ID_Ustadz===s.ID_Ustadz);
                     tb.innerHTML += `
                         <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
-                            <td class="p-4 font-mono text-sm text-emerald-600 dark:text-emerald-400 font-bold">${s.ID_Santri}</td>
-                            <td class="p-4 font-bold">${s.Nama_Santri}</td>
+                            <td class="p-4 font-mono text-xs text-[#9a2024] dark:text-[#f29fa3] font-bold">${s.ID_Santri}</td>
+                            <td class="p-4 font-bold text-gray-900 dark:text-white">${s.Nama_Santri}</td>
                             <td class="p-4 text-gray-600 dark:text-gray-400">${s.Nama_Wali}</td>
-                            <td class="p-4 text-gray-600 dark:text-gray-400">${u?u.Nama:'-'}</td>
+                            <td class="p-4 text-gray-600 dark:text-gray-400">${u ? u.Nama : '-'}</td>
                             <td class="p-4 text-center">
                                 <div class="flex justify-center gap-2">
-                                    <button onclick="openModalSantri('${s.ID_Santri}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 p-2 rounded-md transition shadow-sm" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                                    <button onclick="openModalSantri('${s.ID_Santri}', true)" class="text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 p-2 rounded-md transition shadow-sm" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
-                                    <button onclick="deleteAction('Data_Santri', '${s.ID_Santri}', '${s.Nama_Santri}')" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 p-2 rounded-md transition shadow-sm" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                                    <button onclick="openModalSantri('${s.ID_Santri}')" class="text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg transition shadow-xs" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                                    <button onclick="openModalSantri('${s.ID_Santri}', true)" class="text-amber-600 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 p-2 rounded-lg transition shadow-xs" title="Duplicate"><i class="fa-solid fa-copy"></i></button>
+                                    <button onclick="deleteAction('Data_Santri', '${s.ID_Santri}', '${s.Nama_Santri}')" class="text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/30 p-2 rounded-lg transition shadow-xs" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                                 </div>
                             </td>
                         </tr>`;
@@ -1195,7 +1366,7 @@
                 if (res.status === 'success') {
                     if (badge) {
                         badge.textContent = 'Status API: Terhubung (Online)';
-                        badge.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 font-bold';
+                        badge.className = 'text-xs px-2.5 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c] dark:text-[#83c9a6] font-bold';
                     }
                     Swal.fire({
                         icon: 'success',
@@ -1219,7 +1390,7 @@
                 text: 'Sistem akan memeriksa dan membuat sheet yang belum ada (Users_Admin, Users_Ustadz, Data_Santri, Data_Setoran, Pengaturan). Data yang sudah ada tidak akan hilang.',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#10b981',
+                confirmButtonColor: '#9a2024',
                 confirmButtonText: 'Ya, Jalankan Setup'
             }).then(async (result) => {
                 if (result.isConfirmed) {
@@ -1288,8 +1459,8 @@
 
         function switchSmartTab(type) {
             document.getElementById('smartType').value = type;
-            document.getElementById('btnTabBaru').className = type === 'Hafalan Baru' ? "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-active" : "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive";
-            document.getElementById('btnTabMurojaah').className = type === 'Murojaah' ? "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-active ml-2" : "flex-1 py-2.5 rounded-lg text-sm transition smart-tab-inactive ml-2";
+            document.getElementById('btnTabBaru').className = type === 'Hafalan Baru' ? "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-secondary-active font-semibold" : "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-inactive";
+            document.getElementById('btnTabMurojaah').className = type === 'Murojaah' ? "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-active ml-2 font-semibold" : "flex-1 py-2.5 rounded-xl text-sm transition smart-tab-inactive ml-2";
         }
 
         function checkSmartPin(santriId) {
@@ -1355,74 +1526,222 @@
             const mySetoran = state.setoran.filter(set => set.ID_Ustadz === sessionData.id);
             
             if(mySetoran.length === 0) { 
-                container.innerHTML = `<p class="text-center text-gray-500 py-4">Belum ada input.</p>`; 
+                container.innerHTML = `<p class="text-center text-gray-500 py-6 text-sm">Belum ada input setoran hari ini.</p>`; 
                 return; 
             }
 
             mySetoran.forEach(set => {
                 const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
                 const isBaru = set.Jenis === 'Hafalan Baru';
-                const borderLeft = isBaru ? 'border-l-4 border-emerald-500' : 'border-l-4 border-blue-500';
-                const typeBadge = isBaru ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300';
+                const borderLeft = isBaru ? 'border-l-4 border-[#1c6b45]' : 'border-l-4 border-[#9a2024]';
+                const typeBadge = isBaru ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]' : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
                 let predIcon = set.Predikat === 'Lancar' ? '🟢' : set.Predikat === 'Kurang Lancar' ? '🟡' : '🔴';
 
                 container.innerHTML += `
-                    <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-4 border border-gray-100 dark:border-darkborder ${borderLeft}">
+                    <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-4 border border-gray-100 dark:border-darkborder ${borderLeft}">
                         <div class="flex justify-between items-start mb-2">
-                            <div><h4 class="font-bold text-gray-800 dark:text-white text-sm">${s ? s.Nama_Santri : 'Unknown'}</h4><p class="text-xs text-gray-500">${set.Tanggal}</p></div>
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${set.Jenis}</span>
+                            <div><h4 class="font-bold text-gray-800 dark:text-white text-sm">${s ? s.Nama_Santri : 'Unknown'}</h4><p class="text-[11px] text-gray-500">${set.Tanggal}</p></div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${set.Jenis}</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
-                            <div><span class="text-gray-400 text-xs block">Surat & Juz</span> <span class="font-medium">${set.Surah} (Juz ${set.Juz})</span></div>
-                            <div><span class="text-gray-400 text-xs block">Ayat & Hal</span> <span class="font-medium">Ayat ${set.Ayat} | Hal ${set.Halaman}</span></div>
+                        <div class="grid grid-cols-2 gap-2 text-xs text-gray-700 dark:text-gray-300 mb-2">
+                            <div><span class="text-gray-400 text-[10px] block">Surat & Juz</span> <span class="font-semibold">${set.Surah} (Juz ${set.Juz})</span></div>
+                            <div><span class="text-gray-400 text-[10px] block">Ayat & Hal</span> <span class="font-semibold">Ayat ${set.Ayat} | Hal ${set.Halaman}</span></div>
                         </div>
-                        <div class="flex items-center gap-2 bg-white dark:bg-darkcard px-3 py-2 rounded-lg border border-gray-100 dark:border-darkborder">
-                            <span class="text-xs font-bold">${predIcon} ${set.Predikat}</span>
-                            ${set.Catatan ? `<span class="text-[10px] text-gray-500 italic truncate ml-auto">"${set.Catatan}"</span>` : ''}
+                        <div class="flex items-center gap-2 bg-white dark:bg-darkcard px-3 py-2 rounded-xl border border-gray-100 dark:border-darkborder text-xs">
+                            <span class="font-bold">${predIcon} ${set.Predikat}</span>
+                            ${set.Catatan ? `<span class="text-[11px] text-gray-500 italic truncate ml-auto">"${set.Catatan}"</span>` : ''}
                         </div>
                     </div>
                 `;
             });
         }
 
-        // --- WALI SANTRI RENDER ---
+        // ==================== WALI SANTRI MOBILE-FIRST LOGIC ====================
+        function copySantriId() {
+            if (!state.santri || !state.santri.ID_Santri) return;
+            navigator.clipboard.writeText(state.santri.ID_Santri).then(() => {
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'ID Santri berhasil disalin!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
+        }
+
+        function shareProgressWa() {
+            const s = state.santri;
+            const u = state.ustadz;
+            const mySetoran = state.setoran || [];
+            if (!s) return;
+
+            const baru = mySetoran.filter(x => x.Jenis === 'Hafalan Baru').length;
+            const murojaah = mySetoran.filter(x => x.Jenis === 'Murojaah' || x.Jenis === "Muroja'ah").length;
+            const last = mySetoran.length > 0 ? mySetoran[0] : null;
+
+            let text = `*LAPORAN PERKEMBANGAN TAHFIDZ AL-QUR'AN*\n`;
+            text += `*${state.appName || 'Zadil Quran'}*\n\n`;
+            text += `Nama Santri: *${s.Nama_Santri}*\n`;
+            text += `ID Santri: *${s.ID_Santri}*\n`;
+            text += `Pembimbing: *${u ? u.Nama : '-'}*\n\n`;
+            text += `*Ringkasan Pencapaian:*\n`;
+            text += `- Total Setoran: ${mySetoran.length}\n`;
+            text += `- Hafalan Baru: ${baru}\n`;
+            text += `- Muroja'ah: ${murojaah}\n`;
+            if (last) {
+                text += `\n*Setoran Terakhir:*\n`;
+                text += `- Surat ${last.Surah} (Juz ${last.Juz}), Ayat ${last.Ayat}\n`;
+                text += `- Tanggal: ${last.Tanggal}\n`;
+                text += `- Predikat: ${last.Predikat}\n`;
+                if (last.Catatan) text += `- Catatan Ustadz: "${last.Catatan}"\n`;
+            }
+            text += `\nSemoga ananda istiqomah menghafal Al-Qur'an. Aamiin.`;
+
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        function setWaliFilter(filterType) {
+            waliFilter = filterType;
+            const btnAll = document.getElementById('btnFilterAll');
+            const btnBaru = document.getElementById('btnFilterBaru');
+            const btnMurojaah = document.getElementById('btnFilterMurojaah');
+            
+            if (btnAll) {
+                btnAll.className = filterType === 'all' 
+                    ? "px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#9a2024] text-white shadow-xs transition" 
+                    : "px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition";
+            }
+            if (btnBaru) {
+                btnBaru.className = filterType === 'baru' 
+                    ? "px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#1c6b45] text-white shadow-xs transition" 
+                    : "px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition";
+            }
+            if (btnMurojaah) {
+                btnMurojaah.className = filterType === 'murojaah' 
+                    ? "px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#9a2024] text-white shadow-xs transition" 
+                    : "px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition";
+            }
+            renderWaliList();
+        }
+
+        function handleWaliSearch(q) {
+            waliSearchQuery = (q || '').toLowerCase().trim();
+            renderWaliList();
+        }
+
         function renderWali() {
             const s = state.santri;
             const u = state.ustadz;
-            const mySetoran = state.setoran;
+            const mySetoran = state.setoran || [];
 
-            document.getElementById('waliAnakName').textContent = s.Nama_Santri;
-            document.getElementById('waliAnakId').textContent = s.ID_Santri;
-            document.getElementById('waliUstadzName').textContent = u ? u.Nama : 'Belum Ditentukan';
-            document.getElementById('waliTotalSetoran').innerHTML = `${mySetoran.length} <span class="text-sm font-normal text-emerald-100">Setoran</span>`;
+            if (!s) return;
 
+            const elName = document.getElementById('waliAnakName');
+            const elId = document.getElementById('waliAnakId');
+            const elInit = document.getElementById('waliAnakInitial');
+            const elUstadz = document.getElementById('waliUstadzName');
+            const elWali = document.getElementById('waliOrangtuaName');
+
+            if (elName) elName.textContent = s.Nama_Santri;
+            if (elId) elId.textContent = s.ID_Santri;
+            if (elInit) elInit.textContent = s.Nama_Santri.charAt(0).toUpperCase();
+            if (elUstadz) elUstadz.textContent = u ? u.Nama : 'Belum Ditentukan';
+            if (elWali) elWali.textContent = s.Nama_Wali || '-';
+
+            const baru = mySetoran.filter(x => x.Jenis === 'Hafalan Baru').length;
+            const murojaah = mySetoran.filter(x => x.Jenis === 'Murojaah' || x.Jenis === "Muroja'ah").length;
+
+            const elTotal = document.getElementById('waliTotalSetoran');
+            const elBaru = document.getElementById('waliTotalBaru');
+            const elMurojaah = document.getElementById('waliTotalMurojaah');
+
+            if (elTotal) elTotal.textContent = mySetoran.length;
+            if (elBaru) elBaru.textContent = baru;
+            if (elMurojaah) elMurojaah.textContent = murojaah;
+
+            renderWaliList();
+        }
+
+        function renderWaliList() {
+            const mySetoran = state.setoran || [];
             const listContainer = document.getElementById('waliSetoranList');
             const emptyState = document.getElementById('waliEmptyState');
+            const countDisplay = document.getElementById('waliCountDisplay');
+            if (!listContainer) return;
+
             listContainer.innerHTML = '';
-            
-            if(mySetoran.length === 0) { 
-                emptyState.classList.remove('hidden'); 
+
+            let filtered = mySetoran;
+            if (waliFilter === 'baru') {
+                filtered = filtered.filter(x => x.Jenis === 'Hafalan Baru');
+            } else if (waliFilter === 'murojaah') {
+                filtered = filtered.filter(x => x.Jenis === 'Murojaah' || x.Jenis === "Muroja'ah");
+            }
+
+            if (waliSearchQuery) {
+                filtered = filtered.filter(x => 
+                    (x.Surah || '').toLowerCase().includes(waliSearchQuery) || 
+                    String(x.Juz || '').includes(waliSearchQuery) ||
+                    String(x.Ayat || '').includes(waliSearchQuery)
+                );
+            }
+
+            if (countDisplay) {
+                countDisplay.textContent = `${filtered.length} riwayat`;
+            }
+
+            if (filtered.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
             } else {
-                emptyState.classList.add('hidden');
-                mySetoran.forEach(set => {
-                    let icon = set.Predikat === 'Lancar' ? 'fa-check-circle text-emerald-500' : set.Predikat === 'Kurang Lancar' ? 'fa-circle-minus text-yellow-500' : 'fa-circle-xmark text-red-500';
-                    let bgLeft = set.Predikat === 'Lancar' ? 'bg-emerald-500' : set.Predikat === 'Kurang Lancar' ? 'bg-yellow-500' : 'bg-red-500';
-                    const badgeStyle = set.Jenis === 'Hafalan Baru' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800';
+                if (emptyState) emptyState.classList.add('hidden');
+                filtered.forEach(set => {
+                    const isLancar = set.Predikat === 'Lancar';
+                    const isKurang = set.Predikat === 'Kurang Lancar';
+                    const bgLeft = isLancar ? 'bg-[#1c6b45]' : isKurang ? 'bg-amber-500' : 'bg-red-500';
+                    const predIcon = isLancar ? 'fa-circle-check text-[#1c6b45]' : isKurang ? 'fa-circle-exclamation text-amber-500' : 'fa-circle-xmark text-red-500';
+                    const isBaru = set.Jenis === 'Hafalan Baru';
+                    const badgeClass = isBaru ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]' : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
 
                     listContainer.innerHTML += `
-                        <div class="bg-white dark:bg-darkcard rounded-xl shadow-sm border border-gray-100 dark:border-darkborder p-4 flex gap-4 overflow-hidden relative">
+                        <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-4 overflow-hidden relative transition hover:shadow-sm">
                             <div class="absolute left-0 top-0 bottom-0 w-1.5 ${bgLeft}"></div>
-                            <div class="mt-1"><i class="fa-solid ${icon} text-xl"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start mb-1">
-                                    <h4 class="font-bold text-gray-800 dark:text-white truncate">${set.Surah}</h4>
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${badgeStyle}">${set.Jenis}</span>
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center text-gray-700 dark:text-gray-300">
+                                        ${set.SurahNo || 'QS'}
+                                    </span>
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 dark:text-white text-base leading-tight">${set.Surah}</h4>
+                                        <p class="text-[11px] text-gray-500 dark:text-gray-400">Juz ${set.Juz} &bull; Hal ${set.Halaman}</p>
+                                    </div>
                                 </div>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Juz ${set.Juz} • Ayat ${set.Ayat} • Hal ${set.Halaman}</p>
-                                <div class="flex justify-between items-center text-xs">
-                                    <span class="text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>${set.Tanggal}</span>
-                                    <span class="font-bold px-2 py-1 bg-gray-50 dark:bg-slate-800 rounded text-gray-700 dark:text-gray-300 shadow-sm">${set.Predikat}</span>
-                                </div>
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${badgeClass}">
+                                    ${set.Jenis}
+                                </span>
+                            </div>
+
+                            <div class="bg-gray-50 dark:bg-slate-800/60 rounded-xl p-2.5 my-2.5 flex items-center justify-between text-xs">
+                                <span class="text-gray-600 dark:text-gray-300 font-medium">
+                                    <i class="fa-solid fa-lines-leaning mr-1 text-gray-400"></i> Ayat ${set.Ayat}
+                                </span>
+                                <span class="font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid ${predIcon}"></i> ${set.Predikat}
+                                </span>
+                            </div>
+
+                            ${set.Catatan ? `
+                            <div class="bg-[#edf7f2] dark:bg-[#12452c]/20 border border-[#b2dfc8]/50 dark:border-[#12452c]/50 rounded-xl p-2.5 mb-2 text-xs text-[#1c6b45] dark:text-[#83c9a6] flex items-start gap-2">
+                                <i class="fa-solid fa-comment-dots mt-0.5"></i>
+                                <span class="italic leading-relaxed">"${set.Catatan}"</span>
+                            </div>
+                            ` : ''}
+
+                            <div class="flex items-center justify-between text-[11px] text-gray-400 pt-1 border-t border-gray-100 dark:border-darkborder/50">
+                                <span><i class="fa-regular fa-calendar mr-1"></i>${set.Tanggal}</span>
+                                <span><i class="fa-solid fa-check-double text-[#1c6b45] mr-1"></i>Tersimpan di Sheets</span>
                             </div>
                         </div>
                     `;
