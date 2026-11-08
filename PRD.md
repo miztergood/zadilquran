@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
-# Zadil Quran - Sistem Manajemen Tahfidz & Pantauan Hafalan Al-Qur'an
+# Zadil Quran - Sistem Manajemen Tahfizh & Pantauan Hafalan Al-Qur'an
 
 ## 1. Ringkasan Eksekutif & Visi Produk
 
-Zadil Quran adalah aplikasi web manajemen tahfidz berbasis arsitektur serverless modern yang dirancang khusus untuk memenuhi kebutuhan operasional pondok pesantren, rumah tahfidz, dan halaqah Al-Qur'an. Aplikasi ini menyatukan pengelolaan data santri, penugasan ustadz pembimbing, pencatatan setoran hafalan harian, serta portal pantauan langsung bagi wali santri dalam satu platform terpadu.
+Zadil Quran adalah aplikasi web manajemen tahfizh berbasis arsitektur serverless modern yang dirancang khusus untuk memenuhi kebutuhan operasional pondok pesantren, rumah tahfizh, dan halaqah Al-Qur'an. Aplikasi ini menyatukan pengelolaan data santri, penugasan ustadz pembimbing, pencatatan setoran hafalan harian, serta portal pantauan langsung bagi wali santri dalam satu platform terpadu.
 
 Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge worker (`_worker.js`) dan menggunakan **Google Sheets** sebagai basis data yang dikelola melalui **Google Apps Script** API. Pendekatan ini memungkinkan lembaga pendidikan Islam mengoperasikan sistem pemantauan hafalan yang andal, cepat, dan berbiaya operasional nol rupiah (Free Tier Friendly).
 
@@ -20,8 +20,8 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
   - Mengubah nama identitas lembaga dan memperbarui kredensial kata sandi admin demi keamanan.
 - **Tantangan Saat Ini**: Rekapitulasi manual menggunakan buku setoran fisik rentan hilang, rusak, dan memakan waktu lama saat menyusun laporan bulanan kepada pimpinan yayasan.
 
-### 2.2 Ustadz Pembimbing Tahfidz
-- **Profil**: Guru pengampu halaqah tahfidz yang menyimak langsung setoran hafalan para santri setiap hari.
+### 2.2 Ustadz Pembimbing Tahfizh
+- **Profil**: Guru pengampu halaqah tahfizh yang menyimak langsung setoran hafalan para santri setiap hari.
 - **Kebutuhan**:
   - Membuka daftar santri binaan secara terfilter tanpa terganggu data santri halaqah lain.
   - Menginput setoran ayat dengan cepat: memilih surat, juz, ayat awal, ayat akhir, nomor halaman mushaf, dan predikat kelancaran.
@@ -57,9 +57,9 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
 2. **Pengumuman PSB**: Bilah pengumuman teratas (*announcement bar*) mengenai Penerimaan Santri Baru Tahun Ajaran 2025/2026.
 3. **Hero Section & Nilai Kepercayaan**: Judul utama, profil singkat pesantren, tombol aksi pendaftaran & WhatsApp, serta 4 kartu sorotan keunggulan (Metode Ummi, WTN Darul Qur'an, Integrasi Formal, Usia Dini).
 4. **Pilar Solusi Orang Tua**: Menjawab keresahan orang tua dengan program pembinaan kemandirian, tahsin ramah anak, dan pendidikan seimbang.
-5. **Program & Fasilitas**: Informasi lengkap 5 program unggulan (Tahfidz 30 Juz, Tahsin Ummi, MDTA, Formal, WTN) dan fasilitas asrama.
+5. **Program & Fasilitas**: Informasi lengkap 5 program unggulan (Tahfizh 30 Juz, Tahsin Ummi, MDTA, Formal, WTN) dan fasilitas asrama.
 6. **Formulir Pendaftaran Online Interaktif**: Calon orang tua/wali santri dapat langsung mengisi data pendaftaran dan mengirimkannya otomatis ke WhatsApp admin PSB (`0857 3180 4663`).
-7. **Pusat Akses Portal**: Tombol pintas cepat di header dan footer untuk masuk ke portal pemantauan tahfidz (`/login`).
+7. **Pusat Akses Portal**: Tombol pintas cepat di header dan footer untuk masuk ke portal pemantauan tahfizh (`/login`).
 
 ### 4.1 Modul Autentikasi & Manajemen Sesi
 1. **Layar Masuk Ganda (Tabbed Login)**:
@@ -138,7 +138,7 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
    - Panggilan API ke Google Apps Script di-cache dan diteruskan secara efisien oleh Edge Worker (`_worker.js`).
 2. **Kesesuaian Perangkat (Mobile-Friendly & Mobile-First)**:
    - Portal wali santri menerapkan prinsip ketat *mobile-first design* untuk kenyamanan orang tua yang mengakses via smartphone.
-   - Antarmuka ustadz dirancang optimal untuk penggunaan tablet dan ponsel pintar saat menyimak di aula halaqah tahfidz.
+   - Antarmuka ustadz dirancang optimal untuk penggunaan tablet dan ponsel pintar saat menyimak di aula halaqah tahfizh.
    - Seluruh elemen sentuh memenuhi standar ergonomis minimum 44 x 44 piksel.
 3. **Kenyamanan Visual (Anti-Slop Institutional Palette)**:
    - Menghindari warna neon silau dan hitam pekat murni (`#000000`).

@@ -7,7 +7,7 @@ Dokumen ini memvisualisasikan arsitektur tata letak antarmuka pengguna (UI Wiref
 
 ## 0. Layar Beranda / Landing Page Utama (`/`)
 
-Layar yang pertama kali tampil saat situs web diakses. Memuat identitas pondok pesantren, program tahfidz, keunggulan, alur pendaftaran, dan formulir online pendaftaran santri baru.
+Layar yang pertama kali tampil saat situs web diakses. Memuat identitas pondok pesantren, program tahfizh, keunggulan, alur pendaftaran, dan formulir online pendaftaran santri baru.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -16,11 +16,11 @@ Layar yang pertama kali tampil saat situs web diakses. Memuat identitas pondok p
 │ [Logo] Zadil Qur'an    Program  Ekskul  Fasilitas  Alur PSB  [🌙] [Portal]│
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│         [ 🏛️ PONDOK PESANTREN TAHFIDZ ZADIL QUR'AN TUBAN ]              │
+│         [ 🏛️ PONDOK PESANTREN TAHFIZH ZADIL QUR'AN TUBAN ]              │
 │                                                                         │
 │     Mencetak Generasi Qur’ani, Mandiri, dan Berakhlak Mulia             │
 │                                                                         │
-│     Pondok Pesantren Tahfidz Zadil Qur'an membimbing putra-putri Anda   │
+│     Pondok Pesantren Tahfizh Zadil Qur'an membimbing putra-putri Anda   │
 │     menghafal Al-Qur'an 30 Juz dan meraih pendidikan formal berkualitas │
 │                                                                         │
 │     [ 📝 Daftar Santri Baru ]   [ 💬 WhatsApp ]   [ 📖 Portal Hafalan ] │
@@ -36,7 +36,7 @@ Layar yang pertama kali tampil saat situs web diakses. Memuat identitas pondok p
 │ │ 1. Mandiri & Beradab │ │ 2. Tahsin Ramah Anak │ │3. Pddk Seimbang   │ │
 │ └──────────────────────┘ └──────────────────────┘ └───────────────────┘ │
 ├─────────────────────────────────────────────────────────────────────────┤
-│ 📚 Program Unggulan: Tahfidz 30 Juz | Tahsin Ummi | MDTA | Formal | WTN │
+│ 📚 Program Unggulan: Tahfizh 30 Juz | Tahsin Ummi | MDTA | Formal | WTN │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ 📝 Formulir Pendaftaran Calon Santri Baru Online                        │
 │ [ Nama Lengkap Santri  ]  [ Usia / Tgl Lahir ]                          │
@@ -125,7 +125,7 @@ Menggunakan model dua kolom: Sidebar di sebelah kiri (dapat diciutkan di ponsel)
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Data Ustadz                            [ + Tambah Ustadz Baru ]         │
-│ Daftar pembimbing tahfidz dan jumlah santri binaan                      │
+│ Daftar pembimbing tahfizh dan jumlah santri binaan                      │
 ├─────────────────────────────────────────────────────────────────────────┤
 │ [ 🔍 Cari ustadz / username...                             ]            │
 ├─────────────────────────────────────────────────────────────────────────┤

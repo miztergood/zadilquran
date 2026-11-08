@@ -1,4 +1,4 @@
-# Draf Copywriting Landing Page: Pondok Pesantren Tahfidz Zadil Qur'an
+# Draf Copywriting Landing Page: Pondok Pesantren Tahfizh Zadil Qur'an
 
 ## 1. Top Bar / Announcement Bar
 
@@ -12,7 +12,7 @@
 Mencetak Generasi Qur’ani, Mandiri, dan Berakhlak Mulia Sejak Usia Dini
 
 ### **Sub-headline:**
-Pondok Pesantren Tahfidz Zadil Qur'an menghadirkan lingkungan belajar yang hangat dan kondusif untuk membimbing putra-putri Anda menghafal Al-Qur'an 30 Juz, mendalami ilmu agama, serta tetap meraih pendidikan formal berkualitas.
+Pondok Pesantren Tahfizh Zadil Qur'an menghadirkan lingkungan belajar yang hangat dan kondusif untuk membimbing putra-putri Anda menghafal Al-Qur'an 30 Juz, mendalami ilmu agama, serta tetap meraih pendidikan formal berkualitas.
 
 ### **Call to Action (CTA Buttons):**
 * `[Daftar Santri Baru Sekarang]` *(Target: Placeholder Halaman Formulir Internal, misal: `/pendaftaran` atau `#form-pendaftaran`)*
@@ -20,7 +20,7 @@ Pondok Pesantren Tahfidz Zadil Qur'an menghadirkan lingkungan belajar yang hanga
 
 ### **Trust Badges / Highlight Singkat:**
 * 📖 Metode Tahsin Ummi Terstandar
-* 🏆 Wisuda Tahfidz Nasional (WTN) Darul Qur'an
+* 🏆 Wisuda Tahfizh Nasional (WTN) Darul Qur'an
 * 🎒 Integrasi Sekolah Formal & Diniyah
 * 👦 Menerima Santri Mulai Usia 7 Tahun
 
@@ -32,7 +32,7 @@ Pondok Pesantren Tahfidz Zadil Qur'an menghadirkan lingkungan belajar yang hanga
 
 Di tengah tantangan pergaulan dan distraksi digital saat ini, memberikan pondasi akidah, adab, dan Al-Qur'an sejak usia dini adalah hadiah terbaik bagi putra-putri kita.
 
-Di **Pondok Pesantren Tahfidz Zadil Qur'an**, anak-anak tidak hanya dibimbing menghafal ayat demi ayat, tetapi juga:
+Di **Pondok Pesantren Tahfizh Zadil Qur'an**, anak-anak tidak hanya dibimbing menghafal ayat demi ayat, tetapi juga:
 1. **Dibiasakan Mandiri & Beradab:** Melatih kedisiplinan dan akhlakul karimah dalam keseharian asrama.
 2. **Tahsin Ramah Anak:** Memperbaiki bacaan secara tartil dengan Metode Ummi yang menyenangkan.
 3. **Pendidikan Seimbang:** Hak akademis santri tetap terjamin melalui integrasi pendidikan formal.
@@ -43,7 +43,7 @@ Di **Pondok Pesantren Tahfidz Zadil Qur'an**, anak-anak tidak hanya dibimbing me
 
 ### **Judul:** Kurikulum Terintegrasi untuk Tumbuh Kembang Santri
 
-* **1. Tahfidz 30 Juz Intensif (Target 2-3 Tahun)**  
+* **1. Tahfizh 30 Juz Intensif (Target 2-3 Tahun)**  
   Metode setoran dan muraja'ah terarah yang disesuaikan dengan ritme santri, didampingi oleh asatidz/asatidzah berpengalaman.
 
 * **2. Tahsin Al-Qur’an Metode Ummi**  
@@ -55,7 +55,7 @@ Di **Pondok Pesantren Tahfidz Zadil Qur'an**, anak-anak tidak hanya dibimbing me
 * **4. Program Sekolah Formal**  
   Santri tetap menempuh jenjang pendidikan formal yang diakui pemerintah sehingga legalitas ijazah formal tetap terjamin.
 
-* **5. Wisuda Tahfidz Nasional (WTN) Darul Qur’an**  
+* **5. Wisuda Tahfizh Nasional (WTN) Darul Qur’an**  
   Uji kompetensi hafalan berskala nasional sebagai wujud apresiasi atas perjuangan hafalan para santri.
 
 ---
@@ -126,7 +126,7 @@ Jangan lewatkan kesempatan kuota pendaftaran Tahun Ajaran 2025/2026. Bimbing bua
 
 ## 10. Footer & Kontak Lembaga
 
-### **Pondok Pesantren Tahfidz Zadil Qur’an**  
+### **Pondok Pesantren Tahfizh Zadil Qur’an**  
 *Mencetak Generasi Penghafal Al-Qur'an yang Beradab, Cerdas, dan Mandiri.*
 
 * 📍 **Alamat Kampus:**  
@@ -136,4 +136,4 @@ Jangan lewatkan kesempatan kuota pendaftaran Tahun Ajaran 2025/2026. Bimbing bua
 * 📋 **Pendaftaran:**  
   Silakan klik tombol *Pendaftaran* pada menu navigasi website untuk mengisi formulir pendaftaran langsung di sistem ini.
 
-*(c) 2025 Pondok Pesantren Tahfidz Zadil Qur'an. Hak Cipta Dilindungi.*
+*(c) 2025 Pondok Pesantren Tahfizh Zadil Qur'an. Hak Cipta Dilindungi.*

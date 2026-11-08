@@ -1,7 +1,7 @@
 # DESIGN SISTEM ZADIL QURAN
 # Panduan Desain, Token Visual, Ergonomi Antarmuka & Standar Estetika
 
-> **Design Read**: Sistem Manajemen Tahfidz & Pemantauan Hafalan Al-Qur'an untuk Lembaga Pendidikan Islam (Pondok Pesantren, Rumah Tahfidz, dan Halaqah Qur'an). Mengusung bahasa visual institusional terhormat dengan kombinasi warna utama Crimson Maroon (`#9a2024`) dan warna sekunder Pine Green (`#1c6b45`), tata letak mobile-first untuk orang tua/wali santri, kontras tajam ramah mata, serta interaksi taktil yang menenangkan.
+> **Design Read**: Sistem Manajemen Tahfizh & Pemantauan Hafalan Al-Qur'an untuk Lembaga Pendidikan Islam (Pondok Pesantren, Rumah Tahfizh, dan Halaqah Qur'an). Mengusung bahasa visual institusional terhormat dengan kombinasi warna utama Crimson Maroon (`#9a2024`) dan warna sekunder Pine Green (`#1c6b45`), tata letak mobile-first untuk orang tua/wali santri, kontras tajam ramah mata, serta interaksi taktil yang menenangkan.
 
 ---
 
@@ -9,7 +9,7 @@
 
 | Indikator | Nilai (Skala 1 - 10) | Alasan & Penerapan Praktis |
 | :--- | :--- | :--- |
-| **`DESIGN_VARIANCE`** | **4 (Structured & Institutional)** | Antarmuka tahfidz menuntut ketertiban, stabilitas, dan konsistensi tinggi. Penempatan formulir setoran ayat, pemilihan surat Al-Qur'an, dan rekapitulasi data santri terstruktur rapi agar ustadz dapat mencatat setoran dengan reflek cepat tanpa kebingungan tata letak. |
+| **`DESIGN_VARIANCE`** | **4 (Structured & Institutional)** | Antarmuka tahfizh menuntut ketertiban, stabilitas, dan konsistensi tinggi. Penempatan formulir setoran ayat, pemilihan surat Al-Qur'an, dan rekapitulasi data santri terstruktur rapi agar ustadz dapat mencatat setoran dengan reflek cepat tanpa kebingungan tata letak. |
 | **`MOTION_INTENSITY`** | **4 (Calm & Respectful)** | Animasi dirancang bersahaja dan menghormati suasana ibadah halaqah. Transisi perpindahan tab berkecepatan 200ms (`transition-all duration-200`), modal muncul dengan skala lembut tanpa guncangan berlebih, dan tombol interaktif memiliki umpan balik sentuhan ringkas (`active:scale-95`). |
 | **`VISUAL_DENSITY`** | **5 (Balanced Readability)** | Kepadatan antarmuka seimbang antara ruang nafas yang nyaman bagi orang tua dan efisiensi penyajian metadata mushaf Al-Qur'an (nomor surat, juz, rentang ayat, nomor halaman mushaf Madinah, serta catatan evaluasi ustadz). |
 

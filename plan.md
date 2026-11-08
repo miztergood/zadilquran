@@ -1,7 +1,7 @@
 # Rencana Pengembangan (Plan)
-# Zadil Quran - Sistem Manajemen Tahfidz & Pantauan Hafalan Al-Qur'an
+# Zadil Quran - Sistem Manajemen Tahfizh & Pantauan Hafalan Al-Qur'an
 
-Dokumen ini memuat peta jalan teknis dan arsitektur menyeluruh untuk membangun sistem manajemen tahfidz Zadil Quran berbasis Cloudflare Pages (Frontend SPA & Edge Proxy Worker) yang terintegrasi dengan Google Sheets sebagai basis data real-time melalui Google Apps Script (GAS).
+Dokumen ini memuat peta jalan teknis dan arsitektur menyeluruh untuk membangun sistem manajemen tahfizh Zadil Quran berbasis Cloudflare Pages (Frontend SPA & Edge Proxy Worker) yang terintegrasi dengan Google Sheets sebagai basis data real-time melalui Google Apps Script (GAS).
 
 ---
 
@@ -46,7 +46,7 @@ Menyimpan data otentikasi pengurus/superadmin yayasan:
 - Kolom E: `Timestamp` (waktu pendaftaran akun)
 
 ### 2.3 Sheet `Users_Ustadz`
-Menyimpan data pembimbing tahfidz:
+Menyimpan data pembimbing tahfizh:
 - Kolom A: `ID_Ustadz` (ID unik berformat `U-XXXXXX`)
 - Kolom B: `Username` (kredensial login ustadz)
 - Kolom C: `Password` (kredensial login ustadz)

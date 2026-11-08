@@ -1,5 +1,5 @@
 // ==============================================================================
-// SISTEM BACKEND MANAJEMEN TAHFIDZ ZADIL QURAN V3.5 (API GATEWAY & DATABASE ENGINE)
+// SISTEM BACKEND MANAJEMEN TAHFIZH ZADIL QURAN V3.5 (API GATEWAY & DATABASE ENGINE)
 // ==============================================================================
 
 /**
@@ -33,7 +33,7 @@ function doGet(e) {
 
     // Tampilkan antarmuka HTML jika diakses langsung tanpa parameter API
     return HtmlService.createHtmlOutputFromFile('index')
-      .setTitle('Zadil Quran - Sistem Manajemen Tahfidz')
+      .setTitle('Zadil Quran - Sistem Manajemen Tahfizh')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   } catch (err) {
@@ -249,7 +249,7 @@ function validateRequired(fields) {
   return null;
 }
 
-// === CUSTOM: LOGIKA BISNIS MANAJEMEN TAHFIDZ ===
+// === CUSTOM: LOGIKA BISNIS MANAJEMEN TAHFIZH ===
 
 function getAppBranding() {
   return safeExecute(function() {

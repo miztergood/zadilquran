@@ -1,12 +1,12 @@
 /**
- * CONFIG.JS - Konfigurasi Klien Sistem Manajemen Tahfidz Zadil Quran
+ * CONFIG.JS - Konfigurasi Klien Sistem Manajemen Tahfizh Zadil Quran
  * Frontend berkomunikasi secara transparan melalui reverse proxy Cloudflare Pages (/api).
  * URL backend Google Apps Script dikelola terpusat di _worker.js.
  */
 
 const APP_CONFIG = {
   APP_NAME: 'Zadil Quran',
-  APP_TAGLINE: 'Sistem Manajemen Pantauan Tahfidz & Hafalan Al-Qur\'an',
+  APP_TAGLINE: 'Sistem Manajemen Pantauan Tahfizh & Hafalan Al-Qur\'an',
 
   // Endpoint API reverse proxy Cloudflare Pages
   API_PROXY_ENDPOINT: '/api',
