@@ -4,9 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zadil Quran - Sistem Manajemen Tahfizh</title>
-    <!-- Logo Favicon -->
+    
+    <!-- PWA Meta Tags & Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#9a2024">
+    <meta name="application-name" content="Zadil Qur'an">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Zadil Qur'an">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
     <link rel="icon" type="image/jpeg" href="logo.jpg">
-    <link rel="apple-touch-icon" href="logo.jpg">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -82,6 +91,149 @@
         .dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: white; }
         .dark .ts-dropdown .option:hover, .dark .ts-dropdown .option.active { background-color: #334155; color: #e56b71; }
         .ts-control > input { color: inherit !important; }
+
+        /* ==================== DESIGN SYSTEM NOTIFICATIONS & SWEETALERT2 ==================== */
+        .zq-swal-popup {
+            border-radius: 1.25rem !important;
+            padding: 1.5rem !important;
+            font-family: 'Inter', sans-serif !important;
+            border: 1px solid #e5e7eb !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+        }
+        .dark .zq-swal-popup {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+        }
+        .zq-swal-title {
+            font-weight: 700 !important;
+            font-size: 1.25rem !important;
+            color: #1f2937 !important;
+            letter-spacing: -0.025em !important;
+        }
+        .dark .zq-swal-title {
+            color: #f8fafc !important;
+        }
+        .zq-swal-html {
+            font-size: 0.875rem !important;
+            color: #4b5563 !important;
+            line-height: 1.5 !important;
+        }
+        .dark .zq-swal-html {
+            color: #cbd5e1 !important;
+        }
+        .zq-swal-btn-primary {
+            background-color: #9a2024 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            padding: 0.65rem 1.35rem !important;
+            border-radius: 0.75rem !important;
+            border: none !important;
+            font-size: 0.875rem !important;
+            transition: all 0.2s !important;
+            margin: 0.35rem !important;
+            box-shadow: 0 4px 6px -1px rgba(154, 32, 36, 0.25) !important;
+            cursor: pointer !important;
+        }
+        .zq-swal-btn-primary:hover {
+            background-color: #871a1e !important;
+            transform: translateY(-1px) !important;
+        }
+        .zq-swal-btn-secondary {
+            background-color: #64748b !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            padding: 0.65rem 1.35rem !important;
+            border-radius: 0.75rem !important;
+            border: none !important;
+            font-size: 0.875rem !important;
+            transition: all 0.2s !important;
+            margin: 0.35rem !important;
+            cursor: pointer !important;
+        }
+        .zq-swal-btn-secondary:hover {
+            background-color: #475569 !important;
+            transform: translateY(-1px) !important;
+        }
+        .zq-swal-btn-danger {
+            background-color: #ef4444 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            padding: 0.65rem 1.35rem !important;
+            border-radius: 0.75rem !important;
+            border: none !important;
+            font-size: 0.875rem !important;
+            transition: all 0.2s !important;
+            margin: 0.35rem !important;
+            cursor: pointer !important;
+        }
+        .zq-swal-btn-danger:hover {
+            background-color: #dc2626 !important;
+            transform: translateY(-1px) !important;
+        }
+
+        /* Floating Toast Container & Cards */
+        .zq-toast-container {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            pointer-events: none;
+        }
+        .zq-toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 1rem;
+            background: #ffffff;
+            color: #1f2937;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateX(120%);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+            opacity: 0;
+            max-width: 24rem;
+        }
+        .dark .zq-toast {
+            background: #1e293b;
+            color: #f8fafc;
+            border-color: #334155;
+        }
+        .zq-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .zq-toast-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.15rem;
+        }
+        .zq-toast-success .zq-toast-icon { color: #1c6b45; }
+        .zq-toast-danger .zq-toast-icon, .zq-toast-error .zq-toast-icon { color: #ef4444; }
+        .zq-toast-warning .zq-toast-icon { color: #f59e0b; }
+        .zq-toast-info .zq-toast-icon { color: #9a2024; }
+        .zq-toast-message { flex-1; line-height: 1.4; }
+        .zq-toast-close {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 0.25rem;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .zq-toast-close:hover { color: #4b5563; }
+        .dark .zq-toast-close:hover { color: #f8fafc; }
     </style>
 </head>
 <body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-200 font-sans antialiased h-screen flex flex-col overflow-hidden theme-transition">
@@ -122,10 +274,15 @@
                 </nav>
 
                 <!-- Actions: Dark Mode & Portal Button -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2 sm:gap-3">
                     <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition" title="Ganti Mode Tampilan">
                         <i class="fa-solid fa-moon dark:hidden"></i>
                         <i class="fa-solid fa-sun hidden dark:block"></i>
+                    </button>
+
+                    <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden bg-[#1c6b45] hover:bg-[#165737] text-white px-3.5 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-xs transition active:scale-95 flex items-center gap-1.5" title="Pasang Aplikasi PWA">
+                        <i class="fa-solid fa-download"></i>
+                        <span class="hidden sm:inline">Pasang App</span>
                     </button>
 
                     <button id="btnLandingPortal" onclick="handleLandingPortalClick()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition active:scale-95 flex items-center gap-2">
@@ -142,6 +299,10 @@
 
             <!-- Mobile Dropdown Menu -->
             <div id="landingMobileMenu" class="hidden lg:hidden border-t border-gray-200 dark:border-darkborder bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3">
+                <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden w-full text-left py-2 text-sm font-semibold text-[#1c6b45] dark:text-[#83c9a6] flex items-center gap-2 border-b border-gray-100 dark:border-darkborder/50 pb-2.5">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Pasang Aplikasi (PWA)</span>
+                </button>
                 <a href="#program" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Program Unggulan</a>
                 <a href="#ekskul" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Ekstrakurikuler & Minat Bakat</a>
                 <a href="#fasilitas" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Fasilitas Pesantren</a>
@@ -850,7 +1011,11 @@
 
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebarMenu"></nav>
 
-            <div class="p-4 border-t border-[#631316] dark:border-darkborder">
+            <div class="p-4 border-t border-[#631316] dark:border-darkborder space-y-2">
+                <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition group text-sm">
+                    <i class="fa-solid fa-download text-emerald-400"></i>
+                    <span>Pasang Aplikasi PWA</span>
+                </button>
                 <button onclick="logout()" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-red-600 hover:text-white transition group text-sm">
                     <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
                     <span>Keluar</span>
@@ -1215,6 +1380,9 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
+                    <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center transition active:scale-95" title="Pasang Aplikasi (PWA)">
+                        <i class="fa-solid fa-download text-xs"></i>
+                    </button>
                     <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center transition active:scale-95" title="Ganti Mode">
                         <i class="fa-solid fa-moon dark:hidden text-xs"></i>
                         <i class="fa-solid fa-sun hidden dark:block text-yellow-400 text-xs"></i>
@@ -1351,6 +1519,166 @@
     </template>
 
     <script>
+        // ==================== SISTEM NOTIFIKASI MODERN (ANTI-ALERT BAWAAN) ====================
+        const AppNotify = {
+            toast(message, type = 'info', duration = 3000) {
+                let container = document.getElementById('zq-toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'zq-toast-container';
+                    container.className = 'zq-toast-container';
+                    document.body.appendChild(container);
+                }
+
+                const toast = document.createElement('div');
+                toast.className = `zq-toast zq-toast-${type}`;
+
+                let iconHtml = '';
+                if (type === 'success') {
+                    iconHtml = '<i class="fa-solid fa-circle-check text-[#1c6b45]"></i>';
+                } else if (type === 'danger' || type === 'error') {
+                    iconHtml = '<i class="fa-solid fa-circle-xmark text-red-500"></i>';
+                } else if (type === 'warning') {
+                    iconHtml = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>';
+                } else {
+                    iconHtml = '<i class="fa-solid fa-circle-info text-[#9a2024]"></i>';
+                }
+
+                toast.innerHTML = `
+                    <div class="zq-toast-icon">${iconHtml}</div>
+                    <div class="zq-toast-message">${message}</div>
+                    <button class="zq-toast-close" aria-label="Tutup">&times;</button>
+                `;
+
+                container.appendChild(toast);
+                requestAnimationFrame(() => toast.classList.add('show'));
+
+                const dismiss = () => {
+                    toast.classList.remove('show');
+                    setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 250);
+                };
+
+                toast.querySelector('.zq-toast-close').addEventListener('click', dismiss);
+                if (duration > 0) setTimeout(dismiss, duration);
+            },
+
+            success(title, textOrHtml, timer = 2500) {
+                const isHtml = textOrHtml && textOrHtml.includes('<');
+                return Swal.fire({
+                    icon: 'success',
+                    title: title,
+                    [isHtml ? 'html' : 'text']: textOrHtml || '',
+                    confirmButtonText: 'Selesai',
+                    timer: timer > 0 ? timer : undefined,
+                    timerProgressBar: timer > 0,
+                    customClass: {
+                        popup: 'zq-swal-popup',
+                        title: 'zq-swal-title',
+                        htmlContainer: 'zq-swal-html',
+                        confirmButton: 'zq-swal-btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            },
+
+            error(title, textOrHtml) {
+                const isHtml = textOrHtml && textOrHtml.includes('<');
+                return Swal.fire({
+                    icon: 'error',
+                    title: title,
+                    [isHtml ? 'html' : 'text']: textOrHtml || '',
+                    confirmButtonText: 'Tutup',
+                    customClass: {
+                        popup: 'zq-swal-popup',
+                        title: 'zq-swal-title',
+                        htmlContainer: 'zq-swal-html',
+                        confirmButton: 'zq-swal-btn-danger'
+                    },
+                    buttonsStyling: false
+                });
+            },
+
+            warning(title, textOrHtml) {
+                const isHtml = textOrHtml && textOrHtml.includes('<');
+                return Swal.fire({
+                    icon: 'warning',
+                    title: title,
+                    [isHtml ? 'html' : 'text']: textOrHtml || '',
+                    confirmButtonText: 'Mengerti',
+                    customClass: {
+                        popup: 'zq-swal-popup',
+                        title: 'zq-swal-title',
+                        htmlContainer: 'zq-swal-html',
+                        confirmButton: 'zq-swal-btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            },
+
+            info(title, textOrHtml) {
+                const isHtml = textOrHtml && textOrHtml.includes('<');
+                return Swal.fire({
+                    icon: 'info',
+                    title: title,
+                    [isHtml ? 'html' : 'text']: textOrHtml || '',
+                    confirmButtonText: 'Baik',
+                    customClass: {
+                        popup: 'zq-swal-popup',
+                        title: 'zq-swal-title',
+                        htmlContainer: 'zq-swal-html',
+                        confirmButton: 'zq-swal-btn-primary'
+                    },
+                    buttonsStyling: false
+                });
+            },
+
+            async confirm(title, textOrHtml, confirmBtnText = 'Ya, Lanjutkan', cancelBtnText = 'Batal') {
+                const isHtml = textOrHtml && textOrHtml.includes('<');
+                const res = await Swal.fire({
+                    icon: 'question',
+                    title: title,
+                    [isHtml ? 'html' : 'text']: textOrHtml || '',
+                    showCancelButton: true,
+                    confirmButtonText: confirmBtnText,
+                    cancelButtonText: cancelBtnText,
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'zq-swal-popup',
+                        title: 'zq-swal-title',
+                        htmlContainer: 'zq-swal-html',
+                        confirmButton: 'zq-swal-btn-primary',
+                        cancelButton: 'zq-swal-btn-secondary'
+                    },
+                    buttonsStyling: false
+                });
+                return res.isConfirmed;
+            },
+
+            loading(title = 'Memproses...', text = '') {
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    customClass: {
+                        popup: 'zq-swal-popup',
+                        title: 'zq-swal-title',
+                        htmlContainer: 'zq-swal-html'
+                    },
+                    didOpen: () => Swal.showLoading()
+                });
+            },
+
+            close() {
+                Swal.close();
+            }
+        };
+
+        // Ganti fungsi alert bawaan browser agar tidak ada alert jelek yang muncul
+        window.alert = function(msg) {
+            AppNotify.info('Pemberitahuan', msg);
+        };
+
         // ==================== API WRAPPER MULTI-ENVIRONMENT ====================
         async function apiCall(method, ...args) {
             // 1. Lingkungan Google Apps Script Web App iframe
@@ -1385,15 +1713,10 @@
                 return res;
             } catch (err) {
                 console.error('API Call Error:', err);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Koneksi Backend Terkendala',
-                    html: `<div class="text-left text-sm space-y-2">
-                        <p>Gagal menghubungi backend Google Apps Script: <b>${err.message}</b></p>
-                        <p class="text-xs text-gray-500">Pastikan backend Google Apps Script sudah di-deploy sebagai Web App dan APPS_SCRIPT_URL di file _worker.js sudah terisi dengan benar.</p>
-                    </div>`,
-                    confirmButtonText: 'Tutup'
-                });
+                AppNotify.error('Koneksi Backend Terkendala', `<div class="text-left text-sm space-y-2">
+                    <p>Gagal menghubungi backend Google Apps Script: <b>${err.message}</b></p>
+                    <p class="text-xs text-gray-500">Pastikan backend Google Apps Script sudah di-deploy sebagai Web App dan APPS_SCRIPT_URL di file _worker.js sudah terisi dengan benar.</p>
+                </div>`);
                 throw err;
             }
         }
@@ -1745,7 +2068,7 @@
 
         function handleLogin(e, type) {
             e.preventDefault();
-            Swal.fire({ title: 'Memeriksa Kredensial...', didOpen: () => Swal.showLoading() });
+            AppNotify.loading('Memeriksa Kredensial...');
             
             const un = type === 'staff' ? document.getElementById('staffUsername').value : document.getElementById('waliIdSantri').value;
             const pw = type === 'staff' ? document.getElementById('staffPassword').value : '';
@@ -1772,9 +2095,9 @@
                         navigateTo('/wali');
                     }
 
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: res.message, showConfirmButton: false, timer: 2000 });
+                    AppNotify.toast('success', res.message || 'Login berhasil');
                 } else { 
-                    Swal.fire('Akses Ditolak', res.message, 'error'); 
+                    AppNotify.error('Akses Ditolak', res.message || 'Kredensial tidak valid'); 
                 }
             }).catch(() => {});
         }
@@ -1821,27 +2144,27 @@
 
             const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
             if(loginType === 'staff') {
-                Swal.fire({ title: 'Memuat Data...', didOpen: () => Swal.showLoading() });
+                AppNotify.loading('Memuat Data...');
                 apiCall('fetchAppData', token).then(res => {
-                    Swal.close();
+                    AppNotify.close();
                     if(res.status === 'success') {
                         state = { ...state, ...res.data }; 
                         updateBrandingDOM(state.appName);
                         loadContent();
                     } else { 
-                        Swal.fire('Error', res.message, 'error'); 
+                        AppNotify.error('Gagal Memuat Data', res.message); 
                     }
-                }).catch(() => Swal.close());
+                }).catch(() => AppNotify.close());
             } else {
-                Swal.fire({ title: 'Memuat Progres Anak...', didOpen: () => Swal.showLoading() });
+                AppNotify.loading('Memuat Progres Santri...');
                 apiCall('fetchWaliData', sessionData.id).then(res => {
-                    Swal.close();
+                    AppNotify.close();
                     if(res.status === 'success') {
                         state = { ...state, ...res.data };
                         updateBrandingDOM(state.appName);
                         loadContent();
                     }
-                }).catch(() => Swal.close());
+                }).catch(() => AppNotify.close());
             }
         }
 
@@ -1974,7 +2297,7 @@
         // --- SUPERADMIN ACTIONS (API) ---
         function saveUstadz(e) {
             e.preventDefault();
-            Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()});
+            AppNotify.loading('Menyimpan Data Ustadz...');
             
             const n = document.getElementById('inputUstadzName').value;
             const u = document.getElementById('inputUstadzUsername').value;
@@ -1990,7 +2313,7 @@
 
         function saveSantri(e) {
             e.preventDefault();
-            Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()});
+            AppNotify.loading('Menyimpan Data Santri...');
             
             const i = document.getElementById('inputSantriId').value;
             const n = document.getElementById('inputSantriName').value;
@@ -2005,55 +2328,52 @@
             }
         }
 
-        function deleteAction(sheetName, id, textInfo) {
-            Swal.fire({
-                title: 'Hapus Data?', text: `Yakin ingin menghapus ${textInfo}?`, icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({title: 'Menghapus...', didOpen: ()=>Swal.showLoading()});
-                    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
-                    apiCall('deleteDataGlobal', token, sheetName, id).then(res => handleRes(res, null));
-                }
-            });
+        async function deleteAction(sheetName, id, textInfo) {
+            const confirmed = await AppNotify.confirm('Hapus Data?', `Apakah Anda yakin ingin menghapus ${textInfo}? Tindakan ini tidak dapat dibatalkan.`, 'Ya, Hapus Data', 'Batal');
+            if (confirmed) {
+                AppNotify.loading('Menghapus Data...');
+                const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+                apiCall('deleteDataGlobal', token, sheetName, id).then(res => handleRes(res, null));
+            }
         }
 
         function handleRes(res, modalId) {
+            AppNotify.close();
             if(res.status==='success') { 
                 if(modalId) closeModal(modalId, `${modalId}Content`);
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: res.message, showConfirmButton: false, timer: 2000 });
+                AppNotify.toast('success', res.message || 'Operasi berhasil disimpan');
                 initApp('staff');
             } else { 
-                Swal.fire('Error', res.message, 'error'); 
+                AppNotify.error('Operasi Gagal', res.message || 'Terjadi kesalahan sistem.'); 
             }
         }
 
         function savePondokName(e) {
             e.preventDefault();
-            Swal.fire({title: 'Menyimpan...', didOpen: ()=>Swal.showLoading()});
+            AppNotify.loading('Menyimpan Nama Lembaga...');
             const newName = document.getElementById('inputPondokName').value;
             const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
             apiCall('updatePondokName', token, newName).then(res => {
                 if(res.status==='success') { 
                     updateBrandingDOM(newName); 
-                    Swal.fire('Sukses', res.message, 'success'); 
+                    AppNotify.success('Nama Lembaga Diperbarui', res.message); 
                 } else { 
-                    Swal.fire('Error', res.message, 'error'); 
+                    AppNotify.error('Gagal Memperbarui', res.message); 
                 }
             });
         }
 
         function saveAdminPassword(e) {
             e.preventDefault();
-            Swal.fire({title: 'Memverifikasi...', didOpen: ()=>Swal.showLoading()});
+            AppNotify.loading('Memverifikasi Kata Sandi...');
             const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
             apiCall('updateAdminPassword', token, document.getElementById('oldPassword').value, document.getElementById('newPassword').value).then(res => {
                 if(res.status==='success') { 
                     document.getElementById('oldPassword').value=''; 
                     document.getElementById('newPassword').value='';
-                    Swal.fire('Sukses', res.message, 'success'); 
+                    AppNotify.success('Kata Sandi Diperbarui', res.message); 
                 } else { 
-                    Swal.fire('Error', res.message, 'error'); 
+                    AppNotify.error('Gagal Memperbarui Sandi', res.message); 
                 }
             });
         }
@@ -2065,6 +2385,7 @@
                 badge.textContent = 'Status API: Menguji koneksi...';
                 badge.className = 'text-xs px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 font-medium';
             }
+            AppNotify.loading('Menguji Koneksi Backend...');
             try {
                 const res = await apiCall('ping');
                 if (res.status === 'success') {
@@ -2072,11 +2393,7 @@
                         badge.textContent = 'Status API: Terhubung (Online)';
                         badge.className = 'text-xs px-2.5 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c] dark:text-[#83c9a6] font-bold';
                     }
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Koneksi Berhasil!',
-                        html: `<p>Backend Google Apps Script merespons dengan normal.</p><p class="text-xs text-gray-500 mt-2">Waktu Server: ${res.data ? res.data.timestamp : new Date().toISOString()}</p>`
-                    });
+                    AppNotify.success('Koneksi Berhasil!', `<p>Backend Google Apps Script merespons dengan normal.</p><p class="text-xs text-gray-500 mt-2">Waktu Server: ${res.data ? res.data.timestamp : new Date().toISOString()}</p>`);
                 } else {
                     throw new Error(res.message || 'Respons server tidak sukses.');
                 }
@@ -2089,27 +2406,19 @@
         }
 
         async function initSetupDatabaseFromUI() {
-            Swal.fire({
-                title: 'Jalankan Setup Database?',
-                text: 'Sistem akan memeriksa dan membuat sheet yang belum ada (Users_Admin, Users_Ustadz, Data_Santri, Data_Setoran, Pengaturan). Data yang sudah ada tidak akan hilang.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#9a2024',
-                confirmButtonText: 'Ya, Jalankan Setup'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({ title: 'Memproses Setup...', didOpen: () => Swal.showLoading() });
-                    try {
-                        const res = await apiCall('setupDatabase');
-                        if (res.status === 'success') {
-                            Swal.fire('Sukses', res.message, 'success');
-                            initApp('staff');
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
-                        }
-                    } catch (err) {}
-                }
-            });
+            const confirmed = await AppNotify.confirm('Jalankan Setup Database?', 'Sistem akan memeriksa dan membuat sheet yang belum ada (Users_Admin, Users_Ustadz, Data_Santri, Data_Setoran, Pengaturan). Data yang sudah ada tidak akan hilang.', 'Ya, Jalankan Setup', 'Batal');
+            if (confirmed) {
+                AppNotify.loading('Memproses Setup Database...');
+                try {
+                    const res = await apiCall('setupDatabase');
+                    if (res.status === 'success') {
+                        AppNotify.success('Setup Database Berhasil', res.message);
+                        initApp('staff');
+                    } else {
+                        AppNotify.error('Setup Gagal', res.message);
+                    }
+                } catch (err) {}
+            }
         }
 
         // --- USTADZ SMART FORM ---
@@ -2185,15 +2494,15 @@
             populateSurat();
             if(tsSurat) tsSurat.setValue(lastPinData.SurahNo);
             document.getElementById('smartHal').value = lastPinData.Halaman;
-            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Data Lanjutan Terisi', showConfirmButton: false, timer: 1500 });
+            AppNotify.toast('info', 'Data Lanjutan Terisi');
         }
 
         function saveSetoran(e) {
             e.preventDefault();
             const santriId = tsSantri.getValue();
-            if(!santriId) return Swal.fire('Error', 'Pilih Santri terlebih dahulu!', 'error');
+            if(!santriId) return AppNotify.warning('Pilih Santri', 'Silakan pilih santri terlebih dahulu.');
             const suratNo = tsSurat.getValue();
-            if(!suratNo) return Swal.fire('Error', 'Pilih Surat terlebih dahulu!', 'error');
+            if(!suratNo) return AppNotify.warning('Pilih Surat', 'Silakan pilih surat terlebih dahulu.');
             
             const suratData = quranDB.find(q => q.no == suratNo);
             const rawDate = document.getElementById('smartDate').value;
@@ -2210,16 +2519,16 @@
                 date: displayDate
             };
 
-            Swal.fire({title: 'Menyimpan Setoran...', didOpen: ()=>Swal.showLoading()});
+            AppNotify.loading('Menyimpan Setoran...');
             const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
             apiCall('saveSetoran', token, payload).then(res => {
                 if(res.status==='success') {
-                    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Setoran tersimpan!', showConfirmButton: false, timer: 2000 });
+                    AppNotify.toast('success', 'Setoran hafalan santri berhasil disimpan!');
                     document.getElementById('smartHal').value = ''; 
                     document.getElementById('smartCatatan').value = '';
                     initApp('staff'); 
                 } else { 
-                    Swal.fire('Error', res.message, 'error'); 
+                    AppNotify.error('Gagal Menyimpan Setoran', res.message); 
                 }
             });
         }
@@ -2264,14 +2573,7 @@
         function copySantriId() {
             if (!state.santri || !state.santri.ID_Santri) return;
             navigator.clipboard.writeText(state.santri.ID_Santri).then(() => {
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: 'ID Santri berhasil disalin!',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
+                AppNotify.toast('success', 'ID Santri berhasil disalin!');
             });
         }
 
@@ -2528,8 +2830,173 @@
             window.open(waUrl, '_blank');
         }
 
+        // ==================== PWA INSTALLATION & SERVICE WORKER ====================
+        let deferredInstallPrompt = null;
+
+        function isStandalonePWA() {
+            return window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone === true ||
+                   document.referrer.includes('android-app://');
+        }
+
+        function detectPWAPlatform() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+            if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+                return 'ios';
+            }
+            if (/android/i.test(ua)) {
+                return 'android';
+            }
+            return 'desktop';
+        }
+
+        function updatePwaInstallUI() {
+            const isInstalled = isStandalonePWA();
+            const installButtons = document.querySelectorAll('.btn-pwa-install');
+            installButtons.forEach(btn => {
+                if (isInstalled) {
+                    btn.classList.add('hidden');
+                } else {
+                    btn.classList.remove('hidden');
+                }
+            });
+        }
+
+        function initPwa() {
+            updatePwaInstallUI();
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(reg => {
+                        console.log('Service Worker Zadil Quran terdaftar:', reg.scope);
+                        if (reg.waiting) {
+                            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    }
+                                });
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.warn('Registrasi Service Worker gagal:', err);
+                    });
+            }
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                updatePwaInstallUI();
+            });
+
+            window.addEventListener('appinstalled', () => {
+                deferredInstallPrompt = null;
+                document.body.classList.add('pwa-installed');
+                updatePwaInstallUI();
+                AppNotify.toast('success', 'Aplikasi Zadil Quran berhasil dipasang di perangkat Anda!');
+            });
+        }
+
+        async function triggerPwaInstall() {
+            if (isStandalonePWA()) {
+                AppNotify.toast('info', 'Aplikasi Zadil Quran sudah terpasang dan berjalan dalam mode layar penuh.');
+                return;
+            }
+
+            if (deferredInstallPrompt) {
+                try {
+                    deferredInstallPrompt.prompt();
+                    const choice = await deferredInstallPrompt.userChoice;
+                    deferredInstallPrompt = null;
+                    if (choice && choice.outcome === 'accepted') {
+                        document.body.classList.add('pwa-installed');
+                        updatePwaInstallUI();
+                        AppNotify.toast('success', 'Terima kasih telah memasang aplikasi Zadil Quran!');
+                    }
+                    return;
+                } catch (err) {
+                    console.warn('Gagal memanggil native install prompt:', err);
+                }
+            }
+
+            const platform = detectPWAPlatform();
+
+            if (platform === 'ios') {
+                AppNotify.info(
+                    'Pasang di iPhone / iPad',
+                    `<div class="text-left text-sm leading-relaxed space-y-3">
+                        <p class="text-gray-600 dark:text-gray-300">
+                            Pasang <b>Zadil Quran</b> di layar utama iPhone/iPad Anda agar dapat dibuka cepat satu sentuhan:
+                        </p>
+                        <div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                                <span>Buka web ini di browser <b>Safari</b> lalu ketuk tombol <b>Bagikan (Share)</b> <i class="fa-solid fa-arrow-up-from-bracket text-[#9a2024]"></i> pada bilah menu.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                                <span>Gulir ke bawah dan pilih <b>"Tambah ke Layar Utama"</b> (<i>Add to Home Screen</i> <i class="fa-solid fa-square-plus text-[#1c6b45]"></i>).</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                                <span>Ketuk <b>"Tambah"</b> di pojok kanan atas untuk menyelesaikan.</span>
+                            </div>
+                        </div>
+                    </div>`
+                );
+            } else if (platform === 'android') {
+                AppNotify.info(
+                    'Pasang di Android',
+                    `<div class="text-left text-sm leading-relaxed space-y-3">
+                        <p class="text-gray-600 dark:text-gray-300">
+                            Pasang <b>Zadil Quran</b> sebagai aplikasi mandiri di ponsel atau tablet Android Anda:
+                        </p>
+                        <div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                                <span>Ketuk menu <b>Titik Tiga (⋮)</b> <i class="fa-solid fa-ellipsis-vertical text-[#9a2024]"></i> di pojok kanan atas browser Google Chrome.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                                <span>Pilih opsi <b>"Instal aplikasi"</b> atau <b>"Tambahkan ke Layar Utama"</b>.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
+                                <span>Ketuk konfirmasi <b>"Instal"</b>. Ikon aplikasi akan langsung muncul di beranda ponsel Anda.</span>
+                            </div>
+                        </div>
+                    </div>`
+                );
+            } else {
+                AppNotify.info(
+                    'Pasang di Komputer / Laptop',
+                    `<div class="text-left text-sm leading-relaxed space-y-3">
+                        <p class="text-gray-600 dark:text-gray-300">
+                            Pasang <b>Zadil Quran</b> sebagai aplikasi desktop mandiri di Windows atau Mac:
+                        </p>
+                        <div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
+                                <span>Klik ikon <b>Instal</b> <i class="fa-solid fa-download text-[#9a2024]"></i> di sisi kanan kolom alamat URL (Address Bar) browser Chrome atau Edge Anda.</span>
+                            </div>
+                            <div class="flex items-start gap-2.5">
+                                <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
+                                <span>Atau klik menu titik tiga browser (⋮) &gt; pilih <b>"Simpan dan Bagikan / Aplikasi"</b> &gt; klik <b>"Instal Zadil Quran"</b>.</span>
+                            </div>
+                        </div>
+                    </div>`
+                );
+            }
+        }
+
         // ==================== INISIALISASI SAAT DOM SIAP ====================
         window.addEventListener('DOMContentLoaded', () => {
+            initPwa();
             fetchInitialBranding();
 
             const hasSession = checkExistingSession();
