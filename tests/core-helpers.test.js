@@ -76,3 +76,4 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
     });
   });
 });
+

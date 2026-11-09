@@ -46,3 +46,4 @@ describe('Cloudflare Pages Edge Worker (_worker.js)', () => {
     }
   });
 });
+
