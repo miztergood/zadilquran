@@ -85,7 +85,7 @@
                                 <p class="text-xs text-gray-500 dark:text-gray-400">Ketentuan resmi calon santri Putra &amp; Putri</p>
                             </div>
                         </div>
-                        <ol class="space-y-2 text-xs text-gray-700 dark:text-gray-300 list-decimal list-inside font-medium">
+                        <ol id="psbSyaratList" class="space-y-2 text-xs text-gray-700 dark:text-gray-300 list-decimal list-inside font-medium">
                             <li class="p-2 rounded-lg bg-gray-50 dark:bg-slate-800/60">Berkomitmen menghafal Al-Qur'an <strong>30 Juz</strong>.</li>
                             <li class="p-2 rounded-lg bg-gray-50 dark:bg-slate-800/60">Mengisi formulir pendaftaran lengkap.</li>
                             <li class="p-2 rounded-lg bg-gray-50 dark:bg-slate-800/60"><strong>Pas Foto 3x4 (3 lembar)</strong>: Putra berkopyah, Putri berkerudung.</li>
@@ -97,7 +97,7 @@
                     </div>
                     <div class="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-darkborder text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-2">
                         <i class="fa-solid fa-circle-info text-[#1c6b45]"></i>
-                        <span>Berkas fisik diserahkan saat santri tiba di pondok.</span>
+                        <span id="psbCatatanSyarat">Berkas fisik diserahkan saat santri tiba di pondok.</span>
                     </div>
                 </div>
 
@@ -110,27 +110,27 @@
                             </div>
                             <div>
                                 <h2 class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">Rincian Biaya Pendaftaran Resmi</h2>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Transparansi biaya masuk &amp; syahriyah bulanan</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Transparansi biaya masuk &amp; syahriyah bulanan (Total Otomatis)</p>
                             </div>
                         </div>
 
                         <div class="space-y-3 text-xs">
                             <div class="font-bold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider text-[11px]">A. Biaya Pendaftaran &amp; Fasilitas:</div>
-                            <div class="space-y-1.5 pl-2 border-l-2 border-[#9a2024]/30">
+                            <div id="psbBiayaList" class="space-y-1.5 pl-2 border-l-2 border-[#9a2024]/30">
                                 <div class="flex justify-between text-gray-600 dark:text-gray-300"><span>1. Pendaftaran</span><span class="font-semibold">Rp 100.000</span></div>
                                 <div class="flex justify-between text-gray-600 dark:text-gray-300"><span>2. Almari Santri</span><span class="font-semibold">Rp 500.000</span></div>
                                 <div class="flex justify-between text-gray-600 dark:text-gray-300"><span>3. Infaq Gedung</span><span class="font-semibold">Rp 1.000.000</span></div>
                                 <div class="flex justify-between text-gray-600 dark:text-gray-300"><span>4. Kesehatan</span><span class="font-semibold">Rp 100.000</span></div>
                                 <div class="flex justify-between text-gray-600 dark:text-gray-300"><span>5. Kitab dan Buku Panduan</span><span class="font-semibold">Rp 100.000</span></div>
-                                <div class="flex justify-between font-bold text-gray-900 dark:text-white pt-1 border-t border-gray-100 dark:border-darkborder">
-                                    <span>Subtotal Pendaftaran (A)</span><span>Rp 1.800.000</span>
-                                </div>
+                            </div>
+                            <div class="flex justify-between font-bold text-gray-900 dark:text-white pt-1 border-t border-gray-100 dark:border-darkborder text-xs">
+                                <span>Subtotal Pendaftaran &amp; Fasilitas (A)</span><span id="psbSubtotalBiaya">Rp 1.800.000</span>
                             </div>
 
                             <div class="font-bold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider text-[11px] pt-1">B. Syahriyah (SPP Bulanan):</div>
                             <div class="pl-2 border-l-2 border-[#1c6b45]/30">
                                 <div class="flex justify-between font-bold text-gray-900 dark:text-white">
-                                    <span>Syahriyah Bulanan (B)</span><span>Rp 200.000 / bulan</span>
+                                    <span>Syahriyah Bulanan (B)</span><span id="psbSyahriyahNominal">Rp 200.000 / bulan</span>
                                 </div>
                             </div>
                         </div>
@@ -144,7 +144,7 @@
                                 <p class="text-xs text-white/90">Pendaftaran + Syahriyah Pertama</p>
                             </div>
                             <div class="text-right">
-                                <span class="text-xl font-extrabold">Rp 2.000.000</span>
+                                <span id="psbGrandTotal" class="text-xl font-extrabold">Rp 2.000.000</span>
                             </div>
                         </div>
                     </div>

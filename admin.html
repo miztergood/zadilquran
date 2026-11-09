@@ -22,6 +22,7 @@
     <script src="js/tailwind-config.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     
@@ -426,6 +427,197 @@
         </div>
     </div>
 
+    <!-- ==================== MODAL IMPORT EXCEL SANTRI ==================== -->
+    <div id="modalImportSantri" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-3 sm:p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col transform scale-95 transition-transform" id="modalImportSantriContent">
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg font-bold">
+                        <i class="fa-solid fa-file-excel"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg text-gray-900 dark:text-white">Import Biodata Santri dari Excel</h3>
+                        <p class="text-xs text-gray-500">Impor massal Buku Induk santri tanpa input manual satu per satu</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('modalImportSantri', 'modalImportSantriContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-sm flex-1">
+                <!-- Info & Download Template Link -->
+                <div class="bg-[#edf7f2] dark:bg-[#12452c]/30 p-3.5 rounded-xl border border-[#b2dfc8] dark:border-[#12452c] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-200">
+                        <i class="fa-solid fa-circle-info text-base text-[#1c6b45] shrink-0"></i>
+                        <span>Pastikan data santri menggunakan kolom resmi Buku Induk Zadil Qur'an.</span>
+                    </div>
+                    <button type="button" onclick="downloadExcelTemplate()" class="shrink-0 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700/60 text-[#1c6b45] dark:text-emerald-300 hover:bg-emerald-50 text-xs font-bold py-1.5 px-3 rounded-lg shadow-2xs transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Unduh Template Excel</span>
+                    </button>
+                </div>
+
+                <!-- Dropzone Area -->
+                <div id="dropzoneExcel" onclick="document.getElementById('inputExcelFile').click()" ondragover="handleExcelDragOver(event)" ondragleave="handleExcelDragLeave(event)" ondrop="handleExcelDrop(event)" class="border-2 border-dashed border-gray-300 dark:border-darkborder rounded-2xl p-6 text-center hover:border-emerald-500 dark:hover:border-emerald-500 hover:bg-emerald-50/30 transition cursor-pointer group">
+                    <input type="file" id="inputExcelFile" accept=".xlsx, .xls, .csv" onchange="handleExcelFileSelected(event)" class="hidden">
+                    <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-800 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-950/50 flex items-center justify-center mx-auto text-xl transition">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <p class="font-bold text-gray-800 dark:text-gray-200 mt-2 text-sm">Pilih file Excel atau tarik ke sini</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Mendukung format .xlsx, .xls, atau .csv (Maksimal 10 MB)</p>
+                </div>
+
+                <!-- File Info Badge (Setelah Pilih File) -->
+                <div id="fileInfoBadge" class="hidden flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-slate-800/80 border border-gray-200 dark:border-darkborder text-xs">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fa-solid fa-file-excel text-emerald-600 text-base shrink-0"></i>
+                        <div class="truncate">
+                            <span class="font-bold text-gray-800 dark:text-gray-200 block truncate" id="fileNameDisplay">file.xlsx</span>
+                            <span class="text-gray-500 text-[10px]" id="fileSizeDisplay">0 KB</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetExcelFileSelection()" class="text-red-500 hover:text-red-700 font-bold p-1 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 text-xs">
+                        <i class="fa-solid fa-trash-can mr-1"></i>Hapus
+                    </button>
+                </div>
+
+                <!-- Preview Area & Pengaturan Default Impor -->
+                <div id="previewImportSection" class="hidden space-y-3">
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="bg-gray-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-gray-100 dark:border-darkborder">
+                            <span class="text-[10px] uppercase font-bold text-gray-500 block">Total Baris</span>
+                            <span id="previewTotalCount" class="text-lg font-extrabold text-gray-900 dark:text-white">0</span>
+                        </div>
+                        <div class="bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
+                            <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">Siap Diimpor</span>
+                            <span id="previewValidCount" class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400">0</span>
+                        </div>
+                        <div class="bg-amber-50 dark:bg-amber-950/30 p-2.5 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                            <span class="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 block">Dilewati / Kosong</span>
+                            <span id="previewSkipCount" class="text-lg font-extrabold text-amber-600 dark:text-amber-400">0</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 dark:bg-slate-800/60 p-3 rounded-xl border border-gray-100 dark:border-darkborder">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Ustadz Pembimbing Default</label>
+                            <select id="importSelectUstadz" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-xs outline-none font-semibold">
+                                <option value="">-- Tanpa Ustadz (Bisa Diatur Nanti) --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Status Santri Default</label>
+                            <select id="importSelectStatus" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl text-xs outline-none font-semibold">
+                                <option value="Aktif">Santri Aktif</option>
+                                <option value="Calon Santri">Calon Santri (PSB)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Table Preview -->
+                    <div>
+                        <div class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center justify-between">
+                            <span>Pratinjau Data (Maksimal 5 Baris Pertama):</span>
+                            <span class="text-[11px] text-gray-400 font-normal">Pastikan nama dan gender terisi</span>
+                        </div>
+                        <div class="max-h-44 overflow-y-auto overflow-x-auto border border-gray-200 dark:border-darkborder rounded-xl bg-white dark:bg-slate-900">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-darkborder sticky top-0">
+                                        <th class="p-2">#</th>
+                                        <th class="p-2">Nama Lengkap</th>
+                                        <th class="p-2">Gender</th>
+                                        <th class="p-2">TTL</th>
+                                        <th class="p-2">Orang Tua / Wali</th>
+                                        <th class="p-2">No. HP</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importPreviewTableBody" class="divide-y divide-gray-100 dark:divide-darkborder"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar Impor -->
+                <div id="importProgressContainer" class="hidden space-y-2 pt-2">
+                    <div class="flex justify-between text-xs font-bold text-gray-700 dark:text-gray-300">
+                        <span id="importProgressText">Mengimpor data ke Buku Induk...</span>
+                        <span id="importProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div id="importProgressBar" class="h-full bg-emerald-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex justify-end gap-2 flex-shrink-0 bg-gray-50 dark:bg-slate-900/50 rounded-b-2xl">
+                <button type="button" onclick="closeModal('modalImportSantri', 'modalImportSantriContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-xl font-medium text-xs sm:text-sm">Batal</button>
+                <button type="button" id="btnExecuteImport" onclick="executeSantriImport()" disabled class="px-5 py-2 bg-[#1c6b45] hover:bg-[#165737] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Mulai Impor Data</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TAMBAH & EDIT SYARAT PSB ==================== -->
+    <div id="modalTambahEditSyarat" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-3 sm:p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform" id="modalTambahEditSyaratContent">
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-base sm:text-lg text-gray-900 dark:text-white" id="titleModalSyarat">Tambah Poin Syarat PSB</h3>
+                <button onclick="closeModal('modalTambahEditSyarat', 'modalTambahEditSyaratContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formSyaratPsb" onsubmit="saveSyaratItem(event)" class="p-4 sm:p-6 space-y-4 text-sm">
+                <input type="hidden" id="inputSyaratIndex" value="-1">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Isi Poin Persyaratan *</label>
+                    <textarea id="inputSyaratText" rows="3" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" placeholder="Contoh: Fotokopi Ijazah terakhir & KK masing-masing 2 lembar." required></textarea>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalTambahEditSyarat', 'modalTambahEditSyaratContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium text-xs sm:text-sm">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold rounded-xl shadow-md text-xs sm:text-sm">Simpan Poin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL TAMBAH & EDIT BIAYA / FASILITAS PSB ==================== -->
+    <div id="modalTambahEditBiaya" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-3 sm:p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform" id="modalTambahEditBiayaContent">
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <h3 class="font-bold text-base sm:text-lg text-gray-900 dark:text-white" id="titleModalBiaya">Tambah Komponen Biaya / Fasilitas</h3>
+                <button onclick="closeModal('modalTambahEditBiaya', 'modalTambahEditBiayaContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formBiayaPsb" onsubmit="saveBiayaItem(event)" class="p-4 sm:p-6 space-y-4 text-sm">
+                <input type="hidden" id="inputBiayaId" value="">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nama Komponen / Fasilitas *</label>
+                    <input type="text" id="inputBiayaNama" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" placeholder="Contoh: Almari Santri Pribadi" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori</label>
+                        <select id="inputBiayaKategori" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none text-xs font-semibold">
+                            <option value="Pendaftaran">Pendaftaran</option>
+                            <option value="Fasilitas">Fasilitas</option>
+                            <option value="Kesehatan">Kesehatan</option>
+                            <option value="Kitab">Kitab & Panduan</option>
+                            <option value="Seragam">Seragam</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nominal (Rp) *</label>
+                        <input type="number" id="inputBiayaNominal" min="0" step="5000" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm font-semibold" placeholder="Contoh: 500000" required>
+                    </div>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalTambahEditBiaya', 'modalTambahEditBiayaContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium text-xs sm:text-sm">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold rounded-xl shadow-md text-xs sm:text-sm">Simpan Komponen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ==================== TEMPLATES SUPERADMIN ==================== -->
     <template id="tpl-superadmin-dashboard">
         <div class="mb-4 sm:mb-6">
@@ -565,8 +757,19 @@
                 <h2 class="text-2xl font-bold">Buku Induk Santri</h2>
                 <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kelola biodata lengkap santri, TTL, orang tua/wali, alamat, dan pembimbing tahfizh.</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="openModalSantri()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-user-plus mr-2"></i>Tambah Santri Baru</button>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="downloadExcelTemplate()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs flex items-center gap-1.5" title="Unduh format template Excel untuk pengisian massal">
+                    <i class="fa-solid fa-file-excel text-emerald-200"></i>
+                    <span>Template Excel</span>
+                </button>
+                <button type="button" onclick="openModalImportSantri()" class="bg-[#1c6b45] hover:bg-[#165737] text-white px-3 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs flex items-center gap-1.5" title="Import data santri dari file Excel / CSV ke Buku Induk">
+                    <i class="fa-solid fa-file-import text-emerald-200"></i>
+                    <span>Import Excel</span>
+                </button>
+                <button type="button" onclick="openModalSantri()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Tambah Santri</span>
+                </button>
             </div>
         </div>
         <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
@@ -676,9 +879,121 @@
     </template>
 
     <template id="tpl-superadmin-pengaturan">
-        <div class="mb-6"><h2 class="text-2xl font-bold">Pengaturan Sistem</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Konfigurasi lembaga, password superadmin, dan backend Apps Script.</p></div>
+        <div class="mb-6"><h2 class="text-2xl font-bold">Pengaturan Sistem</h2><p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Konfigurasi formulir online, syarat &amp; rincian biaya pendaftaran, identitas lembaga, dan backend.</p></div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- ==================== KUSTOMISASI SYARAT PENDAFTARAN ONLINE ==================== -->
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-5 sm:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b dark:border-darkborder gap-2">
+                        <div>
+                            <h3 class="font-bold text-base sm:text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-[#9a2024]"></i>
+                                <span>Syarat Pendaftaran Online</span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Poin persyaratan yang tampil di Formulir PSB Online</p>
+                        </div>
+                        <button type="button" onclick="openModalTambahSyarat()" class="shrink-0 bg-[#9a2024] hover:bg-[#871a1e] text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Poin</span>
+                        </button>
+                    </div>
+
+                    <!-- Container Poin Syarat Dinamis -->
+                    <div id="adminPsbSyaratList" class="space-y-2 mb-4 max-h-[380px] overflow-y-auto pr-1">
+                        <!-- Diisi secara dinamis oleh JavaScript -->
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Catatan Tambahan / Info Berkas Fisik</label>
+                        <input type="text" id="adminPsbCatatanSyarat" placeholder="Contoh: Berkas fisik diserahkan saat santri tiba di pondok." class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-xs">
+                    </div>
+                </div>
+
+                <div class="pt-4 mt-4 border-t border-gray-100 dark:border-darkborder flex justify-end">
+                    <button type="button" onclick="savePsbConfigSettings()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white font-medium py-2 px-4 rounded-xl transition shadow-xs text-xs sm:text-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Syarat PSB</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== KUSTOMISASI DETAIL BIAYA & FASILITAS ==================== -->
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-5 sm:p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between pb-3 mb-4 border-b dark:border-darkborder gap-2">
+                        <div>
+                            <h3 class="font-bold text-base sm:text-lg flex items-center gap-2">
+                                <i class="fa-solid fa-wallet text-[#1c6b45]"></i>
+                                <span>Detail Biaya &amp; Fasilitas</span>
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Komponen biaya pendaftaran &amp; nominal fasilitas (total otomatis)</p>
+                        </div>
+                        <button type="button" onclick="openModalTambahBiaya()" class="shrink-0 bg-[#1c6b45] hover:bg-[#165737] text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Komponen</span>
+                        </button>
+                    </div>
+
+                    <!-- Tabel Komponen Biaya & Fasilitas -->
+                    <div class="border border-gray-100 dark:border-darkborder rounded-xl overflow-hidden mb-4 max-h-[260px] overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-darkborder text-gray-500 sticky top-0">
+                                    <th class="p-2.5">Komponen / Fasilitas</th>
+                                    <th class="p-2.5">Kategori</th>
+                                    <th class="p-2.5 text-right">Nominal (Rp)</th>
+                                    <th class="p-2.5 text-center w-16">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminPsbBiayaTableBody" class="divide-y divide-gray-100 dark:divide-darkborder">
+                                <!-- Diisi secara dinamis oleh JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Input Syahriyah / SPP Bulanan -->
+                    <div class="bg-gray-50 dark:bg-slate-800/50 p-3 rounded-xl border border-gray-100 dark:border-darkborder mb-3">
+                        <label class="block text-xs font-bold uppercase text-[#1c6b45] dark:text-[#83c9a6] mb-1">B. Syahriyah (SPP Bulanan Standar)</label>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-500">Rp</span>
+                            <input type="number" id="adminPsbSppBulanan" min="0" step="10000" oninput="recalcAdminPsbTotals()" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#1c6b45] outline-none text-xs font-bold" placeholder="200000">
+                            <span class="text-xs text-gray-500 shrink-0">/ bulan</span>
+                        </div>
+                    </div>
+
+                    <!-- Kotak Ringkasan Perhitungan Otomatis -->
+                    <div class="p-3.5 rounded-xl bg-[#9a2024] text-white space-y-1.5 shadow-sm">
+                        <div class="flex justify-between text-xs text-white/80">
+                            <span>Subtotal Biaya Pendaftaran &amp; Fasilitas (A):</span>
+                            <span id="adminPsbSubtotalBiaya" class="font-bold text-white">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-white/80">
+                            <span>Syahriyah Bulanan Pertama (B):</span>
+                            <span id="adminPsbSppDisplay" class="font-bold text-white">Rp 0</span>
+                        </div>
+                        <div class="pt-1.5 border-t border-white/20 flex justify-between items-center">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider text-emerald-200 block">Total Biaya Awal Masuk (A + B)</span>
+                                <span class="text-[10px] text-white/70">Otomatis dihitung real-time</span>
+                            </div>
+                            <span id="adminPsbTotalMasuk" class="text-lg font-extrabold text-amber-200">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 mt-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between">
+                    <button type="button" onclick="resetPsbConfigSettings()" class="text-gray-500 hover:text-red-500 text-xs font-semibold py-2 px-3 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i>Reset Default
+                    </button>
+                    <button type="button" onclick="savePsbConfigSettings()" class="bg-[#1c6b45] hover:bg-[#165737] text-white font-medium py-2 px-4 rounded-xl transition shadow-xs text-xs sm:text-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Simpan Biaya PSB</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ==================== IDENTITAS LEMBAGA ==================== -->
             <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6">
                 <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-building-columns mr-2 text-[#9a2024]"></i>Identitas Lembaga</h3>
                 <form onsubmit="savePondokName(event)" class="space-y-4">
@@ -690,6 +1005,7 @@
                 </form>
             </div>
 
+            <!-- ==================== GANTI PASSWORD ADMIN ==================== -->
             <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6">
                 <h3 class="font-bold text-lg mb-4 border-b pb-2 dark:border-darkborder"><i class="fa-solid fa-shield-halved mr-2 text-[#1c6b45]"></i>Ganti Password Admin</h3>
                 <form onsubmit="saveAdminPassword(event)" class="space-y-4">
@@ -705,6 +1021,7 @@
                 </form>
             </div>
 
+            <!-- ==================== BACKEND CONNECTION ==================== -->
             <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-6 lg:col-span-2">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b pb-2 dark:border-darkborder">
                     <h3 class="font-bold text-lg"><i class="fa-solid fa-cloud-arrow-up mr-2 text-[#1c6b45]"></i>Backend Google Apps Script &amp; Cloudflare Pages</h3>

@@ -27,6 +27,10 @@ function doGet(e) {
       return createJsonResponse(getAppBranding());
     }
 
+    if (action === 'getPsbConfig') {
+      return createJsonResponse(getPsbConfig());
+    }
+
     if (action === 'setupDatabase') {
       return createJsonResponse(setupDatabase());
     }
@@ -79,6 +83,14 @@ function doPost(e) {
         result = getAppBranding();
         break;
 
+      case 'getPsbConfig':
+        result = getPsbConfig();
+        break;
+
+      case 'savePsbConfig':
+        result = savePsbConfig(args[0], args[1]);
+        break;
+
       case 'loginUser':
         result = loginUser(args[0], args[1], args[2]);
         break;
@@ -110,6 +122,10 @@ function doPost(e) {
 
       case 'saveSantriData':
         result = saveSantriData(args[0], args[1]);
+        break;
+
+      case 'saveSantriBatch':
+        result = saveSantriBatch(args[0], args[1]);
         break;
 
       case 'addSantri':
@@ -173,6 +189,27 @@ function createJsonResponse(data) {
 }
 
 // === BOILERPLATE: DATABASE & SETUP ===
+const DEFAULT_PSB_CONFIG = {
+  syarat: [
+    "Berkomitmen menghafal Al-Qur'an 30 Juz.",
+    "Mengisi formulir pendaftaran lengkap.",
+    "Pas Foto 3x4 (3 lembar): Putra berkopyah, Putri berkerudung.",
+    "Fotokopi Ijazah terakhir, Raport, KK, & Akta Kelahiran (masing-masing 2 lembar).",
+    "(Bagi Yatim/Piatu) Surat Keterangan Kematian Orang Tua.",
+    "Sanggup menaati tata tertib Pesantren bagi santri & wali.",
+    "Diantar langsung oleh Orang Tua / Wali ke Pesantren."
+  ],
+  catatanSyarat: "Berkas fisik diserahkan saat santri tiba di pondok.",
+  biayaFasilitas: [
+    { id: "bf_1", nama: "Pendaftaran Administrasi", nominal: 100000, kategori: "Pendaftaran" },
+    { id: "bf_2", nama: "Almari Santri Pribadi", nominal: 500000, kategori: "Fasilitas" },
+    { id: "bf_3", nama: "Infaq Gedung & Sarana Prasarana", nominal: 1000000, kategori: "Fasilitas" },
+    { id: "bf_4", nama: "Layanan Kesehatan Santri", nominal: 100000, kategori: "Kesehatan" },
+    { id: "bf_5", nama: "Kitab & Buku Panduan Tahfizh", nominal: 100000, kategori: "Kitab" }
+  ],
+  sppBulanan: 200000
+};
+
 const SHEET_CONFIG = {
   "Pengaturan": ["Key", "Value", "Timestamp"],
   "Users_Admin": ["Username", "Password", "Nama", "Role", "Timestamp"],
@@ -222,6 +259,10 @@ function setupDatabase() {
   const pengSheet = ss.getSheetByName("Pengaturan");
   if (pengSheet.getLastRow() === 1) {
     pengSheet.appendRow(["Nama_Pondok", "Zadil Quran", new Date()]);
+  }
+  const currentPeng = getSheetDataAsObjects("Pengaturan");
+  if (!currentPeng.find(x => x.Key === "Config_PSB")) {
+    pengSheet.appendRow(["Config_PSB", JSON.stringify(DEFAULT_PSB_CONFIG), new Date()]);
   }
 
   return createResponse(true, null, "Database berhasil disiapkan & kolom dimutakhirkan. Refresh aplikasi Anda.");
@@ -304,14 +345,55 @@ function getAppBranding() {
   });
 }
 
+function getPsbConfig() {
+  return safeExecute(function() {
+    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_PSB");
+    if (p && p.Value) {
+      try {
+        const parsed = JSON.parse(p.Value);
+        return createResponse(true, parsed, "Konfigurasi PSB berhasil dimuat");
+      } catch (err) {}
+    }
+    return createResponse(true, DEFAULT_PSB_CONFIG, "Konfigurasi PSB default");
+  });
+}
+
+function savePsbConfig(token, configData) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Pengaturan");
+    if (!sheet) return createResponse(false, null, "Sheet Pengaturan tidak ditemukan");
+
+    const data = sheet.getDataRange().getValues();
+    const jsonStr = typeof configData === "string" ? configData : JSON.stringify(configData);
+    let found = false;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === "Config_PSB") {
+        sheet.getRange(i + 1, 2).setValue(jsonStr);
+        sheet.getRange(i + 1, 3).setValue(new Date());
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      sheet.appendRow(["Config_PSB", jsonStr, new Date()]);
+    }
+    return createResponse(true, typeof configData === "string" ? JSON.parse(configData) : configData, "Pengaturan PSB & Biaya berhasil disimpan!");
+  });
+}
+
 function fetchAppData(token) {
   const auth = checkRole(token, ["superadmin", "ustadz"]);
   if (auth.status === "error") return auth;
 
   return safeExecute(function() {
     const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Nama_Pondok");
+    const psb = getPsbConfig();
     const data = {
       appName: p ? p.Value : "Zadil Quran",
+      psbConfig: psb.data || DEFAULT_PSB_CONFIG,
       ustadz: getSheetDataAsObjects("Users_Ustadz").reverse(),
       santri: getSheetDataAsObjects("Data_Santri").reverse(),
       setoran: getSheetDataAsObjects("Data_Setoran"),
@@ -430,35 +512,51 @@ function registerCalonSantriOnline(data) {
     const newRow = headersSantri.map(function(h) { return rowSantri.hasOwnProperty(h) ? rowSantri[h] : ""; });
     sheetSantri.appendRow(newRow);
 
+    // Ambil konfigurasi PSB & biaya terbaru (dinamis)
+    let psbConfig = DEFAULT_PSB_CONFIG;
+    try {
+      const cfg = getPsbConfig();
+      if (cfg && cfg.status === "success" && cfg.data) psbConfig = cfg.data;
+    } catch (e) {}
+
+    const totalFasilitas = (psbConfig.biayaFasilitas || []).reduce(function(sum, item) {
+      return sum + (Number(item.nominal) || 0);
+    }, 0) || 1800000;
+    const sppNominal = Number(psbConfig.sppBulanan) || 200000;
+    const grandTotal = totalFasilitas + sppNominal;
+    const rincianFasilitasStr = (psbConfig.biayaFasilitas || []).map(function(b) {
+      return b.nama + ": Rp " + Number(b.nominal).toLocaleString('id-ID');
+    }).join(' • ');
+
     // Terbitkan Otomatis Tagihan Biaya Masuk & Syahriyah Pertama di Data_Tagihan
     const sheetTagihan = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Tagihan");
     if (sheetTagihan) {
       const headersTagihan = sheetTagihan.getRange(1, 1, 1, Math.max(sheetTagihan.getLastColumn(), 1)).getValues()[0];
       const timePrefix = new Date().getTime().toString().slice(-4);
 
-      // Tagihan 1: Paket Pendaftaran & Fasilitas Santri Mukim (Rp 1.800.000)
+      // Tagihan 1: Paket Pendaftaran & Fasilitas Santri Mukim (Dinamis dari Pengaturan)
       const tagihan1 = {
         "ID_Tagihan": "INV-" + timePrefix + "-001",
         "ID_Santri": newId,
         "Kategori": "Pendaftaran & Fasilitas",
         "Judul_Tagihan": "Biaya Pendaftaran & Fasilitas Santri Mukim",
-        "Nominal": 1800000,
+        "Nominal": totalFasilitas,
         "Jatuh_Tempo": "Saat Masuk Pondok",
         "Status": "Belum Lunas",
         "Tgl_Bayar": "-",
         "Metode_Bayar": "-",
-        "Catatan": "Rincian: Pendaftaran 100rb, Almari 500rb, Infaq Gedung 1jt, Kesehatan 100rb, Kitab 100rb",
+        "Catatan": "Rincian: " + (rincianFasilitasStr || "Paket Pendaftaran Resmi"),
         "Timestamp": new Date()
       };
       sheetTagihan.appendRow(headersTagihan.map(function(h) { return tagihan1.hasOwnProperty(h) ? tagihan1[h] : ""; }));
 
-      // Tagihan 2: Syahriyah (SPP) Bulan Pertama (Rp 200.000)
+      // Tagihan 2: Syahriyah (SPP) Bulan Pertama (Dinamis dari Pengaturan)
       const tagihan2 = {
         "ID_Tagihan": "INV-" + timePrefix + "-002",
         "ID_Santri": newId,
         "Kategori": "Syahriyah (SPP)",
         "Judul_Tagihan": "Syahriyah (SPP) Bulan Pertama",
-        "Nominal": 200000,
+        "Nominal": sppNominal,
         "Jatuh_Tempo": "Saat Masuk Pondok",
         "Status": "Belum Lunas",
         "Tgl_Bayar": "-",
@@ -472,8 +570,8 @@ function registerCalonSantriOnline(data) {
     return createResponse(true, {
       idSantri: newId,
       namaSantri: rowSantri.Nama_Santri,
-      totalBiaya: 2000000,
-      rincianBiaya: "Pendaftaran & Fasilitas (Rp 1.800.000) + Syahriyah (Rp 200.000)"
+      totalBiaya: grandTotal,
+      rincianBiaya: "Pendaftaran & Fasilitas (Rp " + totalFasilitas.toLocaleString('id-ID') + ") + Syahriyah (Rp " + sppNominal.toLocaleString('id-ID') + ")"
     }, "Pendaftaran online berhasil! Nomor Registrasi ID: " + newId);
   });
 }
@@ -544,6 +642,71 @@ function saveSantriData(token, data) {
       sheet.appendRow(newRow);
       return createResponse(true, null, "Santri baru berhasil didaftarkan ke Buku Induk.");
     }
+  });
+}
+
+function saveSantriBatch(token, santriList) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  if (!Array.isArray(santriList) || santriList.length === 0) {
+    return createResponse(false, null, "Daftar santri untuk impor kosong.");
+  }
+
+  return safeExecute(function() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Santri");
+    if (!sheet) return createResponse(false, null, "Sheet Data_Santri tidak ditemukan.");
+
+    const lastCol = Math.max(sheet.getLastColumn(), 1);
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    const year = new Date().getFullYear();
+
+    const newRows = santriList.map(function(data) {
+      let idSantri = String(data.idSantri || data.ID_Santri || "").trim().toUpperCase();
+      if (!idSantri || !idSantri.startsWith("ZQ-")) {
+        const rnd = Math.random().toString(36).substring(2, 6).toUpperCase();
+        idSantri = "ZQ-" + year + "-" + rnd;
+      }
+
+      const rowObj = {
+        "ID_Santri": idSantri,
+        "Nama_Santri": String(data.namaSantri || data.Nama_Santri || "").trim(),
+        "Nama_Panggilan": data.namaPanggilan || data.Nama_Panggilan ? String(data.namaPanggilan || data.Nama_Panggilan).trim() : "",
+        "Jenis_Kelamin": data.jenisKelamin || data.Jenis_Kelamin || "Putra",
+        "Tempat_Lahir": data.tempatLahir || data.Tempat_Lahir ? String(data.tempatLahir || data.Tempat_Lahir).trim() : "",
+        "Tanggal_Lahir": data.tanggalLahir || data.Tanggal_Lahir ? String(data.tanggalLahir || data.Tanggal_Lahir).trim() : "",
+        "Alamat": data.alamat || data.Alamat ? String(data.alamat || data.Alamat).trim() : "",
+        "RT": data.rt || data.RT ? String(data.rt || data.RT).trim() : "-",
+        "RW": data.rw || data.RW ? String(data.rw || data.RW).trim() : "-",
+        "Desa": data.desa || data.Desa ? String(data.desa || data.Desa).trim() : "-",
+        "Kecamatan": data.kecamatan || data.Kecamatan ? String(data.kecamatan || data.Kecamatan).trim() : "-",
+        "Kab_Kota": data.kabKota || data.Kab_Kota ? String(data.kabKota || data.Kab_Kota).trim() : "-",
+        "Provinsi": data.provinsi || data.Provinsi ? String(data.provinsi || data.Provinsi).trim() : "Jawa Timur",
+        "Pendidikan_Terakhir": data.pendidikanTerakhir || data.Pendidikan_Terakhir ? String(data.pendidikanTerakhir || data.Pendidikan_Terakhir).trim() : "-",
+        "Tahun_Lulus": data.tahunLulus || data.Tahun_Lulus ? String(data.tahunLulus || data.Tahun_Lulus).trim() : "-",
+        "Sekolah_Asal": data.sekolahAsal || data.Sekolah_Asal ? String(data.sekolahAsal || data.Sekolah_Asal).trim() : "-",
+        "Nama_Ayah": data.namaAyah || data.Nama_Ayah ? String(data.namaAyah || data.Nama_Ayah).trim() : "",
+        "Pekerjaan_Ayah": data.pekerjaanAyah || data.Pekerjaan_Ayah ? String(data.pekerjaanAyah || data.Pekerjaan_Ayah).trim() : "-",
+        "Pendidikan_Ayah": data.pendidikanAyah || data.Pendidikan_Ayah ? String(data.pendidikanAyah || data.Pendidikan_Ayah).trim() : "-",
+        "Nama_Ibu": data.namaIbu || data.Nama_Ibu ? String(data.namaIbu || data.Nama_Ibu).trim() : "",
+        "Pekerjaan_Ibu": data.pekerjaanIbu || data.Pekerjaan_Ibu ? String(data.pekerjaanIbu || data.Pekerjaan_Ibu).trim() : "-",
+        "Pendidikan_Ibu": data.pendidikanIbu || data.Pendidikan_Ibu ? String(data.pendidikanIbu || data.Pendidikan_Ibu).trim() : "-",
+        "Nama_Wali": data.namaWali || data.Nama_Wali ? String(data.namaWali || data.Nama_Wali).trim() : (data.namaAyah || data.Nama_Ayah || ""),
+        "No_HP_Wali": data.noHpWali || data.No_HP_Wali ? String(data.noHpWali || data.No_HP_Wali).trim() : "",
+        "ID_Ustadz": data.idUstadz || data.ID_Ustadz ? String(data.idUstadz || data.ID_Ustadz).trim() : "",
+        "Status": data.status || data.Status || "Aktif",
+        "Timestamp": new Date()
+      };
+
+      return headers.map(function(h) {
+        return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
+      });
+    });
+
+    const startRow = sheet.getLastRow() + 1;
+    sheet.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+
+    return createResponse(true, { count: newRows.length }, "Berhasil mengimpor " + newRows.length + " data santri ke Buku Induk.");
   });
 }
 
