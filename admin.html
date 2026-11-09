@@ -34,7 +34,7 @@
 
     <!-- ==================== MAIN DASHBOARD LAYOUT ==================== -->
     <div id="mainLayout" class="h-full flex flex-col md:flex-row w-full">
-        <aside id="sidebar" class="bg-[#480a0c] dark:bg-slate-950 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-xl flex flex-col border-r border-[#631316] dark:border-darkborder theme-transition">
+        <aside id="sidebar" class="bg-[#480a0c] dark:bg-slate-950 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50 shadow-xl flex flex-col border-r border-[#631316] dark:border-darkborder theme-transition">
             <div class="p-4 flex items-center gap-3 border-b border-[#631316] dark:border-darkborder">
                 <img src="logo.jpg" alt="Logo Zadil Quran" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 bg-white">
                 <a href="index.html" class="text-lg font-bold tracking-wider brand-name-display cursor-pointer">Zadil Quran</a>
@@ -55,20 +55,20 @@
                 </button>
             </div>
 
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebarMenu"></nav>
+            <nav class="flex-1 p-3.5 space-y-1.5 overflow-y-auto" id="sidebarMenu"></nav>
 
-            <div class="p-4 border-t border-[#631316] dark:border-darkborder space-y-2">
-                <a href="index.html" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition text-sm">
-                    <i class="fa-solid fa-globe text-amber-300"></i>
+            <div class="p-3.5 pb-6 md:pb-4 border-t border-[#631316] dark:border-darkborder space-y-1.5 bg-[#3a0709] dark:bg-slate-950">
+                <a href="index.html" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition text-xs font-medium">
+                    <i class="fa-solid fa-globe text-amber-300 w-4 text-center"></i>
                     <span>Lihat Landing Page</span>
                 </a>
-                <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition group text-sm">
-                    <i class="fa-solid fa-download text-emerald-400"></i>
+                <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-white/10 hover:text-white transition group text-xs font-medium">
+                    <i class="fa-solid fa-download text-emerald-400 w-4 text-center"></i>
                     <span>Pasang Aplikasi PWA</span>
                 </button>
-                <button onclick="logout()" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-white/80 hover:bg-red-600 hover:text-white transition group text-sm">
-                    <i class="fa-solid fa-right-from-bracket group-hover:-translate-x-1 transition-transform"></i>
-                    <span>Keluar</span>
+                <button onclick="logout()" class="flex items-center gap-3 w-full p-2.5 rounded-xl bg-red-600/25 hover:bg-red-600 text-red-100 hover:text-white border border-red-500/30 transition group text-xs font-bold shadow-xs">
+                    <i class="fa-solid fa-right-from-bracket w-4 text-center group-hover:-translate-x-0.5 transition-transform"></i>
+                    <span>Keluar (Logout)</span>
                 </button>
             </div>
         </aside>
@@ -88,6 +88,10 @@
                         <i class="fa-solid fa-moon dark:hidden text-xs"></i>
                         <i class="fa-solid fa-sun hidden dark:block text-xs"></i>
                     </button>
+                    <button onclick="logout()" class="h-8 px-2.5 rounded-xl bg-red-50 dark:bg-red-950/40 text-[#9a2024] dark:text-red-300 border border-red-200/80 dark:border-red-900/50 flex items-center justify-center gap-1 text-[11px] font-bold transition active:scale-95" title="Keluar / Logout">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        <span>Keluar</span>
+                    </button>
                     <button onclick="toggleSidebar()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-[#9a2024] flex items-center justify-center transition active:scale-95" title="Menu Sidebar">
                         <i class="fa-solid fa-bars text-sm"></i>
                     </button>
@@ -95,10 +99,10 @@
             </header>
 
             <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 pb-24 md:pb-8 relative" id="contentArea"></div>
-            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
             <!-- Sticky Bottom Navigation Bar Khusus Mobile (Android App Style) -->
-            <nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-2 flex items-center justify-around shadow-xl">
+            <nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-2 flex items-center justify-around shadow-xl">
                 <button type="button" onclick="switchAdmin('dashboard')" id="bottomNav-dashboard" class="bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold">
                     <i class="fa-solid fa-gauge text-base"></i>
                     <span class="text-[10px]">Beranda</span>

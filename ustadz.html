@@ -35,7 +35,7 @@
 
     <div id="mainLayout" class="h-full flex flex-col md:flex-row w-full">
         <!-- ==================== SIDEBAR USTADZ ==================== -->
-        <aside id="sidebar" class="bg-[#480a0c] dark:bg-slate-950 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40 shadow-xl flex flex-col border-r border-[#631316] dark:border-darkborder theme-transition">
+        <aside id="sidebar" class="bg-[#480a0c] dark:bg-slate-950 text-white w-64 flex-shrink-0 fixed md:static inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50 shadow-xl flex flex-col border-r border-[#631316] dark:border-darkborder theme-transition">
             <div class="p-4 flex items-center gap-3 border-b border-[#631316] dark:border-darkborder">
                 <img src="logo.jpg" alt="Logo Zadil Quran" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-white/20 bg-white">
                 <a href="index.html" class="text-lg font-bold tracking-wider brand-name-display cursor-pointer">Zadil Quran</a>
@@ -595,10 +595,10 @@
 
             </div>
 
-            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+            <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
 
             <!-- Sticky Bottom Navigation Bar Khusus Mobile -->
-            <nav id="ustadzBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-3 flex items-center justify-around shadow-xl">
+            <nav id="ustadzBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-3 flex items-center justify-around shadow-xl">
                 <button type="button" onclick="switchUstadzSection('dashboard')" id="bottomNav-ustadz-dashboard" class="bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold">
                     <i class="fa-solid fa-chart-pie text-base"></i>
                     <span class="text-[10px]">Dashboard</span>
