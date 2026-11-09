@@ -53,13 +53,30 @@ export default {
       if (mappedFile) {
         const fallbackUrl = new URL(mappedFile, request.url);
         fallbackUrl.search = url.search;
-        return env.ASSETS.fetch(new Request(fallbackUrl, request));
+        response = await env.ASSETS.fetch(new Request(fallbackUrl, request));
       }
     }
 
-    return response;
+    return applySecurityHeaders(response);
   }
 };
+
+/**
+ * Pertahanan Keamanan OWASP: Lampirkan Security Headers ke respon HTTP
+ */
+function applySecurityHeaders(response) {
+  if (!response) return response;
+  const newHeaders = new Headers(response.headers);
+  newHeaders.set('X-Content-Type-Options', 'nosniff');
+  newHeaders.set('X-Frame-Options', 'SAMEORIGIN');
+  newHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  newHeaders.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: newHeaders
+  });
+}
 
 /**
  * Proxy request ke Google Apps Script Web App
@@ -113,6 +130,8 @@ async function handleApiProxy(request, env, clientUrl) {
     responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     responseHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     responseHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    responseHeaders.set('X-Content-Type-Options', 'nosniff');
+    responseHeaders.set('X-Frame-Options', 'DENY');
 
     return new Response(responseBody, {
       status: scriptResponse.status,
@@ -135,6 +154,7 @@ function handleCorsPreflight() {
   headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   headers.set('Access-Control-Max-Age', '86400');
+  headers.set('X-Content-Type-Options', 'nosniff');
   return new Response(null, { status: 204, headers });
 }
 

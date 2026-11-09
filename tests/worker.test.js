@@ -45,5 +45,20 @@ describe('Cloudflare Pages Edge Worker (_worker.js)', () => {
       expect(requestedFallback).toBe(tc.expectedFile);
     }
   });
+
+  it('melampirkan OWASP Security Headers pada setiap respon HTTP', async () => {
+    const mockEnv = {
+      ASSETS: {
+        fetch: async () => new Response('<!DOCTYPE html><html><body>OK</body></html>', { status: 200 })
+      }
+    };
+
+    const request = new Request('https://zadilquran.pages.dev/');
+    const res = await worker.fetch(request, mockEnv, {});
+    expect(res.headers.get('X-Content-Type-Options')).toBe('nosniff');
+    expect(res.headers.get('X-Frame-Options')).toBe('SAMEORIGIN');
+    expect(res.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
+    expect(res.headers.get('Permissions-Policy')).toContain('camera=()');
+  });
 });
 

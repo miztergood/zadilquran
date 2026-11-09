@@ -219,6 +219,21 @@ async function apiCall(method, ...args) {
 }
 
 // ==================== FORMATTERS & HELPERS ====================
+
+/**
+ * Pertahanan Cross-Site Scripting (XSS / A05: Injection)
+ * Mengenkripsi karakter khusus HTML sebelum dirender ke innerHTML
+ */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 function formatRupiah(angka) {
     if (typeof angka === 'number') {
         return "Rp " + Math.round(angka).toLocaleString('id-ID');
@@ -912,6 +927,7 @@ async function triggerPwaInstall() {
 // Export untuk lingkungan Node.js / Unit Testing jika tersedia
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        escapeHtml,
         formatRupiah,
         angkaKeTerbilang,
         formatWaNumber,

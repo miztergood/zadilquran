@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  escapeHtml,
   formatRupiah,
   angkaKeTerbilang,
   formatWaNumber,
@@ -7,6 +8,23 @@ import {
 } from '../js/core.js';
 
 describe('Zadil Quran Core Helpers (js/core.js)', () => {
+  describe('escapeHtml() - OWASP A05 XSS Sanitizer', () => {
+    it('mengenkripsi tag script dan karakter bahaya XSS', () => {
+      const dangerous = '<script>alert("XSS")</script>';
+      expect(escapeHtml(dangerous)).toBe('&lt;script&gt;alert(&quot;XSS&quot;)&lt;/script&gt;');
+    });
+
+    it('mengenkripsi tanda petik tunggal dan ganda serta ampersand', () => {
+      const input = `Tom & Jerry said 'hello' "world"`;
+      expect(escapeHtml(input)).toBe('Tom &amp; Jerry said &#39;hello&#39; &quot;world&quot;');
+    });
+
+    it('menangani input null atau undefined dengan mengembalikan string kosong', () => {
+      expect(escapeHtml(null)).toBe('');
+      expect(escapeHtml(undefined)).toBe('');
+    });
+  });
+
   describe('formatRupiah()', () => {
     it('memformat angka integer ke format mata uang Rupiah', () => {
       expect(formatRupiah(200000)).toBe('Rp 200.000');

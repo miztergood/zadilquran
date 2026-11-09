@@ -35,7 +35,7 @@ function handleLogin(e, type) {
 
     apiCall('loginUser', un, pw, type).then(res => {
         if (res.status === 'success') {
-            if (type === 'staff') {
+            if (res.data && res.data.token) {
                 localStorage.setItem(APP_CONFIG.STORAGE_KEYS.TOKEN, res.data.token);
             }
             sessionData = res.data;

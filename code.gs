@@ -143,6 +143,11 @@ function doGet(e) {
     }
 
     if (action === 'setupDatabase') {
+      const auth = checkRole(params.token, ["superadmin"]);
+      if (auth.status === "error") {
+        logSecurityEvent_("UNAUTHORIZED_SETUP", "Percobaan eksekusi setupDatabase via GET tanpa izin.");
+        return createJsonResponse(auth);
+      }
       return createJsonResponse(setupDatabase());
     }
 
@@ -187,6 +192,15 @@ function doPost(e) {
         break;
 
       case 'setupDatabase':
+        const existingAdmins = getSheetDataAsObjects("Users_Admin");
+        if (existingAdmins.length > 0) {
+          const authSetup = checkRole(args[0], ["superadmin"]);
+          if (authSetup.status === "error") {
+            logSecurityEvent_("UNAUTHORIZED_SETUP", "Percobaan eksekusi setupDatabase via POST tanpa izin.");
+            result = authSetup;
+            break;
+          }
+        }
         result = setupDatabase();
         break;
 
@@ -211,7 +225,7 @@ function doPost(e) {
         break;
 
       case 'fetchWaliData':
-        result = fetchWaliData(args[0]);
+        result = fetchWaliData(args[0], args[1]);
         break;
 
       case 'addUstadz':
@@ -487,42 +501,119 @@ function safeExecute(fn) {
   try { return fn(); } catch (err) { return createResponse(false, null, "Error: " + err.message); }
 }
 
-// === BOILERPLATE: AUTH & ROLE PERMISSION ===
+// === BOILERPLATE: SECURITY LOGGER & SANITIZATION ===
+function logSecurityEvent_(eventType, details) {
+  try {
+    const timestamp = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM-dd HH:mm:ss");
+    Logger.log("[SECURITY_AUDIT] [" + timestamp + "] " + eventType + ": " + (details || "-"));
+  } catch(e) {}
+}
+
+/**
+ * Sanitasi Input Sel Google Sheets (A05: Injection)
+ * Mencegah Formula Injection (CSV / Spreadsheet Formula Injection)
+ * Mengamankan karakter awalan '=', '+', '-', '@', '\t', '\r'
+ */
+function sanitizeSpreadsheetCell_(val) {
+  if (typeof val !== 'string') return val;
+  const trimmed = val.trim();
+  if (/^[=+\-@\t\r]/.test(trimmed)) {
+    return "'" + trimmed;
+  }
+  return val;
+}
+
+// === BOILERPLATE: AUTH & ROLE PERMISSION (OWASP A01 & A07 HARDENED) ===
 function loginUser(username, password, type) {
   return safeExecute(function() {
+    const cleanUser = String(username || "").trim();
+    if (!cleanUser) return createResponse(false, null, "Username atau ID wajib diisi.");
+
+    // Rate Limiting (A07: Mitigasi Brute Force Attack via Cache)
+    const cache = CacheService.getScriptCache();
+    const rateLimitKey = "rl_login_" + cleanUser.toLowerCase();
+    const failedAttempts = parseInt(cache.get(rateLimitKey) || "0", 10);
+    if (failedAttempts >= 5) {
+      logSecurityEvent_("RATE_LIMIT_BLOCKED", "User '" + cleanUser + "' diblokir sementara karena 5x kegagalan berturut-turut.");
+      return createResponse(false, null, "Terlalu banyak percobaan login yang gagal. Akses dibekukan sementara selama 15 menit demi keamanan.");
+    }
+
     let user = null, role = null, name = "", idUser = "";
 
     if (type === 'staff') {
       const admins = getSheetDataAsObjects("Users_Admin");
-      user = admins.find(u => u.Username === username && u.Password === password);
-      if (user) { role = "superadmin"; name = user.Nama; idUser = username; }
+      user = admins.find(u => u.Username === cleanUser && u.Password === password);
+      if (user) { role = "superadmin"; name = user.Nama; idUser = cleanUser; }
       
       if (!user) {
         const ustadzs = getSheetDataAsObjects("Users_Ustadz");
-        user = ustadzs.find(u => u.Username === username && u.Password === password);
+        user = ustadzs.find(u => u.Username === cleanUser && u.Password === password);
         if (user) { role = "ustadz"; name = user.Nama; idUser = user.ID_Ustadz; }
       }
     } else if (type === 'wali') {
-      const cleanUsername = String(username || "").trim().toUpperCase();
+      const cleanUsername = cleanUser.toUpperCase();
       const santris = getSheetDataAsObjects("Data_Santri");
       user = santris.find(s => String(s.ID_Santri || "").trim().toUpperCase() === cleanUsername);
-      if (user) return createResponse(true, { role: "walisantri", santri: user, id: user.ID_Santri }, "Login wali berhasil."); 
+      if (user) {
+        role = "walisantri";
+        name = "Wali " + user.Nama_Santri;
+        idUser = user.ID_Santri;
+      }
     }
 
-    if (!user) return createResponse(false, null, "Kredensial tidak ditemukan atau salah.");
+    if (!user) {
+      cache.put(rateLimitKey, String(failedAttempts + 1), 900); // Kunci 15 menit jika 5x gagal berturut-turut
+      logSecurityEvent_("LOGIN_FAILED", "Kredensial gagal untuk user: " + cleanUser + " (Gagal ke-" + (failedAttempts + 1) + ")");
+      return createResponse(false, null, "Kredensial tidak ditemukan atau salah.");
+    }
 
+    // Login sukses: Reset counter percobaan gagal
+    cache.remove(rateLimitKey);
+
+    // Buat token sesi dengan batas kedaluwarsa (A07: Session Expiry / 24 Jam)
     const token = Utilities.getUuid();
-    PropertiesService.getScriptProperties().setProperty("session_" + token, JSON.stringify({ id: idUser, role: role, name: name }));
-    return createResponse(true, { token: token, role: role, name: name, id: idUser }, "Login berhasil.");
+    const now = new Date().getTime();
+    const ttlMs = 24 * 60 * 60 * 1000; // 24 jam
+    PropertiesService.getScriptProperties().setProperty("session_" + token, JSON.stringify({
+      id: idUser,
+      role: role,
+      name: name,
+      createdAt: now,
+      expiresAt: now + ttlMs
+    }));
+
+    logSecurityEvent_("LOGIN_SUCCESS", "Login sukses sebagai " + role + " (" + idUser + ")");
+    return createResponse(true, {
+      token: token,
+      role: role,
+      name: name,
+      id: idUser,
+      santri: (role === "walisantri") ? user : undefined
+    }, "Login berhasil.");
   });
 }
 
 function checkRole(token, allowedRoles) {
+  if (!token || typeof token !== 'string') return createResponse(false, null, "Token sesi tidak valid.");
   const raw = PropertiesService.getScriptProperties().getProperty("session_" + token);
-  if(!raw) return createResponse(false, null, "Sesi kedaluwarsa.");
-  const session = JSON.parse(raw);
-  if (allowedRoles.indexOf(session.role) === -1) return createResponse(false, null, "Akses ditolak.");
-  return createResponse(true, session, "Akses diizinkan.");
+  if (!raw) return createResponse(false, null, "Sesi tidak ditemukan atau telah kedaluwarsa.");
+
+  try {
+    const session = JSON.parse(raw);
+    const now = new Date().getTime();
+    if (session.expiresAt && now > session.expiresAt) {
+      PropertiesService.getScriptProperties().deleteProperty("session_" + token);
+      logSecurityEvent_("SESSION_EXPIRED", "Token sesi " + token + " kedaluwarsa.");
+      return createResponse(false, null, "Sesi Anda telah kedaluwarsa. Silakan login kembali.");
+    }
+    if (allowedRoles.indexOf(session.role) === -1) {
+      logSecurityEvent_("UNAUTHORIZED_ROLE", "Role " + session.role + " ditolak saat akses endpoint dengan role " + allowedRoles.join(","));
+      return createResponse(false, null, "Akses ditolak: Anda tidak memiliki izin untuk tindakan ini.");
+    }
+    return createResponse(true, session, "Akses diizinkan.");
+  } catch(e) {
+    return createResponse(false, null, "Format sesi tidak valid.");
+  }
 }
 
 function validateRequired(fields) {
@@ -600,10 +691,32 @@ function fetchAppData(token) {
   });
 }
 
-function fetchWaliData(idSantri) {
+function fetchWaliData(arg1, arg2) {
   return safeExecute(function() {
-    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Nama_Pondok");
+    let token = "";
+    let idSantri = "";
+    if (arg2 !== undefined) {
+      token = arg1;
+      idSantri = arg2;
+    } else {
+      idSantri = arg1;
+    }
+
     const cleanId = String(idSantri || "").trim().toUpperCase();
+    if (!cleanId) return createResponse(false, null, "ID Santri wajib diisi.");
+
+    // Pertahanan A01 (Broken Access Control & IDOR): Validasi token jika ada
+    if (token) {
+      const auth = checkRole(token, ["walisantri", "superadmin", "ustadz"]);
+      if (auth.status === "error") return auth;
+      // Jika role adalah walisantri, pastikan hanya boleh mengakses data anaknya sendiri
+      if (auth.data.role === "walisantri" && String(auth.data.id).trim().toUpperCase() !== cleanId) {
+        logSecurityEvent_("IDOR_ATTEMPT", "Wali " + auth.data.id + " diblokir saat mencoba akses ID santri " + cleanId);
+        return createResponse(false, null, "Akses ditolak: Anda hanya berhak mengakses data ananda santri Anda sendiri.");
+      }
+    }
+
+    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Nama_Pondok");
     const setoran = getSheetDataAsObjects("Data_Setoran").filter(s => String(s.ID_Santri || "").trim().toUpperCase() === cleanId).reverse();
     const santri = getSheetDataAsObjects("Data_Santri").find(s => String(s.ID_Santri || "").trim().toUpperCase() === cleanId);
     const ustadz = getSheetDataAsObjects("Users_Ustadz").find(u => u.ID_Ustadz === (santri ? santri.ID_Ustadz : ""));
@@ -625,6 +738,10 @@ function addUstadz(token, nama, username, password) {
   if (auth.status === "error") return auth;
   const valid = validateRequired({ "Nama": nama, "Username": username, "Password": password });
   if (valid) return valid;
+
+  if (String(password).trim().length < 6) {
+    return createResponse(false, null, "Password ustadz minimal harus 6 karakter.");
+  }
 
   return safeExecute(function() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users_Ustadz");
@@ -708,7 +825,10 @@ function registerCalonSantriOnline(data) {
       "Timestamp": new Date()
     };
 
-    const newRow = headersSantri.map(function(h) { return rowSantri.hasOwnProperty(h) ? rowSantri[h] : ""; });
+    const newRow = headersSantri.map(function(h) {
+      const v = rowSantri.hasOwnProperty(h) ? rowSantri[h] : "";
+      return sanitizeSpreadsheetCell_(v);
+    });
     sheetSantri.appendRow(newRow);
 
     // Ambil konfigurasi PSB & biaya terbaru (dinamis)
@@ -833,14 +953,14 @@ function saveSantriData(token, data) {
     if (existingRowIndex > 0) {
       headers.forEach(function(headerName, colIdx) {
         if (rowObj.hasOwnProperty(headerName)) {
-          sheet.getRange(existingRowIndex, colIdx + 1).setValue(rowObj[headerName]);
+          sheet.getRange(existingRowIndex, colIdx + 1).setValue(sanitizeSpreadsheetCell_(rowObj[headerName]));
         }
       });
       SpreadsheetApp.flush();
       return createResponse(true, null, "Data Buku Induk Santri berhasil diperbarui.");
     } else {
       const newRow = headers.map(function(h) {
-        return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
+        return sanitizeSpreadsheetCell_(rowObj.hasOwnProperty(h) ? rowObj[h] : "");
       });
       sheet.appendRow(newRow);
       SpreadsheetApp.flush();
@@ -903,7 +1023,7 @@ function saveSantriBatch(token, santriList) {
       };
 
       return headers.map(function(h) {
-        return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
+        return sanitizeSpreadsheetCell_(rowObj.hasOwnProperty(h) ? rowObj[h] : "");
       });
     });
 
@@ -1009,7 +1129,7 @@ function saveSetoran(token, dataSetoran) {
     };
 
     const newRow = headers.map(function(h) {
-      return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
+      return sanitizeSpreadsheetCell_(rowObj.hasOwnProperty(h) ? rowObj[h] : "");
     });
     sheet.appendRow(newRow);
     SpreadsheetApp.flush();
@@ -1570,6 +1690,11 @@ function updatePondokName(token, newName) {
 function updateAdminPassword(token, oldPw, newPw) {
   const auth = checkRole(token, ["superadmin"]);
   if (auth.status === "error") return auth;
+
+  if (!newPw || String(newPw).trim().length < 6) {
+    return createResponse(false, null, "Password baru harus memiliki panjang minimal 6 karakter.");
+  }
+
   return safeExecute(function() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users_Admin");
     const data = sheet.getDataRange().getValues();
@@ -1577,9 +1702,11 @@ function updateAdminPassword(token, oldPw, newPw) {
       if(data[i][0] === auth.data.id && data[i][1] === oldPw){
         sheet.getRange(i+1, 2).setValue(newPw);
         SpreadsheetApp.flush();
+        logSecurityEvent_("PASSWORD_CHANGED", "Superadmin " + auth.data.id + " berhasil mengubah password.");
         return createResponse(true, null, "Password berhasil diubah.");
       }
     }
+    logSecurityEvent_("PASSWORD_CHANGE_FAILED", "Superadmin " + auth.data.id + " gagal mengubah password (password lama salah).");
     return createResponse(false, null, "Password lama salah.");
   });
 }

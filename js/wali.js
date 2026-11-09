@@ -644,7 +644,8 @@ function renderWaliProfil() {
 
 function loadWaliData() {
     AppNotify.loading('Memuat Data Santri...');
-    apiCall('fetchWaliData', sessionData.id).then(res => {
+    const token = (typeof localStorage !== 'undefined' ? localStorage.getItem(APP_CONFIG?.STORAGE_KEYS?.TOKEN || 'token') : '') || (sessionData && sessionData.token) || '';
+    apiCall('fetchWaliData', token, sessionData.id).then(res => {
         AppNotify.close();
         if (res.status === 'success') {
             state = { ...state, ...res.data };
