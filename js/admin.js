@@ -748,6 +748,121 @@ function renderTableTagihan() {
     renderKeuanganView();
 }
 
+// Helper normalisasi konfigurasi SPP agar kompatibel dua arah (frontend <-> backend GAS)
+let _autoSppIssuingLock = false;
+
+function normalizeSppConfig(raw = {}) {
+    let isAktif = true;
+    if (raw.aktif !== undefined) isAktif = Boolean(raw.aktif);
+    else if (raw.otomatis !== undefined) isAktif = Boolean(raw.otomatis);
+
+    const tglTerbit = Number(raw.tglTerbit !== undefined ? raw.tglTerbit : raw.hariTerbit) || 1;
+    const tglJatuhTempo = Number(raw.tglJatuhTempo !== undefined ? raw.tglJatuhTempo : raw.hariTempo) || 10;
+    const nominal = Number(raw.nominal) || 200000;
+    const kategori = raw.kategori || 'Syahriyah (SPP)';
+    const catatan = raw.catatan || 'SPP Bulanan Santri Mukim';
+
+    return {
+        aktif: isAktif,
+        otomatis: isAktif,
+        tglTerbit: tglTerbit,
+        hariTerbit: tglTerbit,
+        tglJatuhTempo: tglJatuhTempo,
+        hariTempo: tglJatuhTempo,
+        nominal: nominal,
+        kategori: kategori,
+        catatan: catatan
+    };
+}
+
+function getLocalSppStatusForPeriode(periode) {
+    const targetPeriode = periode || currentKeuanganPeriode;
+    const activeSantris = (state.santri || []).filter(s => {
+        const st = String(s.Status || 'Aktif').trim().toLowerCase();
+        return st !== 'alumni' && st !== 'nonaktif' && st !== 'keluar';
+    });
+    const allTagihan = state.tagihan || [];
+    const billedIds = new Set();
+
+    allTagihan.forEach(t => {
+        const kat = String(t.Kategori || '').toLowerCase();
+        const jud = String(t.Judul_Tagihan || '').toLowerCase();
+        const isSpp = kat.includes('spp') || kat.includes('syahriyah') || jud.includes('spp') || jud.includes('syahriyah');
+        if (!isSpp) return;
+        if (getTagihanPeriode(t) === targetPeriode) {
+            billedIds.add(String(t.ID_Santri || '').trim().toUpperCase());
+        }
+    });
+
+    const belumTerbitList = activeSantris.filter(s => !billedIds.has(String(s.ID_Santri || '').trim().toUpperCase()));
+    const sudahTerbitCount = activeSantris.length - belumTerbitList.length;
+
+    return {
+        periode: targetPeriode,
+        totalSantriAktif: activeSantris.length,
+        santriSudahTerbit: sudahTerbitCount,
+        santriBelumTerbit: belumTerbitList.length,
+        belumTerbitSantris: belumTerbitList,
+        isLengkap: activeSantris.length > 0 ? belumTerbitList.length === 0 : true
+    };
+}
+
+async function ensureSppTerbitPeriode(periode, cfg, showToast = true) {
+    if (_autoSppIssuingLock) return;
+    _autoSppIssuingLock = true;
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    const sppCfg = normalizeSppConfig(cfg || {});
+    const targetPeriode = periode || currentKeuanganPeriode;
+
+    try {
+        // 1. Panggil endpoint massal backend terlebih dahulu
+        const res = await apiCall('terbitkanSppSekarang', token, targetPeriode);
+
+        // 2. Muat ulang data terbaru untuk memastikan apakah masih ada santri aktif (misal status "Santri Aktif") yang terlewat
+        const appRes = await apiCall('fetchAppData', token);
+        if (appRes && appRes.status === 'success' && appRes.data) {
+            state = { ...state, ...appRes.data };
+        }
+
+        const localCheck = getLocalSppStatusForPeriode(targetPeriode);
+        if (localCheck.belumTerbitSantris.length > 0) {
+            const parts = targetPeriode.split('-');
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10);
+            const namaBulan = INDO_MONTHS_KEU[m - 1] || 'Bulan';
+            const maxDays = new Date(y, m, 0).getDate();
+            const tempoDay = Math.min(Number(sppCfg.tglJatuhTempo) || 10, maxDays);
+            const jatuhTempoStr = `${tempoDay} ${namaBulan} ${y}`;
+            const judulStr = `Syahriyah (SPP) Bulan ${namaBulan} ${y}`;
+
+            for (const s of localCheck.belumTerbitSantris) {
+                await apiCall('createTagihan', token, {
+                    targetSantri: s.ID_Santri,
+                    kategori: sppCfg.kategori || 'Syahriyah (SPP)',
+                    judulTagihan: judulStr,
+                    nominal: Number(sppCfg.nominal) || 200000,
+                    jatuhTempo: jatuhTempoStr,
+                    status: 'Belum Lunas',
+                    metodeBayar: '',
+                    catatan: sppCfg.catatan || 'SPP Bulanan Santri Mukim',
+                    periode: targetPeriode
+                });
+            }
+        }
+
+        if (showToast) {
+            AppNotify.toast('success', (res && res.message) ? res.message : `Tagihan SPP periode ${formatPeriodeDisplay(targetPeriode)} berhasil diterbitkan!`);
+        }
+        refreshAdminData();
+    } catch (err) {
+        if (showToast) {
+            AppNotify.error('Gagal Menerbitkan SPP', err.message || 'Terjadi kesalahan jaringan');
+        }
+    } finally {
+        _autoSppIssuingLock = false;
+    }
+}
+
 function renderCardStatusSpp() {
     const card = document.getElementById('cardStatusSppOtomatis');
     if (!card) return;
@@ -765,11 +880,41 @@ function renderCardStatusSpp() {
             return;
         }
         
-        const d = res.data;
+        const d = res.data || {};
+        let cachedCfg = null;
+        try {
+            cachedCfg = JSON.parse(localStorage.getItem('zadil_spp_config_v4') || 'null');
+        } catch (e) {}
+
+        // Normalisasi config dari backend maupun cache lokal jika backend lama belum menyimpan key `otomatis`
+        const rawCfg = d.config ? d.config : (cachedCfg ? { ...d, ...cachedCfg } : d);
+        const cfg = normalizeSppConfig(rawCfg);
+        const localStat = getLocalSppStatusForPeriode(currentKeuanganPeriode);
+
+        const totalSantriAktif = localStat.totalSantriAktif > 0
+            ? localStat.totalSantriAktif
+            : (d.totalSantriAktif !== undefined ? d.totalSantriAktif : (d.totalAktif || 0));
+        const santriSudahTerbit = localStat.totalSantriAktif > 0
+            ? localStat.santriSudahTerbit
+            : (d.santriSudahTerbit !== undefined ? d.santriSudahTerbit : (d.sudahDitagih || 0));
+        const santriBelumTerbit = Math.max(0, totalSantriAktif - santriSudahTerbit);
+        const isLengkap = totalSantriAktif === 0 || santriBelumTerbit === 0;
+
         const periodeDisplay = formatPeriodeDisplay(d.periode || currentKeuanganPeriode);
-        const pct = d.totalSantriAktif > 0 ? Math.round((d.santriSudahTerbit / d.totalSantriAktif) * 100) : 100;
+        const pct = totalSantriAktif > 0 ? Math.round((santriSudahTerbit / totalSantriAktif) * 100) : 100;
+
+        // Jika aturan otomatis AKTIF, periode yang dibuka adalah bulan berjalan, dan tanggal hari ini >= tglTerbit,
+        // otomatis terbitkan SPP untuk santri aktif yang belum punya tagihan bulan ini!
+        const now = new Date();
+        const curYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        if (cfg.aktif && currentKeuanganPeriode === curYearMonth && now.getDate() >= cfg.tglTerbit && santriBelumTerbit > 0 && !_autoSppIssuingLock) {
+            card.className = "mb-5 bg-emerald-50/80 dark:bg-emerald-950/20 rounded-2xl p-4 sm:p-5 border border-emerald-200 dark:border-emerald-900/40 shadow-xs";
+            card.innerHTML = `<div class="py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-2"><i class="fa-solid fa-spinner fa-spin"></i> Otomasi SPP Aktif (Tgl Terbit ${cfg.tglTerbit}): Menerbitkan ${santriBelumTerbit} tagihan SPP periode ${periodeDisplay} secara otomatis...</div>`;
+            ensureSppTerbitPeriode(currentKeuanganPeriode, cfg, true);
+            return;
+        }
         
-        if (!d.config || !d.config.aktif) {
+        if (!cfg.aktif) {
             card.className = "mb-5 bg-amber-50/80 dark:bg-amber-950/20 rounded-2xl p-4 sm:p-5 border border-amber-200 dark:border-amber-900/40 shadow-xs";
             card.innerHTML = `
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -786,7 +931,7 @@ function renderCardStatusSpp() {
                         <i class="fa-solid fa-gear"></i> Aktifkan Aturan SPP
                     </button>
                 </div>`;
-        } else if (d.isLengkap) {
+        } else if (isLengkap) {
             card.className = "mb-5 bg-emerald-50/80 dark:bg-emerald-950/20 rounded-2xl p-4 sm:p-5 border border-emerald-200/80 dark:border-emerald-900/40 shadow-xs";
             card.innerHTML = `
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -795,15 +940,15 @@ function renderCardStatusSpp() {
                             <i class="fa-solid fa-circle-check text-lg"></i>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">SPP ${periodeDisplay} Sudah Lengkap</h4>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">100% Terbit</span>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">Otomasi SPP Aktif &bull; Periode ${periodeDisplay} Lengkap</h4>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">Terbit Tgl ${cfg.tglTerbit} &bull; Tempo Tgl ${cfg.tglJatuhTempo}</span>
                             </div>
-                            <p class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5">Seluruh ${d.totalSantriAktif} santri aktif telah diterbitkan tagihan SPP-nya untuk periode ini.</p>
+                            <p class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5">Seluruh ${totalSantriAktif} santri aktif telah diterbitkan tagihan SPP (${formatRupiah(cfg.nominal)}) untuk periode ini.</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900 shrink-0 shadow-2xs">
-                        <i class="fa-solid fa-users"></i> ${d.santriSudahTerbit} dari ${d.totalSantriAktif} Santri
+                        <i class="fa-solid fa-users"></i> ${santriSudahTerbit} dari ${totalSantriAktif} Santri
                     </div>
                 </div>`;
         } else {
@@ -815,16 +960,19 @@ function renderCardStatusSpp() {
                             <i class="fa-solid fa-triangle-exclamation text-lg"></i>
                         </div>
                         <div class="space-y-1">
-                            <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">SPP ${periodeDisplay} Belum Lengkap</h4>
-                            <p class="text-xs text-yellow-800 dark:text-yellow-300">Ada <b>${d.santriBelumTerbit} santri aktif</b> yang belum memiliki tagihan SPP periode ini.</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">SPP ${periodeDisplay} Belum Lengkap</h4>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-800">Jadwal Terbit Tgl ${cfg.tglTerbit} &bull; Tempo Tgl ${cfg.tglJatuhTempo}</span>
+                            </div>
+                            <p class="text-xs text-yellow-800 dark:text-yellow-300">Ada <b>${santriBelumTerbit} santri aktif</b> yang belum memiliki tagihan SPP periode ini.</p>
                             <div class="w-full bg-yellow-200 dark:bg-yellow-900/40 rounded-full h-2 max-w-xs mt-1">
                                 <div class="bg-yellow-600 h-2 rounded-full transition-all duration-300" style="width: ${pct}%"></div>
                             </div>
-                            <span class="text-[10px] text-gray-500">${d.santriSudahTerbit} dari ${d.totalSantriAktif} santri terbit (${pct}%)</span>
+                            <span class="text-[10px] text-gray-500">${santriSudahTerbit} dari ${totalSantriAktif} santri terbit (${pct}%)</span>
                         </div>
                     </div>
                     <button onclick="konfirmasiTerbitkanSppSekarang()" class="px-4 py-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-xl text-xs font-bold transition shrink-0 flex items-center justify-center gap-1.5 shadow-xs">
-                        <i class="fa-solid fa-paper-plane"></i> Terbitkan Sekarang (${d.santriBelumTerbit} Santri)
+                        <i class="fa-solid fa-paper-plane"></i> Terbitkan Sekarang (${santriBelumTerbit} Santri)
                     </button>
                 </div>`;
         }
@@ -844,16 +992,10 @@ async function konfirmasiTerbitkanSppSekarang() {
     if (!confirmed) return;
     
     AppNotify.loading('Menerbitkan SPP...');
-    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
-    apiCall('terbitkanSppSekarang', token, currentKeuanganPeriode).then(res => {
-        AppNotify.close();
-        if (res.status === 'success') {
-            AppNotify.toast('success', res.message || 'SPP berhasil diterbitkan');
-            refreshAdminData();
-        } else {
-            AppNotify.error('Gagal Menerbitkan SPP', res.message);
-        }
-    });
+    let cachedCfg = {};
+    try { cachedCfg = JSON.parse(localStorage.getItem('zadil_spp_config_v4') || '{}'); } catch (e) {}
+    await ensureSppTerbitPeriode(currentKeuanganPeriode, cachedCfg, true);
+    AppNotify.close();
 }
 
 // --- TAB 1: PERLU DITAGIH ---
@@ -1384,14 +1526,13 @@ function openModalAturanSpp() {
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
     apiCall('getSppConfig', token).then(res => {
         AppNotify.close();
-        const conf = (res && res.status === 'success' && res.data) ? res.data : {
-            aktif: true,
-            nominal: 200000,
-            kategori: 'Syahriyah (SPP)',
-            tglTerbit: 1,
-            tglJatuhTempo: 10,
-            catatan: 'SPP Bulanan Santri Mukim'
-        };
+        let cachedCfg = null;
+        try {
+            cachedCfg = JSON.parse(localStorage.getItem('zadil_spp_config_v4') || 'null');
+        } catch (e) {}
+
+        const rawData = (res && res.status === 'success' && res.data) ? res.data : (cachedCfg || {});
+        const conf = normalizeSppConfig(rawData);
         
         const elAktif = document.getElementById('aturanSppOtomatis');
         const elNominal = document.getElementById('aturanSppNominal');
@@ -1421,20 +1562,50 @@ function openModalAturanSpp() {
 
 function saveAturanSppAction(e) {
     e.preventDefault();
-    AppNotify.loading('Menyimpan Aturan SPP...');
+    AppNotify.loading('Menyimpan Aturan & Memeriksa Jadwal SPP...');
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
-    const payload = {
-        aktif: document.getElementById('aturanSppOtomatis')?.checked ?? true,
-        nominal: Number(document.getElementById('aturanSppNominal')?.value) || 200000,
-        kategori: document.getElementById('aturanSppKategori')?.value || 'Syahriyah (SPP)',
-        tglTerbit: Number(document.getElementById('aturanSppHariTerbit')?.value) || 1,
-        tglJatuhTempo: Number(document.getElementById('aturanSppHariTempo')?.value) || 10,
-        catatan: document.getElementById('aturanSppCatatan')?.value || 'SPP Bulanan Santri Mukim'
-    };
+    const isAktif = document.getElementById('aturanSppOtomatis')?.checked ?? true;
+    const nominalVal = Number(document.getElementById('aturanSppNominal')?.value) || 200000;
+    const kategoriVal = document.getElementById('aturanSppKategori')?.value || 'Syahriyah (SPP)';
+    const tglTerbitVal = Number(document.getElementById('aturanSppHariTerbit')?.value) || 1;
+    const tglTempoVal = Number(document.getElementById('aturanSppHariTempo')?.value) || 10;
+    const catatanVal = document.getElementById('aturanSppCatatan')?.value || 'SPP Bulanan Santri Mukim';
+
+    const payload = normalizeSppConfig({
+        aktif: isAktif,
+        otomatis: isAktif,
+        nominal: nominalVal,
+        kategori: kategoriVal,
+        tglTerbit: tglTerbitVal,
+        hariTerbit: tglTerbitVal,
+        tglJatuhTempo: tglTempoVal,
+        hariTempo: tglTempoVal,
+        catatan: catatanVal
+    });
+
+    try {
+        localStorage.setItem('zadil_spp_config_v4', JSON.stringify(payload));
+    } catch (err) {}
     
-    apiCall('saveSppConfig', token, payload).then(res => {
-        handleRes(res, 'modalAturanSpp');
-        renderCardStatusSpp();
+    apiCall('saveSppConfig', token, payload).then(async (res) => {
+        closeModal('modalAturanSpp', 'modalAturanSppContent');
+        const now = new Date();
+        const curYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const localStat = getLocalSppStatusForPeriode(curYearMonth);
+
+        // Jika otomatisasi aktif dan tanggal hari ini sudah melewati/sama dengan Tgl Terbit, langsung terbitkan tagihan SPP bulan berjalan!
+        if (payload.aktif && now.getDate() >= payload.tglTerbit && localStat.santriBelumTerbit > 0) {
+            await ensureSppTerbitPeriode(curYearMonth, payload, true);
+            AppNotify.close();
+        } else {
+            AppNotify.close();
+            if (res && res.status === 'success') {
+                AppNotify.toast('success', res.message || 'Aturan SPP berhasil disimpan');
+            }
+            refreshAdminData();
+        }
+    }).catch(() => {
+        AppNotify.close();
     });
 }
 

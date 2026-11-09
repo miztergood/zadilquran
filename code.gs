@@ -991,6 +991,32 @@ function createTagihan(token, payloadData) {
   });
 }
 
+function normalizeSppConfig_(raw) {
+  const obj = raw || {};
+  const isAktif = obj.aktif !== undefined ? Boolean(obj.aktif) : (obj.otomatis !== undefined ? Boolean(obj.otomatis) : true);
+  const tglTerbit = Number(obj.tglTerbit !== undefined ? obj.tglTerbit : obj.hariTerbit) || 1;
+  const tglTempo = Number(obj.tglJatuhTempo !== undefined ? obj.tglJatuhTempo : obj.hariTempo) || 10;
+  const nominal = Number(obj.nominal) || 200000;
+  const kategori = obj.kategori || "Syahriyah (SPP)";
+  const catatan = obj.catatan || "SPP Bulanan Santri Mukim";
+  return {
+    aktif: isAktif,
+    otomatis: isAktif,
+    tglTerbit: tglTerbit,
+    hariTerbit: tglTerbit,
+    tglJatuhTempo: tglTempo,
+    hariTempo: tglTempo,
+    nominal: nominal,
+    kategori: kategori,
+    catatan: catatan
+  };
+}
+
+function isSantriAktifForSpp_(s) {
+  const st = String((s && s.Status) || "Aktif").trim().toLowerCase();
+  return st !== "alumni" && st !== "nonaktif" && st !== "keluar";
+}
+
 function getSppConfig(token) {
   const auth = checkRole(token, ["superadmin"]);
   if (auth.status === "error") return auth;
@@ -999,7 +1025,7 @@ function getSppConfig(token) {
     const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
     if (p && p.Value) {
       try {
-        const parsed = JSON.parse(p.Value);
+        const parsed = normalizeSppConfig_(JSON.parse(p.Value));
         return createResponse(true, parsed, "Konfigurasi SPP berhasil dimuat");
       } catch (err) {}
     }
@@ -1012,14 +1038,14 @@ function getSppConfig(token) {
       }
     } catch(e) {}
 
-    const cfg = {
+    const cfg = normalizeSppConfig_({
       nominal: defaultNominal,
       hariTerbit: 1,
       hariTempo: 10,
       otomatis: true,
       kategori: "Syahriyah (SPP)",
       catatan: "SPP Bulanan Santri Mukim"
-    };
+    });
     return createResponse(true, cfg, "Konfigurasi SPP default");
   });
 }
@@ -1033,7 +1059,8 @@ function saveSppConfig(token, configData) {
     if (!sheet) return createResponse(false, null, "Sheet Pengaturan tidak ditemukan");
 
     const data = sheet.getDataRange().getValues();
-    const parsedObj = typeof configData === "string" ? JSON.parse(configData) : configData;
+    const rawObj = typeof configData === "string" ? JSON.parse(configData) : configData;
+    const parsedObj = normalizeSppConfig_(rawObj);
     const jsonStr = JSON.stringify(parsedObj);
     let found = false;
     for (let i = 1; i < data.length; i++) {
@@ -1050,6 +1077,13 @@ function saveSppConfig(token, configData) {
 
     if (parsedObj.otomatis) {
       pasangTriggerSpp_();
+      // Jika hari ini sudah memasuki/melewati tanggal terbit, langsung terbitkan SPP bulan berjalan
+      const today = new Date();
+      const dayOfMonth = parseInt(Utilities.formatDate(today, "Asia/Jakarta", "d"), 10);
+      if (dayOfMonth >= parsedObj.hariTerbit) {
+        const currentPeriode = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
+        terbitkanSppPeriode_(currentPeriode);
+      }
     } else {
       hapusTriggerSpp_();
     }
@@ -1118,10 +1152,10 @@ function terbitkanSppPeriode_(periode, opsi) {
   ];
   const namaBulan = monthNames[month - 1] || "Bulan";
 
-  let sppConfig = { nominal: 200000, hariTerbit: 1, hariTempo: 10, otomatis: true, kategori: "Syahriyah (SPP)", catatan: "SPP Bulanan Santri Mukim" };
+  let sppConfig = normalizeSppConfig_({});
   try {
     const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
-    if (p && p.Value) sppConfig = Object.assign(sppConfig, JSON.parse(p.Value));
+    if (p && p.Value) sppConfig = normalizeSppConfig_(JSON.parse(p.Value));
   } catch(e) {}
 
   const maxDays = new Date(year, month, 0).getDate();
@@ -1139,7 +1173,7 @@ function terbitkanSppPeriode_(periode, opsi) {
   try {
     const headers = sheetTagihan.getRange(1, 1, 1, sheetTagihan.getLastColumn()).getValues()[0];
     const santriList = getSheetDataAsObjects("Data_Santri");
-    let activeSantris = santriList.filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+    let activeSantris = santriList.filter(isSantriAktifForSpp_);
 
     if (opsi && Array.isArray(opsi.hanyaSantriIds) && opsi.hanyaSantriIds.length > 0) {
       const allowedSet = new Set(opsi.hanyaSantriIds.map(id => String(id).trim().toUpperCase()));
@@ -1217,7 +1251,7 @@ function autoTerbitSppHarian() {
   try {
     const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
     if (!p || !p.Value) return;
-    const cfg = JSON.parse(p.Value);
+    const cfg = normalizeSppConfig_(JSON.parse(p.Value));
     if (!cfg.otomatis) return;
 
     const today = new Date();
@@ -1249,14 +1283,14 @@ function getStatusSpp(token, periode) {
     ];
     const namaBulan = monthNames[month - 1] || "Bulan";
 
-    let sppConfig = { nominal: 200000, hariTerbit: 1, hariTempo: 10, otomatis: true, kategori: "Syahriyah (SPP)", catatan: "SPP Bulanan Santri Mukim" };
+    let sppConfig = normalizeSppConfig_({});
     try {
       const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
-      if (p && p.Value) sppConfig = Object.assign(sppConfig, JSON.parse(p.Value));
+      if (p && p.Value) sppConfig = normalizeSppConfig_(JSON.parse(p.Value));
     } catch(e) {}
 
     const santriList = getSheetDataAsObjects("Data_Santri");
-    const activeSantris = santriList.filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+    const activeSantris = santriList.filter(isSantriAktifForSpp_);
     const allTagihan = getSheetDataAsObjects("Data_Tagihan");
 
     const billedMap = new Map();
@@ -1295,12 +1329,20 @@ function getStatusSpp(token, periode) {
       periode: targetPeriode,
       namaPeriode: namaBulan + " " + year,
       totalAktif: activeSantris.length,
+      totalSantriAktif: activeSantris.length,
       sudahDitagih: sudahDitagihSantris.length,
+      santriSudahTerbit: sudahDitagihSantris.length,
+      santriBelumTerbit: belumDitagihSantris.length,
       belumDitagih: belumDitagihSantris,
+      isLengkap: activeSantris.length === 0 || belumDitagihSantris.length === 0,
+      config: sppConfig,
       nominal: Number(sppConfig.nominal) || 200000,
       otomatis: !!sppConfig.otomatis,
+      aktif: !!sppConfig.aktif,
       hariTerbit: Number(sppConfig.hariTerbit) || 1,
-      hariTempo: Number(sppConfig.hariTempo) || 10
+      tglTerbit: Number(sppConfig.tglTerbit) || 1,
+      hariTempo: Number(sppConfig.hariTempo) || 10,
+      tglJatuhTempo: Number(sppConfig.tglJatuhTempo) || 10
     }, "Status SPP periode " + targetPeriode);
   });
 }
