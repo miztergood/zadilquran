@@ -116,22 +116,26 @@
 
             <!-- ==================== TAB 1: BUKU MUTABA'AH & CAPAIAN TAHFIZH ==================== -->
             <div id="waliSectionHafalan" class="space-y-4">
-                <div class="grid grid-cols-4 gap-2">
-                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2.5 border border-gray-100 dark:border-darkborder shadow-xs text-center">
-                        <p class="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total</p>
-                        <p class="text-lg font-extrabold text-gray-800 dark:text-white mt-0.5" id="waliTotalSetoran">0</p>
+                <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2 sm:p-2.5 border border-gray-100 dark:border-darkborder shadow-xs text-center">
+                        <p class="text-[8px] sm:text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider truncate">Total</p>
+                        <p class="text-base sm:text-lg font-extrabold text-gray-800 dark:text-white mt-0.5" id="waliTotalSetoran">0</p>
                     </div>
-                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2.5 border border-[#b2dfc8] dark:border-[#12452c] shadow-xs text-center">
-                        <p class="text-[9px] font-bold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider">Ziyadah</p>
-                        <p class="text-lg font-extrabold text-[#1c6b45] dark:text-[#83c9a6] mt-0.5" id="waliTotalBaru">0</p>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2 sm:p-2.5 border border-[#b2dfc8] dark:border-[#12452c] shadow-xs text-center">
+                        <p class="text-[8px] sm:text-[9px] font-bold text-[#1c6b45] dark:text-[#83c9a6] uppercase tracking-wider truncate">Ziyadah</p>
+                        <p class="text-base sm:text-lg font-extrabold text-[#1c6b45] dark:text-[#83c9a6] mt-0.5" id="waliTotalBaru">0</p>
                     </div>
-                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2.5 border border-[#f9c5c7] dark:border-[#731417]/50 shadow-xs text-center">
-                        <p class="text-[9px] font-bold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider">Muroja'ah</p>
-                        <p class="text-lg font-extrabold text-[#9a2024] dark:text-[#f29fa3] mt-0.5" id="waliTotalMurojaah">0</p>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2 sm:p-2.5 border border-[#f9c5c7] dark:border-[#731417]/50 shadow-xs text-center">
+                        <p class="text-[8px] sm:text-[9px] font-bold text-[#9a2024] dark:text-[#f29fa3] uppercase tracking-wider truncate">Muroja'ah</p>
+                        <p class="text-base sm:text-lg font-extrabold text-[#9a2024] dark:text-[#f29fa3] mt-0.5" id="waliTotalMurojaah">0</p>
                     </div>
-                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2.5 border border-amber-200 dark:border-amber-900/50 shadow-xs text-center">
-                        <p class="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Binnadhor</p>
-                        <p class="text-lg font-extrabold text-amber-700 dark:text-amber-400 mt-0.5" id="waliTotalBinnadhor">0</p>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2 sm:p-2.5 border border-amber-200 dark:border-amber-900/50 shadow-xs text-center">
+                        <p class="text-[8px] sm:text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider truncate">Binnadhor</p>
+                        <p class="text-base sm:text-lg font-extrabold text-amber-700 dark:text-amber-400 mt-0.5" id="waliTotalBinnadhor">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-2 sm:p-2.5 border border-indigo-200 dark:border-indigo-900/50 shadow-xs text-center">
+                        <p class="text-[8px] sm:text-[9px] font-bold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider truncate">Tasmi'</p>
+                        <p class="text-base sm:text-lg font-extrabold text-indigo-700 dark:text-indigo-400 mt-0.5" id="waliTotalTasmi">0</p>
                     </div>
                 </div>
 
@@ -160,6 +164,7 @@
                         <button onclick="setWaliFilter('ziyadah')" id="btnFilterBaru" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition whitespace-nowrap">Ziyadah</button>
                         <button onclick="setWaliFilter('murojaah')" id="btnFilterMurojaah" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition whitespace-nowrap">Muroja'ah</button>
                         <button onclick="setWaliFilter('binnadhor')" id="btnFilterBinnadhor" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition whitespace-nowrap">Binnadhor</button>
+                        <button onclick="setWaliFilter('tasmi')" id="btnFilterTasmi" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition whitespace-nowrap">Tasmi'</button>
                     </div>
 
                     <div class="relative">

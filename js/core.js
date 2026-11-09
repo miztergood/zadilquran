@@ -630,8 +630,19 @@ function closeModal(modalId, contentId) {
 
 // ==================== DARK MODE ====================
 function initTheme() {
+    const path = window.location.pathname.toLowerCase();
+    // Cek apakah halaman saat ini adalah dashboard internal (admin, ustadz, wali)
+    const isDashboard = path.includes('admin') || path.includes('ustadz') || path.includes('wali');
+    
+    // Landing page & halaman publik defaultnya selalu mode terang (Light Mode)
+    if (!isDashboard) {
+        document.documentElement.classList.remove('dark');
+        return;
+    }
+
+    // Pada dashboard internal, muat preferensi tema yang disimpan
     const savedTheme = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.THEME) || localStorage.theme;
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
     } else {
         document.documentElement.classList.remove('dark');

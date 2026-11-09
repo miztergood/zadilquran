@@ -34,6 +34,7 @@ function shareProgressWa() {
     const ziyadah = mySetoran.filter(x => x.Jenis === 'Ziyadah' || x.Jenis === 'Hafalan Baru').length;
     const murojaah = mySetoran.filter(x => x.Jenis === 'Murojaah' || x.Jenis === "Muroja'ah").length;
     const binnadhor = mySetoran.filter(x => x.Jenis === 'Binnadhor').length;
+    const tasmi = mySetoran.filter(x => (x.Jenis || '').toLowerCase().includes('tasmi')).length;
     const last = mySetoran.length > 0 ? mySetoran[0] : null;
 
     let text = `*BUKU MUTABA'AH SETORAN HARIAN SANTRI*\n`;
@@ -46,6 +47,7 @@ function shareProgressWa() {
     text += `• Ziyadah (Hafalan Baru): ${ziyadah}\n`;
     text += `• Muroja'ah (Pengulangan): ${murojaah}\n`;
     text += `• Binnadhor (Melihat Mushaf/Jilid): ${binnadhor}\n`;
+    text += `• Tasmi' (Ujian Simakan Bil-Ghoib): ${tasmi}\n`;
     if (last) {
         const nilaiText = last.Nilai || last.Predikat || 'Mumtaz';
         const isJilid = last.Tingkatan === 'Jilid';
@@ -182,6 +184,7 @@ function setWaliFilter(filterType) {
     const btnBaru = document.getElementById('btnFilterBaru');
     const btnMurojaah = document.getElementById('btnFilterMurojaah');
     const btnBinnadhor = document.getElementById('btnFilterBinnadhor');
+    const btnTasmi = document.getElementById('btnFilterTasmi');
 
     const inactiveClass = "px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition";
 
@@ -203,6 +206,11 @@ function setWaliFilter(filterType) {
     if (btnBinnadhor) {
         btnBinnadhor.className = (filterType === 'binnadhor')
             ? "px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-600 text-white shadow-xs transition"
+            : inactiveClass;
+    }
+    if (btnTasmi) {
+        btnTasmi.className = (filterType === 'tasmi')
+            ? "px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow-xs transition"
             : inactiveClass;
     }
     renderWaliList();
@@ -268,16 +276,19 @@ function renderWali() {
     const baru = mySetoran.filter(x => x.Jenis === 'Ziyadah' || x.Jenis === 'Hafalan Baru').length;
     const murojaah = mySetoran.filter(x => x.Jenis === 'Murojaah' || x.Jenis === "Muroja'ah").length;
     const binnadhor = mySetoran.filter(x => x.Jenis === 'Binnadhor').length;
+    const tasmi = mySetoran.filter(x => (x.Jenis || '').toLowerCase().includes('tasmi')).length;
 
     const elTotal = document.getElementById('waliTotalSetoran');
     const elBaru = document.getElementById('waliTotalBaru');
     const elMurojaah = document.getElementById('waliTotalMurojaah');
     const elBinnadhor = document.getElementById('waliTotalBinnadhor');
+    const elTasmi = document.getElementById('waliTotalTasmi');
 
     if (elTotal) elTotal.textContent = mySetoran.length;
     if (elBaru) elBaru.textContent = baru;
     if (elMurojaah) elMurojaah.textContent = murojaah;
     if (elBinnadhor) elBinnadhor.textContent = binnadhor;
+    if (elTasmi) elTasmi.textContent = tasmi;
 
     renderWaliList();
     renderWaliKeuangan();
@@ -300,6 +311,8 @@ function renderWaliList() {
         filtered = filtered.filter(x => x.Jenis === 'Murojaah' || x.Jenis === "Muroja'ah");
     } else if (waliFilter === 'binnadhor') {
         filtered = filtered.filter(x => x.Jenis === 'Binnadhor');
+    } else if (waliFilter === 'tasmi') {
+        filtered = filtered.filter(x => (x.Jenis || '').toLowerCase().includes('tasmi'));
     }
 
     if (waliSearchQuery) {
@@ -328,11 +341,14 @@ function renderWaliList() {
 
             const isZiyadah = set.Jenis === 'Ziyadah' || set.Jenis === 'Hafalan Baru';
             const isBinnadhor = set.Jenis === 'Binnadhor';
+            const isTasmi = (set.Jenis || '').toLowerCase().includes('tasmi');
             const badgeClass = isZiyadah
                 ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
                 : isBinnadhor
                     ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                    : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
+                    : isTasmi
+                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+                        : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
 
             const isJilid = set.Tingkatan === 'Jilid';
             const tingkatanLabel = isJilid ? 'Jilid / Tahsin' : "Al-Qur'an";

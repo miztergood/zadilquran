@@ -35,4 +35,6 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+~$*
+*~
 .tele-temp/

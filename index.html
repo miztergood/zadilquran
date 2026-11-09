@@ -29,7 +29,7 @@
     <script src="config.js"></script>
     <script src="js/core.js"></script>
 </head>
-<body class="bg-gray-50 dark:bg-darkbg text-gray-800 dark:text-gray-100 font-sans antialiased scroll-smooth theme-transition">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased scroll-smooth theme-transition overflow-x-hidden">
 
     <!-- Sticky Header / Navigation -->
     <header class="sticky top-0 z-40 bg-white/95 dark:bg-darkbg/95 backdrop-blur-md border-b border-gray-200 dark:border-darkborder transition-colors">
@@ -55,101 +55,122 @@
                 <a href="#kontak" class="px-2.5 py-1.5 rounded-lg hover:text-[#9a2024] dark:hover:text-[#f29fa3] hover:bg-gray-100 dark:hover:bg-slate-800/60 transition">Kontak</a>
             </nav>
 
-            <!-- Actions: Dark Mode, CTA Daftar & Portal Button -->
+            <!-- Actions: CTA Daftar & Portal Button (Desktop) & Hamburger (Mobile) -->
             <div class="flex items-center gap-2 shrink-0">
-                <!-- Tombol Mode Gelap/Terang -->
-                <button onclick="toggleDarkMode()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition" title="Ganti Mode Tampilan">
-                    <i class="fa-solid fa-moon dark:hidden text-xs sm:text-sm"></i>
-                    <i class="fa-solid fa-sun hidden dark:block text-xs sm:text-sm"></i>
-                </button>
-
-                <!-- Tombol Pasang App PWA -->
+                <!-- Tombol Pasang App PWA (Desktop Luas) -->
                 <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden 2xl:inline-flex bg-[#1c6b45] hover:bg-[#165737] text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow-xs transition active:scale-95 items-center gap-1.5" title="Pasang Aplikasi PWA">
                     <i class="fa-solid fa-download"></i>
                     <span>Pasang App</span>
                 </button>
 
-                <!-- Tombol Daftar Online (CTA Menonjol Hijau Pine) -->
-                <a href="pendaftaran.html" class="inline-flex bg-[#1c6b45] hover:bg-[#165737] text-white px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-xs transition active:scale-95 items-center gap-1.5 border border-[#165737]" title="Isi Formulir Pendaftaran Santri Mukim Online">
+                <!-- Tombol Daftar Online (Tampil di Desktop, di Mobile masuk Dropdown) -->
+                <a href="pendaftaran.html" class="hidden lg:inline-flex bg-[#1c6b45] hover:bg-[#165737] text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs transition active:scale-95 items-center gap-1.5 border border-[#165737]" title="Isi Formulir Pendaftaran Santri Mukim Online">
                     <i class="fa-solid fa-file-pen"></i>
                     <span>Daftar Online</span>
                 </a>
 
-                <!-- Tombol Portal Masuk (Maroon) -->
-                <a href="login.html" class="inline-flex bg-[#9a2024] hover:bg-[#871a1e] text-white px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-semibold shadow-xs transition active:scale-95 items-center gap-1.5 border border-[#871a1e]" title="Masuk Portal Staff / Ustadz / Wali Santri">
+                <!-- Tombol Portal Masuk (Tampil di Desktop, di Mobile masuk Dropdown) -->
+                <a href="login.html" class="hidden lg:inline-flex bg-[#9a2024] hover:bg-[#871a1e] text-white px-3.5 py-2 rounded-xl text-xs font-semibold shadow-xs transition active:scale-95 items-center gap-1.5 border border-[#871a1e]" title="Masuk Portal Staff / Ustadz / Wali Santri">
                     <i class="fa-solid fa-right-to-bracket"></i>
-                    <span class="hidden sm:inline">Portal Masuk</span>
-                    <span class="sm:hidden">Masuk</span>
+                    <span>Portal Masuk</span>
                 </a>
 
                 <!-- Mobile Menu Hamburger Button -->
-                <button onclick="toggleLandingMobileMenu()" class="lg:hidden w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-slate-700 transition" aria-label="Menu Navigasi">
-                    <i class="fa-solid fa-bars text-sm"></i>
+                <button onclick="toggleLandingMobileMenu()" class="lg:hidden w-9 h-9 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center hover:bg-gray-200 transition" aria-label="Buka Menu Navigasi">
+                    <i class="fa-solid fa-bars text-base"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Mobile Dropdown Menu -->
-        <div id="landingMobileMenu" class="hidden lg:hidden border-t border-gray-200 dark:border-darkborder bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3">
-            <a href="login.html" class="block w-full text-center py-2.5 px-4 rounded-xl text-sm font-bold bg-[#9a2024] text-white shadow-xs">
-                <i class="fa-solid fa-right-to-bracket mr-2"></i>Buka Portal Masuk (Staff &amp; Wali)
-            </a>
-            <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden w-full text-left py-2 text-sm font-semibold text-[#1c6b45] dark:text-[#83c9a6] flex items-center gap-2 border-b border-gray-100 dark:border-darkborder/50 pb-2.5">
+        <!-- Mobile Dropdown Menu (Memuat Tombol Masuk & Daftar Online di Baris Atas) -->
+        <div id="landingMobileMenu" class="hidden lg:hidden border-t border-gray-200 bg-white px-4 pt-3 pb-5 space-y-3 shadow-lg">
+            <div class="grid grid-cols-2 gap-2 pt-1 pb-2 border-b border-gray-100">
+                <a href="login.html" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold bg-[#9a2024] text-white shadow-xs active:scale-95 transition text-center">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Portal Masuk</span>
+                </a>
+                <a href="pendaftaran.html" class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold bg-[#1c6b45] text-white shadow-xs active:scale-95 transition text-center">
+                    <i class="fa-solid fa-file-pen"></i>
+                    <span>Daftar Online</span>
+                </a>
+            </div>
+            <button onclick="triggerPwaInstall()" class="btn-pwa-install hidden w-full text-left py-2 text-sm font-semibold text-[#1c6b45] flex items-center gap-2 border-b border-gray-100 pb-2.5">
                 <i class="fa-solid fa-download"></i>
                 <span>Pasang Aplikasi (PWA)</span>
             </button>
-            <a href="#program" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Program Unggulan</a>
-            <a href="#ekskul" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Ekstrakurikuler &amp; Minat Bakat</a>
-            <a href="#fasilitas" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Fasilitas Pesantren</a>
-            <a href="#galeri" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Galeri Kegiatan Santri</a>
-            <a href="#alur-pendaftaran" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Persyaratan &amp; Alur PSB</a>
-            <a href="pendaftaran.html" class="block py-2 text-sm font-bold text-[#9a2024] dark:text-[#f29fa3]">Isi Formulir Pendaftaran Online &rarr;</a>
-            <a href="#faq" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Pertanyaan Sering Diajukan (FAQ)</a>
-            <a href="#kontak" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-[#9a2024]">Kontak &amp; Lokasi Kampus</a>
+            <a href="#program" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Program Unggulan</a>
+            <a href="#ekskul" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Ekstrakurikuler &amp; Minat Bakat</a>
+            <a href="#fasilitas" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Fasilitas Pesantren</a>
+            <a href="#galeri" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Galeri Kegiatan Santri</a>
+            <a href="#alur-pendaftaran" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Persyaratan &amp; Alur PSB</a>
+            <a href="pendaftaran.html" class="block py-2 text-sm font-bold text-[#9a2024]">Isi Formulir Pendaftaran Online &rarr;</a>
+            <a href="#faq" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Pertanyaan Sering Diajukan (FAQ)</a>
+            <a href="#kontak" onclick="toggleLandingMobileMenu()" class="block py-2 text-sm font-medium text-gray-700 hover:text-[#9a2024]">Kontak &amp; Lokasi Kampus</a>
         </div>
     </header>
 
     <!-- ==================== HERO SECTION ==================== -->
-    <section class="relative overflow-hidden pt-8 pb-16 lg:pt-12 lg:pb-20 bg-[#f7efe0] dark:bg-slate-950 border-b border-amber-200/50 dark:border-darkborder">
+    <section class="relative overflow-hidden pt-8 pb-16 lg:pt-12 lg:pb-20 bg-[#f7efe0] border-b border-amber-200/50">
         <!-- Background Hero Image pada Desktop (Kiri Cream untuk Teks, Kanan Kolase Santri) -->
-        <div class="hidden lg:block absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none dark:opacity-35" style="background-image: url('aset%20grafis/hero%20image.png');"></div>
+        <div class="hidden lg:block absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none" style="background-image: url('aset%20grafis/hero%20image.png');"></div>
         <!-- Lapisan lembut untuk menjaga kontras teks di kiri -->
-        <div class="hidden lg:block absolute inset-y-0 left-0 w-7/12 bg-gradient-to-r from-[#f7efe0]/90 via-[#f7efe0]/65 to-transparent dark:from-slate-950 dark:via-slate-950/85 dark:to-transparent pointer-events-none"></div>
+        <div class="hidden lg:block absolute inset-y-0 left-0 w-7/12 bg-gradient-to-r from-[#f7efe0]/90 via-[#f7efe0]/65 to-transparent pointer-events-none"></div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[420px] lg:min-h-[480px]">
                 <!-- Kolom Kiri: Teks & Tagline Resmi -->
                 <div class="lg:col-span-7 text-center lg:text-left">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white/90 dark:bg-[#731417]/40 text-[#9a2024] dark:text-[#f9c5c7] border border-[#9a2024]/20 dark:border-[#731417] mb-5 shadow-xs">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white/90 text-[#9a2024] border border-[#9a2024]/20 mb-5 shadow-xs">
                         <i class="fa-solid fa-award text-[#9a2024]"></i>
                         <span>PONDOK PESANTREN TAHFIZH ZADIL QUR’AN TUBAN</span>
                     </div>
 
-                    <h1 class="text-3xl sm:text-5xl xl:text-[54px] font-extrabold text-gray-900 dark:text-white tracking-tight leading-[1.15]">
+                    <h1 class="text-3xl sm:text-5xl xl:text-[54px] font-extrabold text-gray-900 tracking-tight leading-[1.15]">
                         Membumikan Al-Qur’an,<br>
-                        <span class="text-[#1c6b45] dark:text-[#83c9a6]">Membangun Peradaban</span>
+                        <span class="text-[#1c6b45]">Membangun Peradaban</span>
                     </h1>
 
-                    <p class="mt-3 text-sm sm:text-lg font-bold text-[#9a2024] dark:text-[#f29fa3]">
+                    <p class="mt-3 text-sm sm:text-lg font-bold text-[#9a2024]">
                         Mencetak Generasi Qur’ani, Mandiri, dan Berakhlak Mulia Sejak Usia Dini
                     </p>
 
-                    <p class="mt-4 text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                    <p class="mt-4 text-sm sm:text-base text-gray-700 leading-relaxed max-w-xl mx-auto lg:mx-0">
                         Menghadirkan lingkungan asrama yang hangat dan kondusif untuk membimbing putra-putri Anda menghafal Al-Qur'an 30 Juz, mendalami ilmu syar'i, serta tetap meraih ijazah pendidikan formal berkualitas.
                     </p>
 
-                    <div class="mt-7 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-                        <a href="pendaftaran.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-bold px-6 py-3.5 rounded-xl shadow-md transition active:scale-95 text-sm">
-                            <i class="fa-solid fa-file-signature"></i>
-                            <span>Daftar Santri Baru</span>
+                    <!-- 3 Menu Tombol Hero Dijejer 3 (Horizontal 3-Kolom Hemat Ruang) -->
+                    <div class="mt-6 grid grid-cols-3 gap-2 sm:gap-3 max-w-xl mx-auto lg:mx-0">
+                        <!-- 1. Daftar Santri Baru -->
+                        <a href="pendaftaran.html" class="group flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-1.5 sm:gap-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white font-bold p-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-md transition active:scale-95 border border-[#871a1e]">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs sm:text-sm shrink-0 group-hover:scale-110 transition">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </div>
+                            <div class="leading-tight overflow-hidden">
+                                <span class="block text-[11px] sm:text-xs md:text-sm font-extrabold truncate">Daftar Santri</span>
+                                <span class="hidden sm:block text-[10px] text-white/80 font-normal">Santri Baru</span>
+                            </div>
                         </a>
-                        <a href="https://wa.me/6285731804663" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#1c6b45] hover:bg-[#165737] text-white font-bold px-6 py-3.5 rounded-xl shadow-md transition active:scale-95 text-sm">
-                            <i class="fa-brands fa-whatsapp text-lg"></i>
-                            <span>Konsultasi WhatsApp</span>
+
+                        <!-- 2. Konsultasi WhatsApp -->
+                        <a href="https://wa.me/6285731804663" target="_blank" rel="noopener noreferrer" class="group flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-1.5 sm:gap-2.5 bg-[#1c6b45] hover:bg-[#165737] text-white font-bold p-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-md transition active:scale-95 border border-[#165737]">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs sm:text-sm shrink-0 group-hover:scale-110 transition">
+                                <i class="fa-brands fa-whatsapp text-sm sm:text-base"></i>
+                            </div>
+                            <div class="leading-tight overflow-hidden">
+                                <span class="block text-[11px] sm:text-xs md:text-sm font-extrabold truncate">Konsultasi WA</span>
+                                <span class="hidden sm:block text-[10px] text-white/80 font-normal">Tanya Admin</span>
+                            </div>
                         </a>
-                        <a href="login.html" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-gray-300 dark:border-darkborder bg-white/95 dark:bg-slate-800 text-gray-800 dark:text-gray-200 hover:bg-white dark:hover:bg-slate-700 font-semibold px-5 py-3.5 rounded-xl text-sm transition active:scale-95 shadow-2xs">
-                            <i class="fa-solid fa-right-to-bracket text-[#9a2024]"></i>
-                            <span>Portal Monitoring</span>
+
+                        <!-- 3. Portal Monitoring -->
+                        <a href="login.html" class="group flex flex-col sm:flex-row items-center justify-center text-center sm:text-left gap-1.5 sm:gap-2.5 bg-white hover:bg-gray-50 text-gray-800 font-bold p-2.5 sm:px-3.5 sm:py-3 rounded-xl sm:rounded-2xl shadow-sm transition active:scale-95 border border-gray-300">
+                            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#9a2024]/10 text-[#9a2024] flex items-center justify-center text-xs sm:text-sm shrink-0 group-hover:scale-110 transition">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                            </div>
+                            <div class="leading-tight overflow-hidden">
+                                <span class="block text-[11px] sm:text-xs md:text-sm font-extrabold text-[#9a2024] truncate">Portal Masuk</span>
+                                <span class="hidden sm:block text-[10px] text-gray-500 font-normal">Staff &amp; Wali</span>
+                            </div>
                         </a>
                     </div>
                 </div>

@@ -1,10 +1,10 @@
 /**
  * ============================================================================
- * ZADIL QURAN - USTADZ WORKSPACE & MUTABA'AH MODULE (js/ustadz.js)
- * Digunakan oleh ustadz.html
- * Mencakup: Database 114 Surat Al-Qur'an, Mode Al-Qur'an & Jilid,
- * 3 Pilar Setoran (Ziyadah, Murojaah, Binnadhor), Tatap Muka (TM),
- * Penilaian Standar (Mumtaz, Jayyid, Dhoif), dan Paraf Ustadz.
+ * ZADIL QURAN - USTADZ WORKSPACE & KOMPREHENSIF MUTABA'AH (js/ustadz.js)
+ * Mendukung: Dashboard Utama Halaqah, Input Cepat Anti-Dropdown Berbelit,
+ * 4 Pilar Setoran (Ziyadah, Muroja'ah, Binnadhor, Tasmi'),
+ * Buku Rekapan Mandiri dengan Multi-Filter & Cetak Rapor Mutaba'ah Digital,
+ * serta Manajemen Santri Binaan & Koordinasi WhatsApp Wali Santri.
  * ============================================================================
  */
 
@@ -15,15 +15,276 @@ let state = {
     appName: "Zadil Quran"
 };
 
+let currentSection = 'dashboard';
 let tsSantri = null, tsSurat = null, lastPinData = null;
+let activeSelectedSantriId = null;
 
-// --- QURAN DB (114 SURAT) ---
-const rawQuran = [[1,"Al-Fatihah",7,1],[2,"Al-Baqarah",286,1],[3,"Ali 'Imran",200,3],[4,"An-Nisa'",176,4],[5,"Al-Ma'idah",120,6],[6,"Al-An'am",165,7],[7,"Al-A'raf",206,8],[8,"Al-Anfal",75,9],[9,"At-Taubah",129,10],[10,"Yunus",109,11],[11,"Hud",123,11],[12,"Yusuf",111,12],[13,"Ar-Ra'd",43,13],[14,"Ibrahim",52,13],[15,"Al-Hijr",99,14],[16,"An-Nahl",128,14],[17,"Al-Isra'",111,15],[18,"Al-Kahf",110,15],[19,"Maryam",98,16],[20,"Taha",135,16],[21,"Al-Anbiya'",112,17],[22,"Al-Hajj",78,17],[23,"Al-Mu'minun",118,18],[24,"An-Nur",64,18],[25,"Al-Furqan",77,18],[26,"Asy-Syu'ara'",227,19],[27,"An-Naml",93,19],[28,"Al-Qasas",88,20],[29,"Al-'Ankabut",69,20],[30,"Ar-Rum",60,21],[31,"Luqman",34,21],[32,"As-Sajdah",30,21],[33,"Al-Ahzab",73,21],[34,"Saba'",54,22],[35,"Fatir",45,22],[36,"Yasin",83,22],[37,"As-Saffat",182,23],[38,"Sad",88,23],[39,"Az-Zumar",75,23],[40,"Ghafir",85,24],[41,"Fussilat",54,24],[42,"Asy-Syura",53,25],[43,"Az-Zukhruf",89,25],[44,"Ad-Dukhan",59,25],[45,"Al-Jasiyah",37,25],[46,"Al-Ahqaf",35,26],[47,"Muhammad",38,26],[48,"Al-Fath",29,26],[49,"Al-Hujurat",18,26],[50,"Qaf",45,26],[51,"Az-Zariyat",60,26],[52,"At-Tur",49,27],[53,"An-Najm",62,27],[54,"Al-Qamar",55,27],[55,"Ar-Rahman",78,27],[56,"Al-Waqi'ah",96,27],[57,"Al-Hadid",29,27],[58,"Al-Mujadilah",22,28],[59,"Al-Hasyr",24,28],[60,"Al-Mumtahanah",13,28],[61,"As-Saff",14,28],[62,"Al-Jumu'ah",11,28],[63,"Al-Munafiqun",11,28],[64,"At-Tagabun",18,28],[65,"At-Talaq",12,28],[66,"At-Tahrim",12,28],[67,"Al-Mulk",30,29],[68,"Al-Qalam",52,29],[69,"Al-Haqqah",52,29],[70,"Al-Ma'arij",44,29],[71,"Nuh",28,29],[72,"Al-Jinn",28,29],[73,"Al-Muzzammil",20,29],[74,"Al-Muddassir",56,29],[75,"Al-Qiyamah",40,29],[76,"Al-Insan",31,29],[77,"Al-Mursalat",50,29],[78,"An-Naba'",40,30],[79,"An-Nazi'at",46,30],[80,"'Abasa",42,30],[81,"At-Takwir",29,30],[82,"Al-Infitar",19,30],[83,"Al-Mutaffifin",36,30],[84,"Al-Insyiqaq",25,30],[85,"Al-Buruj",22,30],[86,"At-Tariq",17,30],[87,"Al-A'la",19,30],[88,"Al-Gasyiyah",26,30],[89,"Al-Fajr",30,30],[90,"Al-Balad",20,30],[91,"Asy-Syams",15,30],[92,"Al-Lail",21,30],[93,"Ad-Duha",11,30],[94,"Asy-Syarh",8,30],[95,"At-Tin",8,30],[96,"Al-'Alaq",19,30],[97,"Al-Qadr",5,30],[98,"Al-Bayyinah",8,30],[99,"Az-Zalzalah",8,30],[100,"Al-'Adiyat",11,30],[101,"Al-Qari'ah",11,30],[102,"At-Takasur",8,30],[103,"Al-'Asr",3,30],[104,"Al-Humazah",9,30],[105,"Al-Fil",5,30],[106,"Quraisy",4,30],[107,"Al-Ma'un",7,30],[108,"Al-Kausar",3,30],[109,"Al-Kafirun",6,30],[110,"An-Nasr",3,30],[111,"Al-Lahab",5,30],[112,"Al-Ikhlas",4,30],[113,"Al-Falaq",5,30],[114,"An-Nas",6,30]];
+// --- QURAN DB (114 SURAT LENGKAP DENGAN JUMLAH AYAT & JUZ) ---
+const rawQuran = [
+    [1,"Al-Fatihah",7,1],[2,"Al-Baqarah",286,1],[3,"Ali 'Imran",200,3],[4,"An-Nisa'",176,4],[5,"Al-Ma'idah",120,6],
+    [6,"Al-An'am",165,7],[7,"Al-A'raf",206,8],[8,"Al-Anfal",75,9],[9,"At-Taubah",129,10],[10,"Yunus",109,11],
+    [11,"Hud",123,11],[12,"Yusuf",111,12],[13,"Ar-Ra'd",43,13],[14,"Ibrahim",52,13],[15,"Al-Hijr",99,14],
+    [16,"An-Nahl",128,14],[17,"Al-Isra'",111,15],[18,"Al-Kahf",110,15],[19,"Maryam",98,16],[20,"Taha",135,16],
+    [21,"Al-Anbiya'",112,17],[22,"Al-Hajj",78,17],[23,"Al-Mu'minun",118,18],[24,"An-Nur",64,18],[25,"Al-Furqan",77,18],
+    [26,"Asy-Syu'ara'",227,19],[27,"An-Naml",93,19],[28,"Al-Qasas",88,20],[29,"Al-'Ankabut",69,20],[30,"Ar-Rum",60,21],
+    [31,"Luqman",34,21],[32,"As-Sajdah",30,21],[33,"Al-Ahzab",73,21],[34,"Saba'",54,22],[35,"Fatir",45,22],
+    [36,"Yasin",83,22],[37,"As-Saffat",182,23],[38,"Sad",88,23],[39,"Az-Zumar",75,23],[40,"Ghafir",85,24],
+    [41,"Fussilat",54,24],[42,"Asy-Syura",53,25],[43,"Az-Zukhruf",89,25],[44,"Ad-Dukhan",59,25],[45,"Al-Jasiyah",37,25],
+    [46,"Al-Ahqaf",35,26],[47,"Muhammad",38,26],[48,"Al-Fath",29,26],[49,"Al-Hujurat",18,26],[50,"Qaf",45,26],
+    [51,"Az-Zariyat",60,26],[52,"At-Tur",49,27],[53,"An-Najm",62,27],[54,"Al-Qamar",55,27],[55,"Ar-Rahman",78,27],
+    [56,"Al-Waqi'ah",96,27],[57,"Al-Hadid",29,27],[58,"Al-Mujadilah",22,28],[59,"Al-Hasyr",24,28],[60,"Al-Mumtahanah",13,28],
+    [61,"As-Saff",14,28],[62,"Al-Jumu'ah",11,28],[63,"Al-Munafiqun",11,28],[64,"At-Tagabun",18,28],[65,"At-Talaq",12,28],
+    [66,"At-Tahrim",12,28],[67,"Al-Mulk",30,29],[68,"Al-Qalam",52,29],[69,"Al-Haqqah",52,29],[70,"Al-Ma'arij",44,29],
+    [71,"Nuh",28,29],[72,"Al-Jinn",28,29],[73,"Al-Muzzammil",20,29],[74,"Al-Muddassir",56,29],[75,"Al-Qiyamah",40,29],
+    [76,"Al-Insan",31,29],[77,"Al-Mursalat",50,29],[78,"An-Naba'",40,30],[79,"An-Nazi'at",46,30],[80,"'Abasa",42,30],
+    [81,"At-Takwir",29,30],[82,"Al-Infitar",19,30],[83,"Al-Mutaffifin",36,30],[84,"Al-Insyiqaq",25,30],[85,"Al-Buruj",22,30],
+    [86,"At-Tariq",17,30],[87,"Al-A'la",19,30],[88,"Al-Gasyiyah",26,30],[89,"Al-Fajr",30,30],[90,"Al-Balad",20,30],
+    [91,"Asy-Syams",15,30],[92,"Al-Lail",21,30],[93,"Ad-Duha",11,30],[94,"Asy-Syarh",8,30],[95,"At-Tin",8,30],
+    [96,"Al-'Alaq",19,30],[97,"Al-Qadr",5,30],[98,"Al-Bayyinah",8,30],[99,"Az-Zalzalah",8,30],[100,"Al-'Adiyat",11,30],
+    [101,"Al-Qari'ah",11,30],[102,"At-Takasur",8,30],[103,"Al-'Asr",3,30],[104,"Al-Humazah",9,30],[105,"Al-Fil",5,30],
+    [106,"Quraisy",4,30],[107,"Al-Ma'un",7,30],[108,"Al-Kausar",3,30],[109,"Al-Kafirun",6,30],[110,"An-Nasr",3,30],
+    [111,"Al-Lahab",5,30],[112,"Al-Ikhlas",4,30],[113,"Al-Falaq",5,30],[114,"An-Nas",6,30]
+];
 const quranDB = rawQuran.map(q => ({ no: q[0], nama: q[1], ayat: q[2], juz: q[3] }));
 
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('-translate-x-full');
     document.getElementById('sidebarOverlay').classList.toggle('hidden');
+}
+
+// ==================== NAVIGASI MULTI-MENU KOMPREHENSIF ====================
+function switchUstadzSection(sectionId) {
+    currentSection = sectionId;
+
+    // Sembunyikan semua section
+    const sections = ['dashboard', 'input', 'rekapan', 'santri'];
+    sections.forEach(sec => {
+        const el = document.getElementById(`ustadzView${sec.charAt(0).toUpperCase() + sec.slice(1)}`);
+        if (el) el.classList.toggle('hidden', sec !== sectionId);
+
+        // Sidebar active styling
+        const menuBtn = document.getElementById(`menu-ustadz-${sec}`);
+        if (menuBtn) {
+            if (sec === sectionId) {
+                menuBtn.className = "flex items-center gap-3 w-full p-2.5 rounded-xl transition cursor-pointer text-sm font-semibold bg-[#9a2024] text-white shadow-inner";
+            } else {
+                menuBtn.className = "flex items-center gap-3 w-full p-2.5 rounded-xl transition cursor-pointer text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white";
+            }
+        }
+
+        // Mobile bottom nav active styling
+        const bNavBtn = document.getElementById(`bottomNav-ustadz-${sec}`);
+        if (bNavBtn) {
+            if (sec === sectionId) {
+                bNavBtn.className = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
+            } else {
+                bNavBtn.className = "bottom-nav-btn text-gray-500 dark:text-gray-400";
+            }
+        }
+    });
+
+    // Tutup sidebar di ponsel
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+        sidebar.classList.add('-translate-x-full');
+    }
+    if (overlay && !overlay.classList.contains('hidden')) {
+        overlay.classList.add('hidden');
+    }
+
+    // Scroll konten ke atas
+    const contentArea = document.getElementById('contentArea');
+    if (contentArea) contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Render data spesifik per section
+    if (sectionId === 'dashboard') {
+        renderUstadzDashboard();
+    } else if (sectionId === 'input') {
+        renderQuickSantriChips();
+        renderUstadzRiwayat();
+    } else if (sectionId === 'rekapan') {
+        populateRekapFilterSantri();
+        renderUstadzRekapanTable();
+    } else if (sectionId === 'santri') {
+        renderUstadzSantriList();
+    }
+}
+
+// ==================== VIEW 1: DASHBOARD UTAMA HALAQAH ====================
+function renderUstadzDashboard() {
+    const mySantri = state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === (sessionData ? sessionData.id : ''));
+
+    // Tanggal Hari Ini (Format Indonesia)
+    const today = new Date();
+    const todayStr = today.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    const elDate = document.getElementById('dashTodayDate');
+    if (elDate) elDate.textContent = todayStr;
+
+    // Santri yang sudah setor hari ini
+    const todaySetoran = mySetoran.filter(set => (set.Tanggal || '').includes(todayStr));
+    const uniqueSantriSudahSetorIds = new Set(todaySetoran.map(s => s.ID_Santri));
+    const sudahSetorCount = uniqueSantriSudahSetorIds.size;
+    const belumSetorCount = Math.max(0, mySantri.length - sudahSetorCount);
+
+    // Bulan Ini
+    const currentMonthYear = today.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+    const monthSetoran = mySetoran.filter(set => (set.Tanggal || '').includes(currentMonthYear));
+
+    // Update KPI Card DOM
+    const elTotal = document.getElementById('kpiTotalSantri');
+    const elSudah = document.getElementById('kpiSudahSetor');
+    const elBelum = document.getElementById('kpiBelumSetor');
+    const elBulan = document.getElementById('kpiTotalBulanIni');
+
+    if (elTotal) elTotal.textContent = mySantri.length;
+    if (elSudah) elSudah.textContent = sudahSetorCount;
+    if (elBelum) elBelum.textContent = belumSetorCount;
+    if (elBulan) elBulan.textContent = monthSetoran.length;
+
+    // 4 Pilar Capaian (Ziyadah, Murojaah, Binnadhor, Tasmi')
+    const countZiyadah = mySetoran.filter(s => s.Jenis === 'Ziyadah' || s.Jenis === 'Hafalan Baru').length;
+    const countMurojaah = mySetoran.filter(s => s.Jenis === 'Murojaah' || s.Jenis === "Muroja'ah").length;
+    const countBinnadhor = mySetoran.filter(s => s.Jenis === 'Binnadhor').length;
+    const countTasmi = mySetoran.filter(s => (s.Jenis || '').toLowerCase().includes('tasmi')).length;
+
+    const elZ = document.getElementById('dashCountZiyadah');
+    const elM = document.getElementById('dashCountMurojaah');
+    const elB = document.getElementById('dashCountBinnadhor');
+    const elT = document.getElementById('dashCountTasmi');
+
+    if (elZ) elZ.textContent = countZiyadah;
+    if (elM) elM.textContent = countMurojaah;
+    if (elB) elB.textContent = countBinnadhor;
+    if (elT) elT.textContent = countTasmi;
+
+    // Render Daftar Halaqah Hari Ini (Presensi & Status Setor)
+    const listContainer = document.getElementById('dashHalaqahList');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    if (mySantri.length === 0) {
+        listContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-400 text-xs">
+                Belum ada data santri yang dialokasikan di bawah bimbingan Anda.
+            </div>
+        `;
+        return;
+    }
+
+    mySantri.forEach((santri, idx) => {
+        const santriTodaySetor = todaySetoran.filter(s => s.ID_Santri === santri.ID_Santri);
+        const hasSetor = santriTodaySetor.length > 0;
+        const lastEntry = hasSetor ? santriTodaySetor[santriTodaySetor.length - 1] : null;
+
+        const isJilid = (santri.Tingkatan || '').toLowerCase() === 'jilid';
+
+        listContainer.innerHTML += `
+            <div class="p-3.5 rounded-2xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                hasSetor 
+                    ? 'bg-[#edf7f2]/60 dark:bg-[#12452c]/20 border-[#b2dfc8] dark:border-[#12452c]' 
+                    : 'bg-white dark:bg-slate-800/80 border-gray-200 dark:border-darkborder hover:border-[#9a2024]/50'
+            }">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-xs shrink-0 ${
+                        hasSetor ? 'bg-[#1c6b45] text-white shadow-xs' : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300'
+                    }">
+                        ${idx + 1}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h4 class="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">${santri.Nama_Santri}</h4>
+                            <span class="text-[10px] font-mono text-gray-400">(${santri.ID_Santri})</span>
+                        </div>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                            Tingkatan: <span class="font-semibold text-gray-700 dark:text-gray-300">${isJilid ? 'Jilid / Tahsin' : "Al-Qur'an 30 Juz"}</span>
+                            ${hasSetor ? ` &bull; <strong class="text-[#1c6b45] dark:text-[#83c9a6]">Tercatat: ${lastEntry.Surah} (${lastEntry.Jenis}, Hal ${lastEntry.Halaman})</strong>` : ''}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+                    ${hasSetor ? `
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-[#1c6b45] text-white shadow-xs">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Sudah Setor (${santriTodaySetor.length}x)</span>
+                        </span>
+                        <button onclick="openInputForSantri('${santri.ID_Santri}')" class="px-2.5 py-1 bg-white dark:bg-slate-700 hover:bg-gray-100 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-darkborder text-xs font-semibold rounded-xl transition active:scale-95" title="Tambah setoran lagi untuk santri ini">
+                            + Tambah
+                        </button>
+                    ` : `
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
+                            <i class="fa-regular fa-clock"></i> Belum
+                        </span>
+                        <button onclick="openInputForSantri('${santri.ID_Santri}')" class="px-3.5 py-1.5 bg-[#9a2024] hover:bg-[#871a1e] text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-nib"></i>
+                            <span>Catat Setoran</span>
+                        </button>
+                    `}
+                </div>
+            </div>
+        `;
+    });
+}
+
+// Buka Input Setoran untuk Santri Tertentu secara Langsung (Bebas Dropdown Lambat)
+function openInputForSantri(santriId) {
+    activeSelectedSantriId = santriId;
+    switchUstadzSection('input');
+
+    if (tsSantri) {
+        tsSantri.setValue(santriId);
+    }
+    checkSmartPin(santriId);
+    highlightActiveSantriChip(santriId);
+
+    // Auto-scroll halus ke form
+    const formEl = document.getElementById('formSmartSetoran');
+    if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ==================== VIEW 2: LEMBAR MUTABA'AH & INPUT CEPAT ====================
+function renderQuickSantriChips() {
+    const chipContainer = document.getElementById('smartSantriChips');
+    if (!chipContainer) return;
+    chipContainer.innerHTML = '';
+
+    const mySantri = state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    if (mySantri.length === 0) return;
+
+    mySantri.forEach(santri => {
+        const isSelected = activeSelectedSantriId === santri.ID_Santri;
+        chipContainer.innerHTML += `
+            <button type="button" onclick="selectSantriViaChip('${santri.ID_Santri}')" id="chip-santri-${santri.ID_Santri}" class="santri-chip px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${
+                isSelected 
+                    ? 'bg-[#9a2024] text-white border-[#9a2024] shadow-xs' 
+                    : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-darkborder hover:border-[#9a2024]'
+            }">
+                ${santri.Nama_Santri}
+            </button>
+        `;
+    });
+}
+
+function selectSantriViaChip(santriId) {
+    activeSelectedSantriId = santriId;
+    highlightActiveSantriChip(santriId);
+    if (tsSantri) {
+        tsSantri.setValue(santriId);
+    }
+    checkSmartPin(santriId);
+}
+
+function highlightActiveSantriChip(santriId) {
+    document.querySelectorAll('.santri-chip').forEach(el => {
+        el.className = "santri-chip px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-darkborder hover:border-[#9a2024]";
+    });
+    const activeChip = document.getElementById(`chip-santri-${santriId}`);
+    if (activeChip) {
+        activeChip.className = "santri-chip px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition border bg-[#9a2024] text-white border-[#9a2024] shadow-xs";
+        activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
 }
 
 function initSmartForm() {
@@ -34,21 +295,27 @@ function initSmartForm() {
     if (tsSantri) {
         tsSantri.destroy();
     }
-    selSantri.innerHTML = '<option value="">🔍 Ketik nama santri...</option>';
-    state.santri.filter(s => s.ID_Ustadz === sessionData.id).forEach(s => {
+    selSantri.innerHTML = '<option value="">🔍 Ketik atau pilih nama santri...</option>';
+    state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : '')).forEach(s => {
         selSantri.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
     });
 
     tsSantri = new TomSelect('#smartSantri', {
         create: false,
         sortField: { field: "text", direction: "asc" },
-        onChange: function(val) { checkSmartPin(val); }
+        onChange: function(val) {
+            activeSelectedSantriId = val;
+            highlightActiveSantriChip(val);
+            checkSmartPin(val);
+        }
     });
 
     const selJuz = document.getElementById('smartJuz');
     selJuz.innerHTML = '<option value="all">Semua</option>';
     for (let i = 1; i <= 30; i++) selJuz.innerHTML += `<option value="${i}">Juz ${i}</option>`;
     populateSurat();
+
+    renderQuickSantriChips();
 }
 
 function switchTingkatan(tingkat) {
@@ -80,26 +347,34 @@ function syncJilidDefaultName() {
     }
 }
 
+// 4 PILAR SETORAN: Ziyadah, Murojaah, Binnadhor, Tasmi'
 function switchSmartTab(type) {
     document.getElementById('smartType').value = type;
     const btnZiyadah = document.getElementById('btnTabZiyadah');
     const btnMurojaah = document.getElementById('btnTabMurojaah');
     const btnBinnadhor = document.getElementById('btnTabBinnadhor');
+    const btnTasmi = document.getElementById('btnTabTasmi');
 
-    const inactive = "py-2 px-2 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 text-center";
+    const inactive = "py-2 px-1 rounded-lg text-xs font-bold transition text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 text-center";
+
     if (btnZiyadah) {
-        btnZiyadah.className = type === 'Ziyadah'
-            ? "py-2 px-2 rounded-lg text-xs font-bold transition bg-[#1c6b45] text-white shadow-xs text-center"
+        btnZiyadah.className = (type === 'Ziyadah')
+            ? "py-2 px-1 rounded-lg text-xs font-bold transition bg-[#1c6b45] text-white shadow-xs text-center"
             : inactive;
     }
     if (btnMurojaah) {
-        btnMurojaah.className = type === 'Murojaah'
-            ? "py-2 px-2 rounded-lg text-xs font-bold transition bg-[#9a2024] text-white shadow-xs text-center"
+        btnMurojaah.className = (type === 'Murojaah')
+            ? "py-2 px-1 rounded-lg text-xs font-bold transition bg-[#9a2024] text-white shadow-xs text-center"
             : inactive;
     }
     if (btnBinnadhor) {
-        btnBinnadhor.className = type === 'Binnadhor'
-            ? "py-2 px-2 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs text-center"
+        btnBinnadhor.className = (type === 'Binnadhor')
+            ? "py-2 px-1 rounded-lg text-xs font-bold transition bg-amber-600 text-white shadow-xs text-center"
+            : inactive;
+    }
+    if (btnTasmi) {
+        btnTasmi.className = (type === 'Tasmi')
+            ? "py-2 px-1 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-xs text-center"
             : inactive;
     }
 }
@@ -110,7 +385,7 @@ function populateSurat() {
     if (tsSurat) {
         tsSurat.destroy();
     }
-    selSurat.innerHTML = '<option value="">🔍 Ketik surat...</option>';
+    selSurat.innerHTML = '<option value="">🔍 Ketik atau pilih surat...</option>';
 
     let filteredSurat = juzVal !== 'all' ? quranDB.filter(q => q.juz == parseInt(juzVal)) : quranDB;
     filteredSurat.forEach(s => {
@@ -170,23 +445,23 @@ function checkSmartPin(santriId) {
     const pinContainer = document.getElementById('smartPinContainer');
     const tmInput = document.getElementById('smartTM');
     if (!santriId) {
-        pinContainer.classList.add('hidden');
+        if (pinContainer) pinContainer.classList.add('hidden');
         lastPinData = null;
         if (tmInput) tmInput.value = 'TM-1';
         return;
     }
 
     const history = state.setoran.filter(s => s.ID_Santri === santriId);
-    // Otomatis hitung TM berikutnya untuk santri ini
     const nextTmNumber = history.length + 1;
     if (tmInput) tmInput.value = `TM-${nextTmNumber}`;
 
     if (history.length > 0) {
-        lastPinData = history[history.length - 1]; // Ambil setoran paling baru
-        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz}), Hal ${lastPinData.Halaman}`;
-        pinContainer.classList.remove('hidden');
+        lastPinData = history[history.length - 1]; // Setoran paling baru
+        const jenisLabel = lastPinData.Jenis || 'Ziyadah';
+        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz}), Hal ${lastPinData.Halaman} [${jenisLabel}]`;
+        if (pinContainer) pinContainer.classList.remove('hidden');
     } else {
-        pinContainer.classList.add('hidden');
+        if (pinContainer) pinContainer.classList.add('hidden');
         lastPinData = null;
     }
 }
@@ -195,24 +470,25 @@ function applySmartPin() {
     if (!lastPinData) return;
     const tingkat = lastPinData.Tingkatan || "Al-Qur'an";
     switchTingkatan(tingkat);
-    switchSmartTab('Murojaah');
 
     if (tingkat === 'Jilid') {
         document.getElementById('smartJilidLevel').value = lastPinData.Juz || 'Jilid 1';
         document.getElementById('smartJilidNama').value = lastPinData.Surah || 'Metode Ummi Jilid 1';
         document.getElementById('smartJilidBaris').value = lastPinData.Ayat || '';
     } else {
-        document.getElementById('smartJuz').value = lastPinData.Juz;
+        document.getElementById('smartJuz').value = lastPinData.Juz || 'all';
         populateSurat();
-        if (tsSurat && lastPinData.SurahNo) tsSurat.setValue(lastPinData.SurahNo);
+        if (tsSurat && lastPinData.SurahNo) {
+            tsSurat.setValue(lastPinData.SurahNo);
+        }
     }
     document.getElementById('smartHal').value = lastPinData.Halaman || '';
-    AppNotify.toast('info', 'Data Setoran Terakhir Terisi');
+    AppNotify.toast('info', 'Data Hafalan Terakhir Berhasil Diterapkan!');
 }
 
 function saveSetoran(e) {
     e.preventDefault();
-    const santriId = tsSantri ? tsSantri.getValue() : '';
+    const santriId = tsSantri ? tsSantri.getValue() : activeSelectedSantriId;
     if (!santriId) return AppNotify.warning('Pilih Santri', 'Silakan pilih santri binaan terlebih dahulu.');
 
     const tingkatan = document.getElementById('smartTingkatan').value || "Al-Qur'an";
@@ -225,11 +501,13 @@ function saveSetoran(e) {
         if (!suratNo) return AppNotify.warning('Pilih Surat', 'Silakan pilih surat Al-Qur\'an terlebih dahulu.');
         const suratData = quranDB.find(q => q.no == suratNo);
         const startAyat = document.getElementById('smartAyatStart').value || '1';
-        const endAyat = document.getElementById('smartAyatEnd').value || suratData.ayat;
+        const endAyat = document.getElementById('smartAyatEnd').value || (suratData ? suratData.ayat : '1');
 
-        juzVal = document.getElementById('smartJuz').value === 'all' ? String(suratData.juz) : String(document.getElementById('smartJuz').value);
-        surahVal = suratData.nama;
-        surahNoVal = suratData.no;
+        juzVal = document.getElementById('smartJuz').value === 'all' 
+            ? String(suratData ? suratData.juz : '1') 
+            : String(document.getElementById('smartJuz').value);
+        surahVal = suratData ? suratData.nama : 'Al-Baqarah';
+        surahNoVal = suratData ? suratData.no : '2';
         ayatVal = `${startAyat} - ${endAyat}`;
     } else {
         juzVal = document.getElementById('smartJilidLevel').value || 'Jilid 1';
@@ -275,15 +553,13 @@ function saveSetoran(e) {
 
 function renderUstadzRiwayat() {
     const container = document.getElementById('listSetoranUstadz');
-    const countEl = document.getElementById('ustadzHistoryCount');
     if (!container) return;
     container.innerHTML = '';
 
-    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === sessionData.id).slice().reverse();
-    if (countEl) countEl.textContent = `${mySetoran.length} Catatan Mutaba'ah`;
+    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === (sessionData ? sessionData.id : '')).slice().reverse().slice(0, 8);
 
     if (mySetoran.length === 0) {
-        container.innerHTML = `<p class="text-center text-gray-500 py-8 text-sm">Belum ada catatan mutaba'ah harian yang diinput.</p>`;
+        container.innerHTML = `<p class="text-center text-gray-500 py-6 text-xs">Belum ada catatan mutaba'ah harian di sesi ini.</p>`;
         return;
     }
 
@@ -292,70 +568,412 @@ function renderUstadzRiwayat() {
         const jenis = set.Jenis || 'Ziyadah';
         const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
         const isBinnadhor = jenis === 'Binnadhor';
+        const isTasmi = (jenis || '').toLowerCase().includes('tasmi');
 
         const borderLeft = isZiyadah
             ? 'border-l-4 border-[#1c6b45]'
             : isBinnadhor
             ? 'border-l-4 border-amber-500'
+            : isTasmi
+            ? 'border-l-4 border-indigo-600'
             : 'border-l-4 border-[#9a2024]';
 
         const typeBadge = isZiyadah
             ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
             : isBinnadhor
             ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+            : isTasmi
+            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
             : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
 
-        const nilai = set.Predikat || 'Mumtaz';
+        const nilai = set.Predikat || set.Nilai || 'Mumtaz';
         const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar';
         const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
         const predIcon = isMumtaz ? '🌟' : isJayyid ? '👍' : '🔁';
 
-        const tingkatBadge = set.Tingkatan === 'Jilid' ? 'Jilid / Tahsin' : 'Al-Qur\'an';
         const tmText = set.TM || 'TM';
-        const parafText = set.ParafUstadz || (sessionData ? sessionData.name : 'Ustadz');
 
         container.innerHTML += `
-            <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-4 border border-gray-100 dark:border-darkborder ${borderLeft}">
-                <div class="flex justify-between items-start gap-2 mb-2">
+            <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-3 sm:p-3.5 border border-gray-100 dark:border-darkborder ${borderLeft}">
+                <div class="flex justify-between items-start gap-2 mb-1.5">
                     <div>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${tmText}</span>
-                            <h4 class="font-bold text-gray-900 dark:text-white text-sm">${s ? s.Nama_Santri : set.ID_Santri}</h4>
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${tmText}</span>
+                            <h4 class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">${s ? s.Nama_Santri : set.ID_Santri}</h4>
                         </div>
-                        <p class="text-[11px] text-gray-500 mt-0.5">${set.Tanggal} &bull; <span class="font-medium">${tingkatBadge}</span></p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">${set.Tanggal}</p>
                     </div>
-                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-2 text-xs text-gray-700 dark:text-gray-300 mb-2 bg-white dark:bg-darkcard p-2.5 rounded-xl border border-gray-100 dark:border-darkborder">
-                    <div>
-                        <span class="text-gray-400 text-[10px] block">${set.Tingkatan === 'Jilid' ? 'Materi Jilid' : 'Surat & Juz'}</span>
-                        <span class="font-bold">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</span>
-                    </div>
-                    <div>
-                        <span class="text-gray-400 text-[10px] block">${set.Tingkatan === 'Jilid' ? 'Baris & Halaman' : 'Ayat & Halaman'}</span>
-                        <span class="font-bold">${set.Tingkatan === 'Jilid' ? set.Ayat : 'Ayat ' + set.Ayat} &bull; Hal ${set.Halaman}</span>
-                    </div>
+                <div class="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-darkcard p-2 rounded-xl border border-gray-100 dark:border-darkborder mb-1.5 flex justify-between items-center">
+                    <span class="font-bold truncate">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</span>
+                    <span class="text-gray-500 font-medium shrink-0 ml-2">${set.Ayat} &bull; Hal ${set.Halaman}</span>
                 </div>
-                <div class="flex items-center justify-between gap-2 text-xs pt-1">
-                    <span class="font-bold text-gray-800 dark:text-gray-200">${predIcon} Nilai: ${nilai}</span>
-                    <span class="text-[11px] text-[#1c6b45] dark:text-[#83c9a6] font-semibold"><i class="fa-solid fa-signature mr-1"></i>Paraf: ${parafText}</span>
+                <div class="flex items-center justify-between text-[11px]">
+                    <span class="font-bold">${predIcon} Nilai: ${nilai}</span>
+                    ${set.Catatan ? `<span class="text-gray-400 truncate max-w-[150px] italic">"${set.Catatan}"</span>` : ''}
                 </div>
-                ${set.Catatan ? `<div class="mt-2 pt-2 border-t border-gray-200/60 dark:border-darkborder text-[11px] text-gray-600 dark:text-gray-400 italic">"${set.Catatan}"</div>` : ''}
             </div>
         `;
     });
 }
 
+// ==================== VIEW 3: BUKU REKAPAN MANDIRI (REKAPAN SENDIRI) ====================
+function populateRekapFilterSantri() {
+    const sel = document.getElementById('rekapFilterSantri');
+    if (!sel) return;
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="all">Semua Santri Binaan</option>';
+    state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : '')).forEach(s => {
+        sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri}</option>`;
+    });
+    if (currentVal) sel.value = currentVal;
+}
+
+function renderUstadzRekapanTable() {
+    const tbody = document.getElementById('rekapTableBody');
+    const emptyState = document.getElementById('rekapEmptyState');
+    const countDisplay = document.getElementById('rekapTableCount');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === (sessionData ? sessionData.id : '')).slice().reverse();
+
+    // Ambil nilai filter
+    const santriFilter = document.getElementById('rekapFilterSantri') ? document.getElementById('rekapFilterSantri').value : 'all';
+    const waktuFilter = document.getElementById('rekapFilterWaktu') ? document.getElementById('rekapFilterWaktu').value : 'all';
+    const kategoriFilter = document.getElementById('rekapFilterKategori') ? document.getElementById('rekapFilterKategori').value : 'all';
+    const nilaiFilter = document.getElementById('rekapFilterNilai') ? document.getElementById('rekapFilterNilai').value : 'all';
+    const searchQuery = document.getElementById('rekapSearchInput') ? (document.getElementById('rekapSearchInput').value || '').toLowerCase().trim() : '';
+
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    const monthStr = now.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
+
+    let filtered = mySetoran.filter(set => {
+        // Filter Santri
+        if (santriFilter !== 'all' && set.ID_Santri !== santriFilter) return false;
+
+        // Filter Waktu
+        if (waktuFilter === 'today' && !(set.Tanggal || '').includes(todayStr)) return false;
+        if (waktuFilter === 'month' && !(set.Tanggal || '').includes(monthStr)) return false;
+
+        // Filter Kategori
+        if (kategoriFilter !== 'all') {
+            const j = (set.Jenis || '').toLowerCase();
+            if (kategoriFilter === 'Ziyadah' && !j.includes('ziyadah') && !j.includes('baru')) return false;
+            if (kategoriFilter === 'Murojaah' && !j.includes('muroja')) return false;
+            if (kategoriFilter === 'Binnadhor' && !j.includes('binnadhor')) return false;
+            if (kategoriFilter === 'Tasmi' && !j.includes('tasmi')) return false;
+        }
+
+        // Filter Nilai
+        if (nilaiFilter !== 'all') {
+            const p = (set.Predikat || set.Nilai || '').toLowerCase();
+            if (nilaiFilter.toLowerCase() !== p) return false;
+        }
+
+        // Search Query
+        if (searchQuery) {
+            const sObj = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+            const sName = sObj ? sObj.Nama_Santri.toLowerCase() : '';
+            const match = (
+                (set.Surah || '').toLowerCase().includes(searchQuery) ||
+                (set.TM || '').toLowerCase().includes(searchQuery) ||
+                (set.Catatan || '').toLowerCase().includes(searchQuery) ||
+                sName.includes(searchQuery)
+            );
+            if (!match) return false;
+        }
+
+        return true;
+    });
+
+    if (countDisplay) countDisplay.textContent = `Menampilkan ${filtered.length} dari ${mySetoran.length} Catatan`;
+
+    if (filtered.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+
+    filtered.forEach((set, idx) => {
+        const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+        const jenis = set.Jenis || 'Ziyadah';
+        const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
+        const isBinnadhor = jenis === 'Binnadhor';
+        const isTasmi = (jenis || '').toLowerCase().includes('tasmi');
+
+        const typeBadge = isZiyadah
+            ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
+            : isBinnadhor
+            ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+            : isTasmi
+            ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+            : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
+
+        const nilai = set.Predikat || set.Nilai || 'Mumtaz';
+        const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar';
+        const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
+        const nilaiColor = isMumtaz ? 'text-[#1c6b45]' : isJayyid ? 'text-amber-600' : 'text-red-500';
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50/80 dark:hover:bg-slate-800/50 transition">
+                <td class="py-3 px-4">
+                    <span class="font-bold text-gray-900 dark:text-white block">${set.TM || 'TM'}</span>
+                    <span class="text-[10px] text-gray-400 block">${set.Tanggal}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="font-bold text-gray-900 dark:text-white block">${s ? s.Nama_Santri : set.ID_Santri}</span>
+                    <span class="text-[10px] text-gray-400 block">${set.Tingkatan || "Al-Qur'an"}</span>
+                </td>
+                <td class="py-3 px-4">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
+                </td>
+                <td class="py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">
+                    ${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})
+                </td>
+                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
+                    ${set.Ayat} <br><span class="text-[10px] text-gray-400">Hal ${set.Halaman}</span>
+                </td>
+                <td class="py-3 px-4 font-bold ${nilaiColor}">
+                    ${nilai}
+                </td>
+                <td class="py-3 px-4 text-gray-500 italic text-xs max-w-xs truncate">
+                    ${set.Catatan ? `"${set.Catatan}"` : '-'}
+                </td>
+                <td class="py-3 px-4 text-center">
+                    <button onclick="cetakRekapanUstadz('${set.ID_Santri}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 text-[#9a2024] dark:text-[#f29fa3] transition text-xs" title="Cetak Rapor Santri Ini">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ==================== VIEW 4: DATA SANTRI BINAAN ====================
+function renderUstadzSantriList() {
+    const grid = document.getElementById('ustadzSantriCardsGrid');
+    const badge = document.getElementById('santriListTotalBadge');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const mySantri = state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    if (badge) badge.textContent = `${mySantri.length} Santri Binaan Aktif`;
+
+    if (mySantri.length === 0) {
+        grid.innerHTML = `
+            <div class="col-span-full text-center py-12 text-gray-400 text-xs">
+                Belum ada data santri yang terhubung dengan akun Ustadz Anda.
+            </div>
+        `;
+        return;
+    }
+
+    mySantri.forEach(santri => {
+        const santriSetoran = state.setoran.filter(s => s.ID_Santri === santri.ID_Santri);
+        const zCount = santriSetoran.filter(s => s.Jenis === 'Ziyadah' || s.Jenis === 'Hafalan Baru').length;
+        const mCount = santriSetoran.filter(s => s.Jenis === 'Murojaah' || s.Jenis === "Muroja'ah").length;
+        const bCount = santriSetoran.filter(s => s.Jenis === 'Binnadhor').length;
+        const tCount = santriSetoran.filter(s => (s.Jenis || '').toLowerCase().includes('tasmi')).length;
+
+        const lastSet = santriSetoran.length > 0 ? santriSetoran[santriSetoran.length - 1] : null;
+        const isJilid = (santri.Tingkatan || '').toLowerCase() === 'jilid';
+
+        const waNumber = (santri.No_WA_Wali || santri.No_HP_Wali || santri.No_WA || '').replace(/[^0-9]/g, '');
+        const cleanWa = waNumber.startsWith('0') ? '62' + waNumber.slice(1) : waNumber;
+
+        grid.innerHTML += `
+            <div class="bg-white dark:bg-darkcard rounded-3xl p-5 border border-gray-100 dark:border-darkborder shadow-xs hover:shadow-md transition flex flex-col justify-between">
+                <div>
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-[#edf7f2] dark:bg-[#12452c]/50 text-[#1c6b45] dark:text-[#83c9a6] font-extrabold flex items-center justify-center text-lg shadow-xs">
+                                ${(santri.Nama_Santri || 'S').charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white leading-tight">${santri.Nama_Santri}</h4>
+                                <span class="text-[11px] font-mono text-gray-400 block mt-0.5">${santri.ID_Santri}</span>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-xl text-[10px] font-bold ${
+                            isJilid 
+                                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' 
+                                : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]'
+                        }">
+                            ${isJilid ? 'Jilid' : 'Tahfizh'}
+                        </span>
+                    </div>
+
+                    <!-- Statistik 4 Pilar Capaian Santri -->
+                    <div class="grid grid-cols-4 gap-1.5 p-2 rounded-2xl bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-darkborder text-center mb-3">
+                        <div>
+                            <span class="text-[9px] text-[#1c6b45] font-bold block">Ziyadah</span>
+                            <span class="text-xs font-black text-gray-800 dark:text-white">${zCount}</span>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-[#9a2024] font-bold block">Muroja'ah</span>
+                            <span class="text-xs font-black text-gray-800 dark:text-white">${mCount}</span>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-amber-600 font-bold block">Binnadhor</span>
+                            <span class="text-xs font-black text-gray-800 dark:text-white">${bCount}</span>
+                        </div>
+                        <div>
+                            <span class="text-[9px] text-indigo-600 font-bold block">Tasmi'</span>
+                            <span class="text-xs font-black text-gray-800 dark:text-white">${tCount}</span>
+                        </div>
+                    </div>
+
+                    <!-- Posisi Hafalan Terakhir -->
+                    <div class="text-xs text-gray-600 dark:text-gray-300 mb-4 p-2.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30">
+                        <span class="text-[10px] text-amber-800 dark:text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Posisi Terakhir:</span>
+                        ${lastSet 
+                            ? `<span class="font-bold text-gray-900 dark:text-white">${lastSet.Surah} (${lastSet.Tingkatan === 'Jilid' ? lastSet.Juz : 'Juz ' + lastSet.Juz})</span>, Hal ${lastSet.Halaman} &bull; <strong class="text-[#1c6b45]">${lastSet.Predikat || 'Mumtaz'}</strong>`
+                            : '<span class="text-gray-400 italic">Belum pernah setoran</span>'
+                        }
+                    </div>
+                </div>
+
+                <!-- Tombol Aksi: Input Setoran & Chat WA Wali -->
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100 dark:border-darkborder">
+                    <button onclick="openInputForSantri('${santri.ID_Santri}')" class="py-2 px-3 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-pen-nib"></i>
+                        <span>Input Setoran</span>
+                    </button>
+                    ${cleanWa ? `
+                        <a href="https://wa.me/${cleanWa}?text=Assalamu%27alaikum%20Bapak%2FIbu%20Wali%20Santri%20dari%20ananda%20${encodeURIComponent(santri.Nama_Santri)}" target="_blank" rel="noopener noreferrer" class="py-2 px-3 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1.5 shadow-xs">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>Chat Wali</span>
+                        </a>
+                    ` : `
+                        <button onclick="cetakRekapanUstadz('${santri.ID_Santri}')" class="py-2 px-3 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-xl text-xs font-bold transition active:scale-95 flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Rapor PDF</span>
+                        </button>
+                    `}
+                </div>
+            </div>
+        `;
+    });
+}
+
+// ==================== MODAL CETAK RAPOR BUKU MUTABA'AH DIGITAL ====================
+function cetakRekapanUstadz(santriId) {
+    const mySantri = state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    let targetSantri = null;
+
+    if (santriId && santriId !== 'all') {
+        targetSantri = mySantri.find(s => s.ID_Santri === santriId);
+    } else {
+        const rekapSel = document.getElementById('rekapFilterSantri');
+        if (rekapSel && rekapSel.value !== 'all') {
+            targetSantri = mySantri.find(s => s.ID_Santri === rekapSel.value);
+        } else if (mySantri.length > 0) {
+            targetSantri = mySantri[0];
+        }
+    }
+
+    if (!targetSantri) {
+        return AppNotify.warning('Pilih Santri', 'Silakan pilih santri yang hendak dicetak rapor mutaba\'ahnya.');
+    }
+
+    const santriSetoran = state.setoran.filter(s => s.ID_Santri === targetSantri.ID_Santri);
+    const zCount = santriSetoran.filter(s => s.Jenis === 'Ziyadah' || s.Jenis === 'Hafalan Baru').length;
+    const mCount = santriSetoran.filter(s => s.Jenis === 'Murojaah' || s.Jenis === "Muroja'ah").length;
+    const bCount = santriSetoran.filter(s => s.Jenis === 'Binnadhor').length;
+    const tCount = santriSetoran.filter(s => (s.Jenis || '').toLowerCase().includes('tasmi')).length;
+
+    const printArea = document.getElementById('printAreaMutabaah');
+    if (!printArea) return;
+
+    printArea.innerHTML = `
+        <div class="border-b-2 border-black pb-4 mb-4 text-center">
+            <h2 class="text-xl font-bold uppercase tracking-wide">Pondok Pesantren Tahfizh Zadil Qur'an Tuban</h2>
+            <p class="text-xs text-gray-600">Alamat: Jl. Pesantren Zadil Qur'an, Tuban - Jawa Timur &bull; Telp/WA: 0857-3180-4663</p>
+            <h3 class="text-base font-bold mt-3 underline tracking-wider">BUKU MUTABA'AH &amp; RAPOR EVALUASI HAFALAN SANTRI</h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-xs mb-4">
+            <div>
+                <p><strong>Nama Santri:</strong> ${targetSantri.Nama_Santri}</p>
+                <p><strong>Nomor Induk / ID:</strong> ${targetSantri.ID_Santri}</p>
+                <p><strong>Tingkatan:</strong> ${targetSantri.Tingkatan || "Al-Qur'an 30 Juz"}</p>
+            </div>
+            <div>
+                <p><strong>Ustadz Pengampu:</strong> ${sessionData ? sessionData.name : 'Ustadz Pembimbing'}</p>
+                <p><strong>Total Sesi Simakan:</strong> ${santriSetoran.length} Pertemuan (TM)</p>
+                <p><strong>Capaian Pilar:</strong> Ziyadah: ${zCount} | Muroja'ah: ${mCount} | Binnadhor: ${bCount} | Tasmi': ${tCount}</p>
+            </div>
+        </div>
+
+        <table class="w-full text-xs border border-gray-400 mb-6 border-collapse">
+            <thead>
+                <tr class="bg-gray-100 border-b border-gray-400 text-left">
+                    <th class="p-2 border-r border-gray-400">TM &amp; Tgl</th>
+                    <th class="p-2 border-r border-gray-400">Pilar</th>
+                    <th class="p-2 border-r border-gray-400">Surat / Jilid</th>
+                    <th class="p-2 border-r border-gray-400">Ayat / Hal</th>
+                    <th class="p-2 border-r border-gray-400">Nilai</th>
+                    <th class="p-2 border-r border-gray-400">Catatan Tajwid &amp; Adab</th>
+                    <th class="p-2 text-center">Paraf</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${santriSetoran.length === 0 ? '<tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada riwayat setoran.</td></tr>' : ''}
+                ${santriSetoran.map(set => `
+                    <tr class="border-b border-gray-300">
+                        <td class="p-2 border-r border-gray-300"><strong>${set.TM || 'TM'}</strong><br>${set.Tanggal}</td>
+                        <td class="p-2 border-r border-gray-300 font-bold">${set.Jenis}</td>
+                        <td class="p-2 border-r border-gray-300">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</td>
+                        <td class="p-2 border-r border-gray-300">${set.Ayat}<br>Hal ${set.Halaman}</td>
+                        <td class="p-2 border-r border-gray-300 font-bold">${set.Predikat || set.Nilai || 'Mumtaz'}</td>
+                        <td class="p-2 border-r border-gray-300 italic">${set.Catatan || '-'}</td>
+                        <td class="p-2 text-center text-[11px]">${set.ParafUstadz || 'Ttd'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+
+        <div class="flex justify-between text-xs pt-4 border-t border-gray-200">
+            <div class="text-center">
+                <p>Mengetahui,</p>
+                <p class="font-bold mt-12">( Orang Tua / Wali Santri )</p>
+            </div>
+            <div class="text-center">
+                <p>Tuban, ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <p class="mt-1">Ustadz Pengampu Halaqah,</p>
+                <p class="font-bold mt-12 underline">( ${sessionData ? sessionData.name : 'Ustadz Pembimbing'} )</p>
+            </div>
+        </div>
+    `;
+
+    const modal = document.getElementById('modalCetakUstadz');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function tutupModalCetak() {
+    const modal = document.getElementById('modalCetakUstadz');
+    if (modal) modal.classList.add('hidden');
+}
+
+// ==================== INISIALISASI & LOAD DATA ====================
 function loadUstadzData() {
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
-    AppNotify.loading('Memuat Buku Mutaba\'ah...');
+    AppNotify.loading('Memuat Data Halaqah Ustadz...');
     apiCall('fetchAppData', token).then(res => {
         AppNotify.close();
         if (res.status === 'success') {
             state = { ...state, ...res.data };
             updateBrandingDOM(state.appName);
             initSmartForm();
+            renderUstadzDashboard();
             renderUstadzRiwayat();
+            populateRekapFilterSantri();
+            renderUstadzRekapanTable();
+            renderUstadzSantriList();
         } else {
             AppNotify.error('Gagal Memuat Data', res.message);
         }
@@ -371,6 +989,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const name = sessionData.name || 'Ustadz';
     document.getElementById('userNameDisplay').textContent = name;
+    document.getElementById('dashUstadzName').textContent = name;
     document.getElementById('userRoleDisplay').textContent = sessionData.role;
     document.getElementById('userInitial').textContent = name.charAt(0).toUpperCase();
     const badgeEl = document.getElementById('parafUstadzBadge');
@@ -378,27 +997,3 @@ window.addEventListener('DOMContentLoaded', () => {
 
     loadUstadzData();
 });
-
-function scrollUstadzView(target) {
-    const btnForm = document.getElementById('bottomNav-ustadz-form');
-    const btnRiwayat = document.getElementById('bottomNav-ustadz-riwayat');
-    const contentArea = document.getElementById('contentArea');
-
-    if (target === 'form') {
-        const formEl = document.getElementById('formSmartSetoran');
-        if (formEl) {
-            formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else if (contentArea) {
-            contentArea.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        if (btnForm) btnForm.className = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
-        if (btnRiwayat) btnRiwayat.className = "bottom-nav-btn text-gray-500 dark:text-gray-400";
-    } else if (target === 'riwayat') {
-        const listEl = document.getElementById('listSetoranUstadz');
-        if (listEl) {
-            listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        if (btnRiwayat) btnRiwayat.className = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
-        if (btnForm) btnForm.className = "bottom-nav-btn text-gray-500 dark:text-gray-400";
-    }
-}
