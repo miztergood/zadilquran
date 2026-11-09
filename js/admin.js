@@ -516,23 +516,640 @@ function saveSantri(e) {
 }
 
 // ==================== MODUL 2: KEUANGAN & SPP (ADMIN) ====================
-function renderTableTagihan() {
-    const tb = document.getElementById('tableTagihanBody');
-    if (!tb) return;
-    tb.innerHTML = '';
+const INDO_MONTHS_KEU = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const _initDateKeu = new Date();
+let currentKeuanganPeriode = `${_initDateKeu.getFullYear()}-${String(_initDateKeu.getMonth() + 1).padStart(2, '0')}`;
+let currentMatriksTahun = _initDateKeu.getFullYear();
+let currentKeuanganTab = 'perlu-ditagih';
+let filterKatPerluDitagih = 'ALL';
+let filterStatusSemuaTagihan = 'ALL';
 
+function formatPeriodeDisplay(periodeStr) {
+    if (!periodeStr || typeof periodeStr !== 'string') return '';
+    const parts = periodeStr.split('-');
+    if (parts.length < 2) return periodeStr;
+    const y = parts[0];
+    const m = parseInt(parts[1], 10);
+    const mName = INDO_MONTHS_KEU[m - 1] || parts[1];
+    return `${mName} ${y}`;
+}
+
+function getTagihanPeriode(t) {
+    if (!t) return '';
+    if (t.Periode && /^\d{4}-\d{2}$/.test(String(t.Periode).trim())) {
+        return String(t.Periode).trim();
+    }
+    // Coba tebak dari Judul_Tagihan (misal "Syahriyah (SPP) Bulan November 2026")
+    if (t.Judul_Tagihan) {
+        for (let i = 0; i < INDO_MONTHS_KEU.length; i++) {
+            const mName = INDO_MONTHS_KEU[i];
+            const regex = new RegExp(mName + '\\s+(\\d{4})', 'i');
+            const match = String(t.Judul_Tagihan).match(regex);
+            if (match) {
+                const year = match[1];
+                const month = String(i + 1).padStart(2, '0');
+                return `${year}-${month}`;
+            }
+        }
+    }
+    // Coba tebak dari Jatuh_Tempo (misal "10 November 2026" atau "2026-11-10")
+    if (t.Jatuh_Tempo) {
+        const str = String(t.Jatuh_Tempo).trim();
+        if (/^\d{4}-\d{2}/.test(str)) {
+            return str.substring(0, 7);
+        }
+        for (let i = 0; i < INDO_MONTHS_KEU.length; i++) {
+            const mName = INDO_MONTHS_KEU[i];
+            const regex = new RegExp(mName + '\\s+(\\d{4})', 'i');
+            const match = str.match(regex);
+            if (match) {
+                const year = match[1];
+                const month = String(i + 1).padStart(2, '0');
+                return `${year}-${month}`;
+            }
+        }
+    }
+    // Fallback dari Timestamp
+    if (t.Timestamp) {
+        try {
+            const d = new Date(t.Timestamp);
+            if (!isNaN(d.getTime())) {
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }
+        } catch (e) {}
+    }
+    return '';
+}
+
+function parseTanggalJatuhTempo(tempoStr) {
+    if (!tempoStr) return null;
+    const str = String(tempoStr).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const parts = str.split('-');
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    for (let i = 0; i < INDO_MONTHS_KEU.length; i++) {
+        const mName = INDO_MONTHS_KEU[i];
+        const regex = new RegExp('(\\d{1,2})\\s+' + mName + '\\s+(\\d{4})', 'i');
+        const match = str.match(regex);
+        if (match) {
+            const d = parseInt(match[1], 10);
+            const y = parseInt(match[2], 10);
+            return new Date(y, i, d);
+        }
+    }
+    try {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) return d;
+    } catch (e) {}
+    return null;
+}
+
+function hitungKeterlambatan(t) {
+    if (!t) return { status: 'normal', text: '-' };
+    if (t.Status === 'Lunas') return { status: 'lunas', text: 'Lunas' };
+    
+    const dueDate = parseTanggalJatuhTempo(t.Jatuh_Tempo);
+    if (!dueDate) {
+        return { status: 'normal', text: t.Jatuh_Tempo || '-' };
+    }
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = today.getTime() - dueDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+        return {
+            status: 'overdue',
+            days: diffDays,
+            text: `Terlambat ${diffDays} hari`
+        };
+    } else if (diffDays >= -7) {
+        const sisa = Math.abs(diffDays);
+        return {
+            status: 'due-soon',
+            days: sisa,
+            text: sisa === 0 ? 'Jatuh tempo hari ini' : `Jatuh tempo ${sisa} hari lagi`
+        };
+    } else {
+        return {
+            status: 'normal',
+            text: `Tempo: ${t.Jatuh_Tempo}`
+        };
+    }
+}
+
+function geserPeriodeKeuangan(delta) {
+    if (!currentKeuanganPeriode) {
+        const _d = new Date();
+        currentKeuanganPeriode = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}`;
+    }
+    const parts = currentKeuanganPeriode.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    const d = new Date(y, m - 1 + delta, 1);
+    currentKeuanganPeriode = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    renderKeuanganView();
+}
+
+function setPeriodeBulanIni() {
+    const now = new Date();
+    currentKeuanganPeriode = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    renderKeuanganView();
+}
+
+function geserTahunMatriks(delta) {
+    currentMatriksTahun += delta;
+    renderTabMatriksSpp();
+}
+
+function switchTabKeuangan(tabId) {
+    currentKeuanganTab = tabId;
+    
+    const btnPerlu = document.getElementById('tabBtnPerluDitagih');
+    const btnMatriks = document.getElementById('tabBtnMatriksSpp');
+    const btnSemua = document.getElementById('tabBtnSemuaTagihan');
+    
+    const contPerlu = document.getElementById('tabContentPerluDitagih');
+    const contMatriks = document.getElementById('tabContentMatriksSpp');
+    const contSemua = document.getElementById('tabContentSemuaTagihan');
+    
+    const activeBtnClass = "pb-3 text-xs sm:text-sm font-bold border-b-2 border-[#9a2024] text-[#9a2024] dark:text-[#f29fa3] flex items-center gap-2 whitespace-nowrap transition";
+    const inactiveBtnClass = "pb-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-2 whitespace-nowrap transition";
+    
+    if (btnPerlu) btnPerlu.className = tabId === 'perlu-ditagih' ? activeBtnClass : inactiveBtnClass;
+    if (btnMatriks) btnMatriks.className = tabId === 'matriks-spp' ? activeBtnClass : inactiveBtnClass;
+    if (btnSemua) btnSemua.className = tabId === 'semua-tagihan' ? activeBtnClass : inactiveBtnClass;
+    
+    if (contPerlu) contPerlu.classList.toggle('hidden', tabId !== 'perlu-ditagih');
+    if (contMatriks) contMatriks.classList.toggle('hidden', tabId !== 'matriks-spp');
+    if (contSemua) contSemua.classList.toggle('hidden', tabId !== 'semua-tagihan');
+    
+    if (tabId === 'perlu-ditagih') renderTabPerluDitagih();
+    else if (tabId === 'matriks-spp') renderTabMatriksSpp();
+    else if (tabId === 'semua-tagihan') renderTabSemuaTagihan();
+}
+
+function renderKeuanganView() {
+    const elPeriode = document.getElementById('keuanganPeriodeDisplay');
+    if (!elPeriode) return;
+    
+    if (!currentKeuanganPeriode) {
+        const _d = new Date();
+        currentKeuanganPeriode = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}`;
+    }
+    elPeriode.textContent = formatPeriodeDisplay(currentKeuanganPeriode);
+    
+    // Hitung KPI Periode Terpilih
     const allTagihan = state.tagihan || [];
-    const totalLunas = allTagihan.filter(t => t.Status === 'Lunas').reduce((sum, t) => sum + (Number(t.Nominal) || 0), 0);
-    const totalPiutang = allTagihan.filter(t => t.Status !== 'Lunas').reduce((sum, t) => sum + (Number(t.Nominal) || 0), 0);
-
+    const tagihanPeriode = allTagihan.filter(t => getTagihanPeriode(t) === currentKeuanganPeriode);
+    
+    const lunasBills = tagihanPeriode.filter(t => t.Status === 'Lunas');
+    const belumBills = tagihanPeriode.filter(t => t.Status !== 'Lunas');
+    const menunggakBills = belumBills.filter(t => hitungKeterlambatan(t).status === 'overdue');
+    
+    const totalLunas = lunasBills.reduce((s, t) => s + (Number(t.Nominal) || 0), 0);
+    const totalBelum = belumBills.reduce((s, t) => s + (Number(t.Nominal) || 0), 0);
+    const totalMenunggak = menunggakBills.reduce((s, t) => s + (Number(t.Nominal) || 0), 0);
+    const santriMenunggakSet = new Set(menunggakBills.map(t => t.ID_Santri));
+    
     const elLunas = document.getElementById('keuStatLunas');
-    const elPiutang = document.getElementById('keuStatBelum');
-    const elCount = document.getElementById('keuStatTotal');
+    const elLunasSub = document.getElementById('keuStatLunasSub');
+    const elBelum = document.getElementById('keuStatBelum');
+    const elBelumSub = document.getElementById('keuStatBelumSub');
+    const elMenunggak = document.getElementById('keuStatMenunggak');
+    const elMenunggakSub = document.getElementById('keuStatMenunggakSub');
+    
     if (elLunas) elLunas.textContent = formatRupiah(totalLunas);
-    if (elPiutang) elPiutang.textContent = formatRupiah(totalPiutang);
-    if (elCount) elCount.textContent = `${allTagihan.length} Tagihan`;
+    if (elLunasSub) elLunasSub.textContent = `${lunasBills.length} pembayaran lunas`;
+    if (elBelum) elBelum.textContent = formatRupiah(totalBelum);
+    if (elBelumSub) elBelumSub.textContent = `${belumBills.length} tagihan belum lunas`;
+    if (elMenunggak) elMenunggak.textContent = `${santriMenunggakSet.size} Santri`;
+    if (elMenunggakSub) elMenunggakSub.textContent = `${menunggakBills.length} tagihan (${formatRupiah(totalMenunggak)})`;
+    
+    // Status SPP Card
+    renderCardStatusSpp();
+    
+    // Tab aktif
+    if (currentKeuanganTab === 'perlu-ditagih') {
+        renderTabPerluDitagih();
+    } else if (currentKeuanganTab === 'matriks-spp') {
+        renderTabMatriksSpp();
+    } else if (currentKeuanganTab === 'semua-tagihan') {
+        renderTabSemuaTagihan();
+    }
+}
 
-    const filterStatus = document.getElementById('filterTagihanStatus') ? document.getElementById('filterTagihanStatus').value : 'ALL';
+// Kompatibilitas untuk pemanggil lama & pagination
+function renderTableTagihan() {
+    renderKeuanganView();
+}
+
+function renderCardStatusSpp() {
+    const card = document.getElementById('cardStatusSppOtomatis');
+    if (!card) return;
+    
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    if (!token) return;
+    
+    card.innerHTML = `<div class="py-3 text-center text-gray-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Memeriksa status penerbitan SPP periode ${formatPeriodeDisplay(currentKeuanganPeriode)}...</div>`;
+    
+    apiCall('getStatusSpp', token, currentKeuanganPeriode).then(res => {
+        if (!card) return;
+        if (res.status !== 'success') {
+            card.className = "mb-5 bg-red-50 dark:bg-red-950/20 rounded-2xl p-4 sm:p-5 border border-red-200 dark:border-red-900/40 shadow-xs";
+            card.innerHTML = `<div class="p-2 text-xs text-red-600 dark:text-red-400"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>Gagal memeriksa status SPP: ${res.message || 'Error'}</div>`;
+            return;
+        }
+        
+        const d = res.data;
+        const periodeDisplay = formatPeriodeDisplay(d.periode || currentKeuanganPeriode);
+        const pct = d.totalSantriAktif > 0 ? Math.round((d.santriSudahTerbit / d.totalSantriAktif) * 100) : 100;
+        
+        if (!d.config || !d.config.aktif) {
+            card.className = "mb-5 bg-amber-50/80 dark:bg-amber-950/20 rounded-2xl p-4 sm:p-5 border border-amber-200 dark:border-amber-900/40 shadow-xs";
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">Otomasi SPP Bulanan Nonaktif</h4>
+                            <p class="text-xs text-amber-800 dark:text-amber-300 mt-0.5">Sistem tidak akan membuat tagihan SPP otomatis di awal bulan. Anda dapat mengaktifkannya pada menu Aturan SPP.</p>
+                        </div>
+                    </div>
+                    <button onclick="openModalAturanSpp()" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition shrink-0 flex items-center justify-center gap-1.5 shadow-2xs">
+                        <i class="fa-solid fa-gear"></i> Aktifkan Aturan SPP
+                    </button>
+                </div>`;
+        } else if (d.isLengkap) {
+            card.className = "mb-5 bg-emerald-50/80 dark:bg-emerald-950/20 rounded-2xl p-4 sm:p-5 border border-emerald-200/80 dark:border-emerald-900/40 shadow-xs";
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-circle-check text-lg"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">SPP ${periodeDisplay} Sudah Lengkap</h4>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">100% Terbit</span>
+                            </div>
+                            <p class="text-xs text-emerald-800 dark:text-emerald-300 mt-0.5">Seluruh ${d.totalSantriAktif} santri aktif telah diterbitkan tagihan SPP-nya untuk periode ini.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-900 shrink-0 shadow-2xs">
+                        <i class="fa-solid fa-users"></i> ${d.santriSudahTerbit} dari ${d.totalSantriAktif} Santri
+                    </div>
+                </div>`;
+        } else {
+            card.className = "mb-5 bg-yellow-50/90 dark:bg-yellow-950/20 rounded-2xl p-4 sm:p-5 border border-yellow-200 dark:border-yellow-900/40 shadow-xs";
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">SPP ${periodeDisplay} Belum Lengkap</h4>
+                            <p class="text-xs text-yellow-800 dark:text-yellow-300">Ada <b>${d.santriBelumTerbit} santri aktif</b> yang belum memiliki tagihan SPP periode ini.</p>
+                            <div class="w-full bg-yellow-200 dark:bg-yellow-900/40 rounded-full h-2 max-w-xs mt-1">
+                                <div class="bg-yellow-600 h-2 rounded-full transition-all duration-300" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="text-[10px] text-gray-500">${d.santriSudahTerbit} dari ${d.totalSantriAktif} santri terbit (${pct}%)</span>
+                        </div>
+                    </div>
+                    <button onclick="konfirmasiTerbitkanSppSekarang()" class="px-4 py-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-xl text-xs font-bold transition shrink-0 flex items-center justify-center gap-1.5 shadow-xs">
+                        <i class="fa-solid fa-paper-plane"></i> Terbitkan Sekarang (${d.santriBelumTerbit} Santri)
+                    </button>
+                </div>`;
+        }
+    }).catch(err => {
+        if (card) card.innerHTML = `<div class="p-3 text-xs text-gray-400">Status otomatisasi belum dapat dimuat.</div>`;
+    });
+}
+
+async function konfirmasiTerbitkanSppSekarang() {
+    const periodeDisplay = formatPeriodeDisplay(currentKeuanganPeriode);
+    const confirmed = await AppNotify.confirm(
+        'Terbitkan SPP Periode Ini?',
+        `Sistem akan menerbitkan tagihan SPP untuk santri aktif yang belum memiliki tagihan periode ${periodeDisplay}. Idempoten dan aman dari duplikasi.`,
+        'Ya, Terbitkan Sekarang',
+        'Batal'
+    );
+    if (!confirmed) return;
+    
+    AppNotify.loading('Menerbitkan SPP...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    apiCall('terbitkanSppSekarang', token, currentKeuanganPeriode).then(res => {
+        AppNotify.close();
+        if (res.status === 'success') {
+            AppNotify.toast('success', res.message || 'SPP berhasil diterbitkan');
+            refreshAdminData();
+        } else {
+            AppNotify.error('Gagal Menerbitkan SPP', res.message);
+        }
+    });
+}
+
+// --- TAB 1: PERLU DITAGIH ---
+function setFilterKatPerluDitagih(val) {
+    filterKatPerluDitagih = val;
+    const btnAll = document.getElementById('btnKatAll');
+    const btnSpp = document.getElementById('btnKatSpp');
+    const btnLain = document.getElementById('btnKatLain');
+    
+    const activeClass = "px-3 py-1.5 rounded-xl text-xs font-bold bg-[#9a2024] text-white transition whitespace-nowrap shadow-2xs";
+    const inactiveClass = "px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition whitespace-nowrap";
+    
+    if (btnAll) btnAll.className = val === 'ALL' ? activeClass : inactiveClass;
+    if (btnSpp) btnSpp.className = val === 'SPP' ? activeClass : inactiveClass;
+    if (btnLain) btnLain.className = val === 'LAIN' ? activeClass : inactiveClass;
+    
+    renderTabPerluDitagih();
+}
+
+function renderTabPerluDitagih() {
+    const listEl = document.getElementById('listPerluDitagih');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    
+    const searchQuery = (document.getElementById('searchPerluDitagih')?.value || '').toLowerCase().trim();
+    const allTagihan = state.tagihan || [];
+    
+    const enriched = allTagihan.map(t => {
+        const s = (state.santri || []).find(san => san.ID_Santri === t.ID_Santri);
+        return {
+            ...t,
+            Nama_Santri: s ? s.Nama_Santri : 'Santri Terhapus',
+            No_HP_Wali: s ? s.No_HP_Wali : '',
+            periodeCalculated: getTagihanPeriode(t)
+        };
+    });
+    
+    let filtered = enriched.filter(t => t.Status !== 'Lunas' && t.periodeCalculated === currentKeuanganPeriode);
+    
+    if (filterKatPerluDitagih === 'SPP') {
+        filtered = filtered.filter(t => t.Kategori === 'Syahriyah (SPP)' || String(t.Judul_Tagihan).toLowerCase().includes('spp'));
+    } else if (filterKatPerluDitagih === 'LAIN') {
+        filtered = filtered.filter(t => t.Kategori !== 'Syahriyah (SPP)' && !String(t.Judul_Tagihan).toLowerCase().includes('spp'));
+    }
+    
+    if (searchQuery) {
+        filtered = filtered.filter(t => 
+            t.Nama_Santri.toLowerCase().includes(searchQuery) ||
+            t.ID_Santri.toLowerCase().includes(searchQuery) ||
+            (t.Judul_Tagihan && t.Judul_Tagihan.toLowerCase().includes(searchQuery))
+        );
+    }
+    
+    const badgeEl = document.getElementById('badgeCountPerluDitagih');
+    if (badgeEl) badgeEl.textContent = filtered.length;
+    
+    if (filtered.length === 0) {
+        const periodeDisplay = formatPeriodeDisplay(currentKeuanganPeriode);
+        listEl.innerHTML = `
+            <div class="py-12 px-4 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto mb-3">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">Alhamdulillah, Tidak Ada Tagihan yang Perlu Ditagih!</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto">Seluruh tagihan periode <b>${periodeDisplay}</b> telah lunas, atau belum ada tagihan yang diterbitkan.</p>
+            </div>`;
+        return;
+    }
+    
+    // Sort: terlambat terbanyak di atas, lalu urutkan tempo
+    filtered.sort((a, b) => {
+        const ketA = hitungKeterlambatan(a);
+        const ketB = hitungKeterlambatan(b);
+        const daysA = ketA.status === 'overdue' ? ketA.days : -9999;
+        const daysB = ketB.status === 'overdue' ? ketB.days : -9999;
+        return daysB - daysA;
+    });
+    
+    filtered.forEach(t => {
+        const ket = hitungKeterlambatan(t);
+        let dueBadge = '';
+        if (ket.status === 'overdue') {
+            dueBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300">
+                <i class="fa-solid fa-triangle-exclamation text-[10px]"></i> ${ket.text}
+            </span>`;
+        } else if (ket.status === 'due-soon') {
+            dueBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">
+                <i class="fa-solid fa-clock text-[10px]"></i> ${ket.text}
+            </span>`;
+        } else {
+            dueBadge = `<span class="text-xs text-gray-500 dark:text-gray-400"><i class="fa-regular fa-calendar mr-1"></i>Tempo: <b>${t.Jatuh_Tempo || '-'}</b></span>`;
+        }
+        
+        listEl.innerHTML += `
+            <div class="p-4 rounded-xl border border-gray-200 dark:border-darkborder bg-white dark:bg-darkcard hover:shadow-xs transition flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                <div class="space-y-1.5 flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">${t.Nama_Santri}</span>
+                        <span class="font-mono text-xs px-2 py-0.5 rounded-md bg-gray-100 dark:bg-slate-800 text-[#9a2024] dark:text-[#f29fa3] font-semibold">${t.ID_Santri}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300">${t.Kategori || 'Tagihan'}</span>
+                    </div>
+                    <div class="text-xs text-gray-700 dark:text-gray-300 font-medium">${t.Judul_Tagihan}</div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        ${dueBadge}
+                        ${t.Catatan ? `<span class="text-gray-400 italic text-[11px]">• ${t.Catatan}</span>` : ''}
+                    </div>
+                </div>
+                <div class="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-darkborder">
+                    <div class="text-left sm:text-right">
+                        <div class="text-[10px] text-gray-400 uppercase font-semibold">Total Tagihan</div>
+                        <div class="text-base sm:text-lg font-extrabold text-[#9a2024] dark:text-[#f29fa3]">${formatRupiah(t.Nominal)}</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-3 py-1.5 bg-[#1c6b45] hover:bg-[#155436] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
+                            <i class="fa-solid fa-check"></i> Sahkan Lunas
+                        </button>
+                        <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-lg transition" title="Kirim Pengingat WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                        </button>
+                        <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 rounded-lg transition" title="Hapus Tagihan">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+    });
+}
+
+// --- TAB 2: MATRIKS SPP 12 BULAN ---
+function renderTabMatriksSpp() {
+    const tableBody = document.getElementById('bodyMatriksSpp');
+    const tableFoot = document.getElementById('footMatriksSpp');
+    const displayTahun = document.getElementById('matriksTahunDisplay');
+    if (!tableBody) return;
+    
+    if (displayTahun) displayTahun.textContent = currentMatriksTahun;
+    tableBody.innerHTML = '';
+    if (tableFoot) tableFoot.innerHTML = '';
+    
+    const searchQuery = (document.getElementById('searchMatriksSantri')?.value || '').toLowerCase().trim();
+    
+    let santriList = (state.santri || []).filter(s => s.Status !== 'Alumni');
+    if (searchQuery) {
+        santriList = santriList.filter(s => 
+            (s.Nama_Santri && s.Nama_Santri.toLowerCase().includes(searchQuery)) ||
+            (s.ID_Santri && s.ID_Santri.toLowerCase().includes(searchQuery))
+        );
+    }
+    
+    santriList.sort((a, b) => (a.Nama_Santri || '').localeCompare(b.Nama_Santri || ''));
+    
+    const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+    const monthStats = months.map(() => ({ lunas: 0, belum: 0 }));
+    const allTagihan = state.tagihan || [];
+    
+    if (santriList.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="13" class="p-6 text-center text-gray-500">Tidak ada santri yang sesuai pencarian.</td></tr>`;
+        return;
+    }
+    
+    const now = new Date();
+    const curYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    santriList.forEach(s => {
+        let rowHtml = `<tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/40 transition">
+            <td class="p-3 sticky left-0 bg-white dark:bg-darkcard border-r border-gray-200 dark:border-darkborder font-semibold text-gray-900 dark:text-white truncate max-w-[200px] z-10">
+                <div class="truncate">${s.Nama_Santri}</div>
+                <div class="font-mono text-[10px] text-gray-400 font-normal">${s.ID_Santri}</div>
+            </td>`;
+        
+        months.forEach((mStr, idx) => {
+            const pKey = `${currentMatriksTahun}-${mStr}`;
+            const t = allTagihan.find(x => 
+                x.ID_Santri === s.ID_Santri &&
+                getTagihanPeriode(x) === pKey &&
+                (x.Kategori === 'Syahriyah (SPP)' || String(x.Judul_Tagihan).toLowerCase().includes('spp'))
+            );
+            
+            let cellContent = '';
+            if (t) {
+                if (t.Status === 'Lunas') {
+                    monthStats[idx].lunas++;
+                    cellContent = `<button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold inline-flex items-center justify-center text-xs transition hover:scale-110 shadow-2xs" title="Lunas: ${formatRupiah(t.Nominal)} - Klik untuk cetak kwitansi">✓</button>`;
+                } else {
+                    monthStats[idx].belum++;
+                    const ket = hitungKeterlambatan(t);
+                    const isOverdue = ket.status === 'overdue';
+                    const colorClass = isOverdue
+                        ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-200'
+                        : 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 hover:bg-amber-200';
+                    cellContent = `<button onclick="openModalBayar('${t.ID_Tagihan}')" class="w-6 h-6 rounded-full ${colorClass} font-bold inline-flex items-center justify-center text-xs transition hover:scale-110 shadow-2xs" title="${isOverdue ? 'Lewat tempo: ' + ket.text : 'Belum lunas: ' + formatRupiah(t.Nominal)} - Klik untuk tandai lunas">●</button>`;
+                }
+            } else {
+                const isPastOrCurrent = pKey <= curYearMonth;
+                if (isPastOrCurrent) {
+                    cellContent = `<button onclick="terbitkanSppSantriBulan('${s.ID_Santri}', '${pKey}')" class="w-6 h-6 rounded-full text-gray-300 dark:text-slate-600 hover:text-[#9a2024] hover:bg-red-50 dark:hover:bg-red-950/40 font-bold inline-flex items-center justify-center text-xs transition" title="Belum terbit. Klik untuk terbitkan SPP bulan ${INDO_MONTHS_KEU[idx]}">–</button>`;
+                } else {
+                    cellContent = `<span class="text-gray-300 dark:text-slate-700 text-xs select-none">–</span>`;
+                }
+            }
+            
+            rowHtml += `<td class="p-2 text-center border-r border-gray-100 dark:border-darkborder">${cellContent}</td>`;
+        });
+        
+        rowHtml += `</tr>`;
+        tableBody.innerHTML += rowHtml;
+    });
+    
+    if (tableFoot) {
+        let footHtml = `<tr>
+            <td class="p-3 sticky left-0 bg-gray-50 dark:bg-slate-800 border-r border-gray-200 dark:border-darkborder font-bold text-gray-700 dark:text-gray-300 z-10">
+                <div>Total Lunas</div>
+                <div class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">Belum Lunas</div>
+            </td>`;
+        monthStats.forEach(stat => {
+            footHtml += `<td class="p-2 text-center text-xs">
+                <div class="font-extrabold text-emerald-600 dark:text-emerald-400">${stat.lunas}</div>
+                <div class="font-semibold text-amber-600 dark:text-amber-400 text-[11px]">${stat.belum}</div>
+            </td>`;
+        });
+        footHtml += `</tr>`;
+        tableFoot.innerHTML = footHtml;
+    }
+}
+
+async function terbitkanSppSantriBulan(idSantri, periode) {
+    const s = (state.santri || []).find(x => x.ID_Santri === idSantri);
+    const namaSantri = s ? s.Nama_Santri : idSantri;
+    const periodeDisplay = formatPeriodeDisplay(periode);
+    
+    const confirmed = await AppNotify.confirm(
+        'Terbitkan SPP Satuan?',
+        `Terbitkan tagihan SPP periode ${periodeDisplay} untuk ${namaSantri}?`,
+        'Ya, Terbitkan',
+        'Batal'
+    );
+    if (!confirmed) return;
+    
+    AppNotify.loading('Menerbitkan SPP...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    const parts = (periode || '').split('-');
+    const y = parts[0];
+    const m = parts[1];
+    const mIdx = parseInt(m, 10) - 1;
+    const mName = INDO_MONTHS_KEU[mIdx] || m;
+    
+    const payload = {
+        targetSantri: idSantri,
+        kategori: 'Syahriyah (SPP)',
+        judulTagihan: `Syahriyah (SPP) Bulan ${mName} ${y}`,
+        nominal: 200000,
+        jatuhTempo: `10 ${mName} ${y}`,
+        status: 'Belum Lunas',
+        metodeBayar: '',
+        catatan: 'SPP Bulanan Santri Mukim',
+        periode: periode
+    };
+    
+    apiCall('createTagihan', token, payload).then(res => {
+        AppNotify.close();
+        if (res.status === 'success') {
+            AppNotify.toast('success', `SPP ${periodeDisplay} berhasil diterbitkan`);
+            refreshAdminData();
+        } else {
+            AppNotify.error('Gagal Menerbitkan SPP', res.message);
+        }
+    });
+}
+
+// --- TAB 3: SEMUA TAGIHAN ---
+function setFilterStatusSemuaTagihan(val) {
+    filterStatusSemuaTagihan = val;
+    const btnAll = document.getElementById('btnStatusAll');
+    const btnBelum = document.getElementById('btnStatusBelum');
+    const btnLunas = document.getElementById('btnStatusLunas');
+    
+    const activeClass = "px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#9a2024] text-white transition";
+    const inactiveClass = "px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition";
+    
+    if (btnAll) btnAll.className = val === 'ALL' ? activeClass : inactiveClass;
+    if (btnBelum) btnBelum.className = val === 'Belum Lunas' ? activeClass : inactiveClass;
+    if (btnLunas) btnLunas.className = val === 'Lunas' ? activeClass : inactiveClass;
+    
+    renderTabSemuaTagihan();
+}
+
+function renderTabSemuaTagihan() {
+    const tb = document.getElementById('tableTagihanBody');
+    const cardsEl = document.getElementById('cardsTagihanMobile');
+    if (!tb && !cardsEl) return;
+    
+    const allTagihan = state.tagihan || [];
+    
+    const badgeAll = document.getElementById('badgeCountSemuaTagihan');
+    if (badgeAll) badgeAll.textContent = allTagihan.length;
+    
     const enriched = allTagihan.map(t => {
         const s = (state.santri || []).find(san => san.ID_Santri === t.ID_Santri);
         return {
@@ -541,115 +1158,190 @@ function renderTableTagihan() {
             No_HP_Wali: s ? s.No_HP_Wali : ''
         };
     });
-
+    
     let filtered = enriched;
-    if (filterStatus !== 'ALL' && filterStatus !== 'all') {
-        filtered = filtered.filter(t => t.Status === filterStatus);
+    if (filterStatusSemuaTagihan !== 'ALL') {
+        filtered = filtered.filter(t => t.Status === filterStatusSemuaTagihan);
     }
-
+    
     const paginationResult = getPaginatedData(filtered, ['Nama_Santri', 'ID_Santri', 'Judul_Tagihan', 'Kategori', 'ID_Tagihan'], 'tagihan');
-
-    if (paginationResult.pageData.length === 0) {
-        tb.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada data tagihan yang sesuai filter.</td></tr>';
-    } else {
-        paginationResult.pageData.forEach(t => {
-            const isLunas = t.Status === 'Lunas';
-            const badge = isLunas
-                ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]"><i class="fa-solid fa-circle-check mr-1"></i>Lunas</span>`
-                : `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/50 dark:text-[#f29fa3]"><i class="fa-solid fa-clock mr-1"></i>Belum Lunas</span>`;
-
-            tb.innerHTML += `
-                <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
-                    <td class="p-4 font-mono text-xs text-gray-500">${t.ID_Tagihan}</td>
-                    <td class="p-4">
-                        <div class="font-bold text-gray-900 dark:text-white">${t.Nama_Santri}</div>
-                        <div class="font-mono text-[11px] text-[#9a2024] dark:text-[#f29fa3]">${t.ID_Santri}</div>
-                    </td>
-                    <td class="p-4">
-                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300">${t.Kategori || 'Tagihan'}</span>
-                        <div class="font-semibold text-gray-800 dark:text-gray-200 mt-1">${t.Judul_Tagihan}</div>
-                        ${t.Catatan ? `<div class="text-[11px] text-gray-400 italic">${t.Catatan}</div>` : ''}
-                    </td>
-                    <td class="p-4 font-bold text-gray-900 dark:text-white">${formatRupiah(t.Nominal)}</td>
-                    <td class="p-4 text-xs text-gray-600 dark:text-gray-400">
-                        <div class="mb-1">${badge}</div>
-                        <div>Tempo: <b>${t.Jatuh_Tempo || '-'}</b></div>
-                        ${isLunas ? `<div class="text-[11px] text-[#1c6b45] dark:text-[#83c9a6] mt-0.5">Dibayar: ${t.Tgl_Bayar || '-'} (${t.Metode_Bayar || '-'})</div>` : ''}
-                    </td>
-                    <td class="p-4 text-center">
-                        <div class="flex justify-center gap-1.5">
-                            ${!isLunas ? `
-                                <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#1c6b45] hover:bg-[#155436] text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Tandai Lunas"><i class="fa-solid fa-check"></i> Lunas</button>
-                                <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-lg transition shadow-xs" title="Kirim Pengingat WA"><i class="fa-brands fa-whatsapp"></i></button>
-                            ` : `
-                                <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6] rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Cetak Kwitansi PDF"><i class="fa-solid fa-file-invoice"></i> Kwitansi</button>
-                                <button onclick="batalLunasTagihan('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-gray-300 rounded-lg text-xs font-semibold transition" title="Batalkan Status Lunas"><i class="fa-solid fa-rotate-left"></i> Batal</button>
-                            `}
-                            <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 rounded-lg transition shadow-xs" title="Hapus Tagihan"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>`;
-        });
+    
+    if (tb) {
+        tb.innerHTML = '';
+        if (paginationResult.pageData.length === 0) {
+            tb.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500">Belum ada data tagihan yang sesuai filter.</td></tr>';
+        } else {
+            paginationResult.pageData.forEach(t => {
+                const isLunas = t.Status === 'Lunas';
+                const badge = isLunas
+                    ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]"><i class="fa-solid fa-circle-check mr-1"></i>Lunas</span>`
+                    : `<span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/50 dark:text-[#f29fa3]"><i class="fa-solid fa-clock mr-1"></i>Belum Lunas</span>`;
+                
+                tb.innerHTML += `
+                    <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
+                        <td class="p-3.5">
+                            <div class="font-bold text-gray-900 dark:text-white">${t.Nama_Santri}</div>
+                            <div class="flex items-center gap-1.5 mt-0.5">
+                                <span class="font-mono text-[11px] text-[#9a2024] dark:text-[#f29fa3] font-semibold">${t.ID_Santri}</span>
+                                <span class="text-gray-300">•</span>
+                                <span class="font-mono text-[10px] text-gray-400">${t.ID_Tagihan}</span>
+                            </div>
+                        </td>
+                        <td class="p-3.5">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300">${t.Kategori || 'Tagihan'}</span>
+                            <div class="font-semibold text-gray-800 dark:text-gray-200 mt-1">${t.Judul_Tagihan}</div>
+                            ${t.Catatan ? `<div class="text-[11px] text-gray-400 italic">${t.Catatan}</div>` : ''}
+                        </td>
+                        <td class="p-3.5 font-bold text-gray-900 dark:text-white">${formatRupiah(t.Nominal)}</td>
+                        <td class="p-3.5 text-xs text-gray-600 dark:text-gray-400">
+                            <div>Tempo: <b>${t.Jatuh_Tempo || '-'}</b></div>
+                            ${isLunas ? `<div class="text-[11px] text-[#1c6b45] dark:text-[#83c9a6] mt-0.5">Dibayar: ${t.Tgl_Bayar || '-'} (${t.Metode_Bayar || '-'})</div>` : ''}
+                        </td>
+                        <td class="p-3.5">${badge}</td>
+                        <td class="p-3.5 text-center">
+                            <div class="flex justify-center gap-1.5">
+                                ${!isLunas ? `
+                                    <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#1c6b45] hover:bg-[#155436] text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Tandai Lunas"><i class="fa-solid fa-check"></i> Lunas</button>
+                                    <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-lg transition shadow-xs" title="Kirim Pengingat WA"><i class="fa-brands fa-whatsapp"></i></button>
+                                ` : `
+                                    <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6] rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Cetak Kwitansi PDF"><i class="fa-solid fa-file-invoice"></i> Kwitansi</button>
+                                    <button onclick="batalLunasTagihan('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-gray-300 rounded-lg text-xs font-semibold transition" title="Batalkan Status Lunas"><i class="fa-solid fa-rotate-left"></i> Batal</button>
+                                `}
+                                <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 rounded-lg transition shadow-xs" title="Hapus Tagihan"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+        }
     }
+    
+    if (cardsEl) {
+        cardsEl.innerHTML = '';
+        if (paginationResult.pageData.length === 0) {
+            cardsEl.innerHTML = '<div class="p-6 text-center text-gray-500 text-xs">Belum ada data tagihan.</div>';
+        } else {
+            paginationResult.pageData.forEach(t => {
+                const isLunas = t.Status === 'Lunas';
+                const badge = isLunas
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#edf7f2] text-[#1c6b45]"><i class="fa-solid fa-circle-check mr-1"></i>Lunas</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#fdf2f2] text-[#9a2024]"><i class="fa-solid fa-clock mr-1"></i>Belum Lunas</span>`;
+                cardsEl.innerHTML += `
+                    <div class="p-3.5 rounded-xl border border-gray-200 dark:border-darkborder bg-white dark:bg-darkcard space-y-2.5 text-xs">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <div class="font-bold text-gray-900 dark:text-white text-sm">${t.Nama_Santri}</div>
+                                <div class="font-mono text-[11px] text-[#9a2024]">${t.ID_Santri} • ${t.ID_Tagihan}</div>
+                            </div>
+                            <div>${badge}</div>
+                        </div>
+                        <div class="border-t border-b border-gray-100 dark:border-darkborder py-2 space-y-1">
+                            <div class="text-[10px] uppercase font-bold text-gray-400">${t.Kategori || 'Tagihan'}</div>
+                            <div class="font-semibold text-gray-800 dark:text-gray-200">${t.Judul_Tagihan}</div>
+                            <div class="flex justify-between items-center pt-1">
+                                <span class="text-gray-500">Nominal:</span>
+                                <span class="font-extrabold text-sm text-[#9a2024]">${formatRupiah(t.Nominal)}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px]">
+                                <span class="text-gray-500">Tempo:</span>
+                                <span class="font-medium">${t.Jatuh_Tempo || '-'}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-1.5 pt-1">
+                            ${!isLunas ? `
+                                <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-3 py-1.5 bg-[#1c6b45] text-white rounded-lg font-bold text-xs"><i class="fa-solid fa-check mr-1"></i> Lunas</button>
+                                <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 text-green-700 rounded-lg"><i class="fa-brands fa-whatsapp"></i></button>
+                            ` : `
+                                <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="px-3 py-1.5 bg-[#edf7f2] text-[#1c6b45] rounded-lg font-bold text-xs"><i class="fa-solid fa-file-invoice mr-1"></i> Kwitansi</button>
+                                <button onclick="batalLunasTagihan('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-xs"><i class="fa-solid fa-rotate-left"></i></button>
+                            `}
+                            <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`;
+            });
+        }
+    }
+    
     const pagEl = document.getElementById('paginationTagihan');
     if (pagEl) pagEl.innerHTML = renderPaginationHtml('tagihan', paginationResult.totalPages);
 }
 
+// --- MODAL & OPERASI TAGIHAN ---
 function openModalTagihan(mode = 'INDIVIDU') {
-    document.getElementById('formBuatTagihan').reset();
+    const form = document.getElementById('formBuatTagihan');
+    if (form) form.reset();
+    
     const sel = document.getElementById('inputTagihanSantri');
-    sel.innerHTML = '<option value="ALL_ACTIVE">📢 SELURUH SANTRI AKTIF (Generate Massal)</option>';
-    (state.santri || []).forEach(s => {
-        sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
-    });
-
-    const now = new Date();
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const curMonthYear = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-    document.getElementById('inputTagihanTempo').value = `10 ${curMonthYear}`;
-
-    if (String(mode).toUpperCase() === 'MASSAL') {
-        sel.value = 'ALL_ACTIVE';
-        document.getElementById('inputTagihanKategori').value = 'Syahriyah (SPP)';
-        document.getElementById('inputTagihanJudul').value = `Syahriyah (SPP) Bulan ${curMonthYear}`;
-        document.getElementById('inputTagihanNominal').value = 200000;
-        document.getElementById('inputTagihanCatatan').value = 'SPP Bulanan Santri Mukim';
-    } else {
-        if (state.santri && state.santri.length > 0) sel.value = state.santri[0].ID_Santri;
-        autoFillTagihanPreset(document.getElementById('inputTagihanKategori').value);
+    if (sel) {
+        sel.innerHTML = '<option value="">-- Pilih Santri Penerima --</option>';
+        const santriList = (state.santri || []).filter(s => s.Status !== 'Alumni');
+        santriList.sort((a, b) => (a.Nama_Santri || '').localeCompare(b.Nama_Santri || ''));
+        santriList.forEach(s => {
+            sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
+        });
+        if (santriList.length > 0) sel.value = santriList[0].ID_Santri;
     }
-
+    
+    const now = new Date();
+    const curYear = now.getFullYear();
+    const curMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const defaultDateStr = `${curYear}-${curMonth}-10`;
+    
+    const inputDate = document.getElementById('inputTagihanTempoDate');
+    if (inputDate) inputDate.value = defaultDateStr;
+    
+    const inputPeriode = document.getElementById('inputTagihanPeriode');
+    if (inputPeriode) inputPeriode.value = currentKeuanganPeriode || `${curYear}-${curMonth}`;
+    
+    const inputKategori = document.getElementById('inputTagihanKategori');
+    if (inputKategori) {
+        inputKategori.value = 'Syahriyah (SPP)';
+        autoFillTagihanPreset('Syahriyah (SPP)');
+    }
+    
     const modal = document.getElementById('modalBuatTagihan');
     const content = document.getElementById('modalBuatTagihanContent');
-    modal.classList.remove('hidden');
-    setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+    if (modal && content) {
+        modal.classList.remove('hidden');
+        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+    }
 }
 
 function autoFillTagihanPreset(val) {
     const now = new Date();
-    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const curMonthYear = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
-
+    const curMonthYear = `${INDO_MONTHS_KEU[now.getMonth()]} ${now.getFullYear()}`;
+    
+    const judulEl = document.getElementById('inputTagihanJudul');
+    const nominalEl = document.getElementById('inputTagihanNominal');
+    const catatanEl = document.getElementById('inputTagihanCatatan');
+    
     if (val === 'Syahriyah (SPP)') {
-        document.getElementById('inputTagihanJudul').value = `Syahriyah (SPP) Bulan ${curMonthYear}`;
-        document.getElementById('inputTagihanNominal').value = 200000;
-        document.getElementById('inputTagihanCatatan').value = 'SPP Bulanan Santri Mukim';
+        if (judulEl) judulEl.value = `Syahriyah (SPP) Bulan ${curMonthYear}`;
+        if (nominalEl) nominalEl.value = 200000;
+        if (catatanEl) catatanEl.value = 'SPP Bulanan Santri Mukim';
     } else if (val === 'Pendaftaran & Fasilitas') {
-        document.getElementById('inputTagihanJudul').value = 'Paket Biaya Pendaftaran Santri Mukim (Pendaftaran, Almari, Infaq Gedung, Kesehatan, Kitab)';
-        document.getElementById('inputTagihanNominal').value = 1800000;
-        document.getElementById('inputTagihanCatatan').value = 'Pendaftaran 100rb, Almari 500rb, Gedung 1jt, Kesehatan 100rb, Kitab 100rb';
+        if (judulEl) judulEl.value = 'Paket Biaya Pendaftaran Santri Mukim (Pendaftaran, Almari, Infaq Gedung, Kesehatan, Kitab)';
+        if (nominalEl) nominalEl.value = 1800000;
+        if (catatanEl) catatanEl.value = 'Pendaftaran 100rb, Almari 500rb, Gedung 1jt, Kesehatan 100rb, Kitab 100rb';
     } else if (val === 'Almari') {
-        document.getElementById('inputTagihanJudul').value = 'Biaya Almari Santri';
-        document.getElementById('inputTagihanNominal').value = 500000;
+        if (judulEl) judulEl.value = 'Biaya Almari Santri';
+        if (nominalEl) nominalEl.value = 500000;
+        if (catatanEl) catatanEl.value = 'Fasilitas almari santri baru';
     } else if (val === 'Infaq Gedung') {
-        document.getElementById('inputTagihanJudul').value = 'Infaq Gedung Pesantren';
-        document.getElementById('inputTagihanNominal').value = 1000000;
+        if (judulEl) judulEl.value = 'Infaq Gedung Pesantren';
+        if (nominalEl) nominalEl.value = 1000000;
+        if (catatanEl) catatanEl.value = 'Pengembangan sarana & prasarana pondok';
     } else if (val === 'Kitab & Buku') {
-        document.getElementById('inputTagihanJudul').value = 'Biaya Kitab dan Buku Panduan';
-        document.getElementById('inputTagihanNominal').value = 100000;
+        if (judulEl) judulEl.value = 'Biaya Kitab dan Buku Panduan';
+        if (nominalEl) nominalEl.value = 100000;
+        if (catatanEl) catatanEl.value = 'Paket kitab matan & tajwid';
     } else if (val === 'Kesehatan') {
-        document.getElementById('inputTagihanJudul').value = 'Biaya Kesehatan Santri';
-        document.getElementById('inputTagihanNominal').value = 100000;
+        if (judulEl) judulEl.value = 'Biaya Kesehatan Santri';
+        if (nominalEl) nominalEl.value = 100000;
+        if (catatanEl) catatanEl.value = 'Dana operasional poskestren';
+    } else {
+        if (judulEl) judulEl.value = '';
+        if (nominalEl) nominalEl.value = 0;
+        if (catatanEl) catatanEl.value = '';
     }
 }
 
@@ -657,19 +1349,96 @@ function saveTagihan(e) {
     e.preventDefault();
     AppNotify.loading('Menerbitkan Tagihan...');
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    
+    const dateVal = document.getElementById('inputTagihanTempoDate')?.value;
+    let jatuhTempoStr = dateVal || '';
+    let periodeVal = document.getElementById('inputTagihanPeriode')?.value || '';
+    
+    if (dateVal && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) {
+        const parts = dateVal.split('-');
+        const y = parts[0];
+        const m = parseInt(parts[1], 10);
+        const d = parseInt(parts[2], 10);
+        jatuhTempoStr = `${d} ${INDO_MONTHS_KEU[m - 1]} ${y}`;
+        if (!periodeVal) periodeVal = `${y}-${parts[1]}`;
+    }
+    
     const payload = {
         targetSantri: document.getElementById('inputTagihanSantri').value,
         kategori: document.getElementById('inputTagihanKategori').value,
         judulTagihan: document.getElementById('inputTagihanJudul').value,
         nominal: Number(document.getElementById('inputTagihanNominal').value) || 0,
-        jatuhTempo: document.getElementById('inputTagihanTempo').value,
+        jatuhTempo: jatuhTempoStr,
         status: 'Belum Lunas',
         metodeBayar: '',
-        catatan: document.getElementById('inputTagihanCatatan').value
+        catatan: document.getElementById('inputTagihanCatatan').value,
+        periode: periodeVal
     };
+    
     apiCall('createTagihan', token, payload).then(res => handleRes(res, 'modalBuatTagihan'));
 }
 
+// --- MODAL ATURAN SPP ---
+function openModalAturanSpp() {
+    AppNotify.loading('Memuat Konfigurasi SPP...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    apiCall('getSppConfig', token).then(res => {
+        AppNotify.close();
+        const conf = (res && res.status === 'success' && res.data) ? res.data : {
+            aktif: true,
+            nominal: 200000,
+            kategori: 'Syahriyah (SPP)',
+            tglTerbit: 1,
+            tglJatuhTempo: 10,
+            catatan: 'SPP Bulanan Santri Mukim'
+        };
+        
+        const elAktif = document.getElementById('aturanSppOtomatis');
+        const elNominal = document.getElementById('aturanSppNominal');
+        const elKategori = document.getElementById('aturanSppKategori');
+        const elTerbit = document.getElementById('aturanSppHariTerbit');
+        const elTempo = document.getElementById('aturanSppHariTempo');
+        const elCatatan = document.getElementById('aturanSppCatatan');
+        
+        if (elAktif) elAktif.checked = conf.aktif !== false;
+        if (elNominal) elNominal.value = conf.nominal || 200000;
+        if (elKategori) elKategori.value = conf.kategori || 'Syahriyah (SPP)';
+        if (elTerbit) elTerbit.value = conf.tglTerbit || 1;
+        if (elTempo) elTempo.value = conf.tglJatuhTempo || 10;
+        if (elCatatan) elCatatan.value = conf.catatan || 'SPP Bulanan Santri Mukim';
+        
+        const modal = document.getElementById('modalAturanSpp');
+        const content = document.getElementById('modalAturanSppContent');
+        if (modal && content) {
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+        }
+    }).catch(err => {
+        AppNotify.close();
+        AppNotify.error('Error', 'Gagal memuat aturan SPP: ' + (err.message || ''));
+    });
+}
+
+function saveAturanSppAction(e) {
+    e.preventDefault();
+    AppNotify.loading('Menyimpan Aturan SPP...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    const payload = {
+        aktif: document.getElementById('aturanSppOtomatis')?.checked ?? true,
+        nominal: Number(document.getElementById('aturanSppNominal')?.value) || 200000,
+        kategori: document.getElementById('aturanSppKategori')?.value || 'Syahriyah (SPP)',
+        tglTerbit: Number(document.getElementById('aturanSppHariTerbit')?.value) || 1,
+        tglJatuhTempo: Number(document.getElementById('aturanSppHariTempo')?.value) || 10,
+        catatan: document.getElementById('aturanSppCatatan')?.value || 'SPP Bulanan Santri Mukim'
+    };
+    
+    apiCall('saveSppConfig', token, payload).then(res => {
+        handleRes(res, 'modalAturanSpp');
+        renderCardStatusSpp();
+    });
+}
+
+// --- AKSI PELUNASAN, KWITANSI, WA, & HAPUS ---
 function openModalBayar(idTagihan) {
     const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
     if (!t) return;

@@ -341,53 +341,136 @@
         </div>
     </div>
 
-    <!-- Modal Buat Tagihan SPP / Keuangan (Individu & Massal) -->
+    <!-- Modal Buat Tagihan Santri (Khusus / Satuan) -->
     <div id="modalBuatTagihan" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-4">
         <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform" id="modalBuatTagihanContent">
             <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
-                <h3 class="font-bold text-lg" id="titleModalTagihan">Terbitkan Tagihan SPP / Biaya</h3>
-                <button onclick="closeModal('modalBuatTagihan', 'modalBuatTagihanContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-[#9a2024]/10 text-[#9a2024] flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-file-invoice"></i>
+                    </div>
+                    <h3 class="font-bold text-base text-gray-900 dark:text-white" id="titleModalTagihan">Terbitkan Tagihan Santri</h3>
+                </div>
+                <button type="button" onclick="closeModal('modalBuatTagihan', 'modalBuatTagihanContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <form id="formBuatTagihan" onsubmit="saveTagihan(event)" class="p-5 space-y-4 text-sm">
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Target Penerima Tagihan *</label>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Pilih Santri Penerima *</label>
                     <select id="inputTagihanSantri" class="w-full px-3 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none font-semibold" required>
-                        <option value="ALL_ACTIVE">📢 SELURUH SANTRI AKTIF (Generate Massal)</option>
+                        <!-- Diisi oleh JS -->
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori Biaya *</label>
-                    <select id="inputTagihanKategori" onchange="autoFillTagihanPreset(this.value)" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
-                        <option value="Syahriyah (SPP)">Syahriyah (SPP Bulanan) - Rp 200.000</option>
-                        <option value="Pendaftaran & Fasilitas">Paket Pendaftaran Mukim - Rp 1.800.000</option>
-                        <option value="Almari">Almari Santri - Rp 500.000</option>
-                        <option value="Infaq Gedung">Infaq Gedung - Rp 1.000.000</option>
-                        <option value="Kitab & Buku">Kitab & Buku Panduan - Rp 100.000</option>
-                        <option value="Kesehatan">Kesehatan - Rp 100.000</option>
+                    <select id="inputTagihanKategori" onchange="autoFillTagihanPreset(this.value)" class="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-darkborder rounded-xl outline-none font-medium" required>
+                        <option value="Syahriyah (SPP)">Syahriyah (SPP Bulanan)</option>
+                        <option value="Pendaftaran & Fasilitas">Paket Pendaftaran &amp; Fasilitas Mukim</option>
+                        <option value="Almari">Almari Santri</option>
+                        <option value="Infaq Gedung">Infaq Gedung</option>
+                        <option value="Kitab & Buku">Kitab &amp; Buku Panduan</option>
+                        <option value="Kesehatan">Layanan Kesehatan</option>
                         <option value="Lainnya">Biaya Lainnya (Custom)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul / Keterangan Tagihan *</label>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Judul / Rincian Tagihan *</label>
                     <input type="text" id="inputTagihanJudul" placeholder="Contoh: Syahriyah (SPP) Bulan November 2026" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nominal (Rp) *</label>
-                        <input type="number" id="inputTagihanNominal" value="200000" min="0" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none font-bold text-[#1c6b45]" required>
+                        <input type="number" id="inputTagihanNominal" value="200000" min="0" step="1000" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none font-bold text-[#1c6b45]" required>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Jatuh Tempo</label>
-                        <input type="text" id="inputTagihanTempo" placeholder="Contoh: 10 Nov 2026" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Jatuh Tempo *</label>
+                        <input type="date" id="inputTagihanTempoDate" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none text-xs" required>
                     </div>
                 </div>
+                <input type="hidden" id="inputTagihanPeriode" value="">
                 <div>
-                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Catatan (Opsional)</label>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Catatan Tambahan (Opsional)</label>
                     <input type="text" id="inputTagihanCatatan" placeholder="Keterangan tambahan..." class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
                 </div>
                 <div class="pt-3 flex justify-end gap-2">
                     <button type="button" onclick="closeModal('modalBuatTagihan', 'modalBuatTagihanContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium">Batal</button>
-                    <button type="submit" class="px-5 py-2 bg-[#1c6b45] hover:bg-[#165737] text-white font-semibold rounded-xl shadow-md"><i class="fa-solid fa-paper-plane mr-1.5"></i>Terbitkan</button>
+                    <button type="submit" class="px-5 py-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold rounded-xl shadow-md flex items-center gap-1.5"><i class="fa-solid fa-paper-plane text-xs"></i>Terbitkan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Aturan & Otomatisasi SPP Bulanan -->
+    <div id="modalAturanSpp" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform" id="modalAturanSppContent">
+            <div class="p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-[#9a2024]/10 text-[#9a2024] flex items-center justify-center text-sm font-bold">
+                        <i class="fa-solid fa-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900 dark:text-white">Aturan &amp; Otomatisasi SPP</h3>
+                        <p class="text-[11px] text-gray-400">Penerbitan tagihan terjadwal tanpa klik manual</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('modalAturanSpp', 'modalAturanSppContent')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="formAturanSpp" onsubmit="saveAturanSppAction(event)" class="p-5 space-y-4 text-sm">
+                <!-- Toggle Otomatis -->
+                <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-darkborder flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-gray-900 dark:text-white block text-xs sm:text-sm">Terbitkan Otomatis Tiap Bulan</span>
+                        <span class="text-[11px] text-gray-500 dark:text-gray-400">Idempoten &amp; aman dari duplikasi tagihan</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                        <input type="checkbox" id="aturanSppOtomatis" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1c6b45]"></div>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Nominal SPP (Rp) *</label>
+                        <input type="number" id="aturanSppNominal" min="0" step="5000" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl font-bold text-[#1c6b45] outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Kategori Tagihan</label>
+                        <input type="text" id="aturanSppKategori" value="Syahriyah (SPP)" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1" title="Hari saat tagihan diterbitkan">Tgl Terbit (1–28)</label>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs text-gray-400 font-semibold">Tgl</span>
+                            <input type="number" id="aturanSppHariTerbit" min="1" max="28" value="1" class="w-full px-2 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none font-bold text-center" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1" title="Hari batas akhir pembayaran">Jatuh Tempo (1–28)</label>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs text-gray-400 font-semibold">Tgl</span>
+                            <input type="number" id="aturanSppHariTempo" min="1" max="28" value="10" class="w-full px-2 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none font-bold text-center" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Catatan Default</label>
+                    <input type="text" id="aturanSppCatatan" value="SPP Bulanan Santri Mukim" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl outline-none">
+                </div>
+
+                <div class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info text-sm mt-0.5 shrink-0"></i>
+                    <p>Sistem otomatis menerbitkan SPP setiap bulan. Santri baru yang masuk di pertengahan bulan akan otomatis ikut tertagih pada jadwal berikutnya.</p>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalAturanSpp', 'modalAturanSppContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium">Batal</button>
+                    <button type="submit" class="px-5 py-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold rounded-xl shadow-md flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                        <span>Simpan Aturan</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -808,73 +891,223 @@
     </template>
 
     <template id="tpl-superadmin-keuangan">
-        <div class="mb-6 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+        <!-- Header Keuangan & SPP -->
+        <div class="mb-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
-                <h2 class="text-2xl font-bold">Manajemen Keuangan &amp; Syahriyah (SPP)</h2>
-                <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Kelola tagihan biaya pendaftaran, syahriyah bulanan, dan verifikasi pembayaran wali santri.</p>
+                <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white">Manajemen Keuangan &amp; SPP</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5">Kelola penerbitan SPP otomatis, tagihan santri, dan verifikasi pembayaran.</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <button onclick="openModalTagihan('MASSAL')" class="bg-[#1c6b45] hover:bg-[#165737] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-bullhorn mr-1.5"></i>Terbitkan SPP Massal</button>
-                <button onclick="openModalTagihan('INDIVIDU')" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm"><i class="fa-solid fa-plus mr-1.5"></i>Buat Tagihan Santri</button>
+            
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Navigasi Periode Cerdas -->
+                <div class="inline-flex items-center bg-white dark:bg-darkcard border border-gray-200 dark:border-darkborder rounded-xl p-1 shadow-2xs">
+                    <button onclick="geserPeriodeKeuangan(-1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center transition" title="Bulan Sebelumnya">
+                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                    </button>
+                    <span id="keuanganPeriodeDisplay" class="px-2.5 text-xs sm:text-sm font-bold text-gray-800 dark:text-white whitespace-nowrap">November 2026</span>
+                    <button onclick="geserPeriodeKeuangan(1)" class="w-8 h-8 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center transition" title="Bulan Berikutnya">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </button>
+                    <button onclick="setPeriodeBulanIni()" class="ml-1 px-2.5 py-1 text-[11px] font-semibold bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg transition" title="Kembali ke Bulan Berjalan">
+                        Bulan Ini
+                    </button>
+                </div>
+
+                <!-- Tombol Aturan SPP (Sekunder) -->
+                <button onclick="openModalAturanSpp()" class="px-3 py-2 bg-white dark:bg-darkcard hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-darkborder rounded-xl text-xs sm:text-sm font-semibold transition shadow-2xs flex items-center gap-1.5" title="Konfigurasi Aturan &amp; Otomatisasi SPP">
+                    <i class="fa-solid fa-gear text-[#9a2024]"></i>
+                    <span class="hidden sm:inline">Aturan SPP</span>
+                </button>
+
+                <!-- Tombol Utama: Buat Tagihan -->
+                <button onclick="openModalTagihan('INDIVIDU')" class="bg-[#9a2024] hover:bg-[#871a1e] text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs flex items-center gap-1.5 active:scale-95" title="Buat Tagihan Santri">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Buat Tagihan</span>
+                </button>
             </div>
         </div>
 
-        <!-- 3 Kartu Ringkasan Keuangan (Mobile: 2-Grid Hemat Space) -->
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 mb-5 sm:mb-6">
-            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3 sm:gap-4">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0"><i class="fa-solid fa-circle-check"></i></div>
+        <!-- Kartu Lebar: Status SPP Otomatis & Pelunasan Periode -->
+        <div id="cardStatusSppOtomatis" class="mb-5 bg-white dark:bg-darkcard rounded-2xl p-4 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs">
+            <!-- Konten dinamis di-render oleh renderCardStatusSpp() -->
+        </div>
+
+        <!-- 3 Kartu Ringkasan Keuangan Periode Terpilih -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-5 sm:mb-6">
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-4 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
                 <div class="min-w-0">
-                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Total Lunas</p>
-                    <p class="text-base sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate" id="keuStatLunas">Rp 0</p>
+                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Terkumpul (Lunas)</p>
+                    <p class="text-base sm:text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate" id="keuStatLunas">Rp 0</p>
+                    <span class="text-[10px] text-gray-400 truncate block" id="keuStatLunasSub">0 pembayaran</span>
                 </div>
             </div>
-            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3 sm:gap-4">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center text-lg sm:text-xl shrink-0"><i class="fa-solid fa-clock"></i></div>
+
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-4 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
                 <div class="min-w-0">
                     <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Belum Lunas</p>
-                    <p class="text-base sm:text-2xl font-extrabold text-red-600 dark:text-red-400 mt-0.5 truncate" id="keuStatBelum">Rp 0</p>
+                    <p class="text-base sm:text-xl font-extrabold text-amber-600 dark:text-amber-400 mt-0.5 truncate" id="keuStatBelum">Rp 0</p>
+                    <span class="text-[10px] text-gray-400 truncate block" id="keuStatBelumSub">0 tagihan</span>
                 </div>
             </div>
-            <div class="col-span-2 md:col-span-1 bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3 sm:gap-4">
-                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-lg sm:text-xl shrink-0"><i class="fa-solid fa-receipt"></i></div>
+
+            <div class="col-span-2 md:col-span-1 bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-4 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
                 <div class="min-w-0">
-                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Total Tagihan</p>
-                    <p class="text-base sm:text-2xl font-extrabold text-gray-800 dark:text-white mt-0.5 truncate" id="keuStatTotal">0 Tagihan</p>
+                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Menunggak (Lewat Tempo)</p>
+                    <p class="text-base sm:text-xl font-extrabold text-rose-600 dark:text-rose-400 mt-0.5 truncate" id="keuStatMenunggak">0 Santri</p>
+                    <span class="text-[10px] text-gray-400 truncate block" id="keuStatMenunggakSub">Perlu ditindaklanjuti</span>
                 </div>
             </div>
         </div>
 
+        <!-- 3 TAB KEUANGAN: Perlu Ditagih, Matriks SPP, Semua Tagihan -->
         <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
-            <div class="p-4 border-b border-gray-100 dark:border-darkborder flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-gray-50/50 dark:bg-slate-800/30">
-                <div class="relative w-full max-w-sm">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-sm"></i>
-                    <input type="text" oninput="handleSearch('tagihan', this.value)" placeholder="Cari ID santri / nama tagihan..." class="w-full pl-9 pr-4 py-2 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-[#9a2024]">
+            <div class="border-b border-gray-200 dark:border-darkborder px-4 pt-3 flex gap-4 overflow-x-auto bg-gray-50/50 dark:bg-slate-800/30 scrollbar-none">
+                <button onclick="switchTabKeuangan('perlu-ditagih')" id="tabBtnPerluDitagih" class="pb-3 text-xs sm:text-sm font-bold border-b-2 border-[#9a2024] text-[#9a2024] dark:text-[#f29fa3] flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-bell"></i>
+                    <span>Perlu Ditagih</span>
+                    <span id="badgeCountPerluDitagih" class="px-2 py-0.5 rounded-full text-[10px] bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 font-bold">0</span>
+                </button>
+                <button onclick="switchTabKeuangan('matriks-spp')" id="tabBtnMatriksSpp" class="pb-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-table-cells"></i>
+                    <span>Matriks SPP (12 Bulan)</span>
+                </button>
+                <button onclick="switchTabKeuangan('semua-tagihan')" id="tabBtnSemuaTagihan" class="pb-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-2 whitespace-nowrap transition">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span>Semua Tagihan</span>
+                    <span id="badgeCountSemuaTagihan" class="px-2 py-0.5 rounded-full text-[10px] bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 font-semibold">0</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: PERLU DITAGIH -->
+            <div id="tabContentPerluDitagih" class="p-4 sm:p-5 space-y-4">
+                <!-- Filter Kategori & Pencarian Cepat -->
+                <div class="flex flex-col sm:flex-row justify-between gap-3">
+                    <div class="relative w-full sm:max-w-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-xs"></i>
+                        <input type="text" id="searchPerluDitagih" oninput="renderTabPerluDitagih()" placeholder="Cari santri atau tagihan..." class="w-full pl-8 pr-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl outline-none focus:ring-2 focus:ring-[#9a2024]">
+                    </div>
+                    <!-- Chip Filter Kategori -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="filterKategoriPerluDitagih">
+                        <button onclick="setFilterKatPerluDitagih('ALL')" id="btnKatAll" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#9a2024] text-white transition whitespace-nowrap shadow-2xs">Semua</button>
+                        <button onclick="setFilterKatPerluDitagih('SPP')" id="btnKatSpp" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition whitespace-nowrap">Syahriyah (SPP)</button>
+                        <button onclick="setFilterKatPerluDitagih('LAIN')" id="btnKatLain" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition whitespace-nowrap">Biaya Lainnya</button>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2 text-xs">
-                    <span class="text-gray-500 font-medium">Status:</span>
-                    <select id="filterTagihanStatus" onchange="renderTableTagihan()" class="px-3 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl outline-none font-semibold">
-                        <option value="ALL">Semua Status</option>
-                        <option value="Belum Lunas">Belum Lunas</option>
-                        <option value="Lunas">Sudah Lunas</option>
-                    </select>
+
+                <div id="listPerluDitagih" class="space-y-3">
+                    <!-- Di-render oleh renderTabPerluDitagih() -->
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
-                            <th class="p-4">No. Invoice</th>
-                            <th class="p-4">Santri</th>
-                            <th class="p-4">Rincian Tagihan</th>
-                            <th class="p-4">Nominal</th>
-                            <th class="p-4">Status &amp; Tgl Bayar</th>
-                            <th class="p-4 text-center">Aksi Bendahara</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableTagihanBody" class="divide-y divide-gray-100 dark:divide-darkborder text-sm"></tbody>
-                </table>
+
+            <!-- TAB 2: MATRIKS SPP 12 BULAN -->
+            <div id="tabContentMatriksSpp" class="hidden p-4 sm:p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Tahun Buku:</span>
+                        <div class="inline-flex items-center bg-gray-100 dark:bg-slate-800 rounded-xl p-1">
+                            <button onclick="geserTahunMatriks(-1)" class="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 flex items-center justify-center transition">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <span id="matriksTahunDisplay" class="px-3 text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white">2026</span>
+                            <button onclick="geserTahunMatriks(1)" class="w-7 h-7 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 flex items-center justify-center transition">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative w-full sm:max-w-xs">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-xs"></i>
+                        <input type="text" id="searchMatriksSantri" oninput="renderTabMatriksSpp()" placeholder="Cari nama atau ID santri..." class="w-full pl-8 pr-3 py-2 text-xs sm:text-sm bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl outline-none focus:ring-2 focus:ring-[#9a2024]">
+                    </div>
+                </div>
+
+                <!-- Legenda Status Matriks -->
+                <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 bg-gray-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <span class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold">✓</span> Lunas</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Belum Lunas (Lewat Tempo)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span> Belum Lunas (Belum Tempo)</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-gray-300 dark:bg-slate-600 inline-block"></span> Belum Ada Tagihan</span>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-darkborder">
+                    <table class="w-full text-left text-xs border-collapse" id="tableMatriksSpp">
+                        <thead class="bg-gray-50 dark:bg-slate-800 text-gray-600 dark:text-gray-300 font-bold border-b border-gray-200 dark:border-darkborder">
+                            <tr>
+                                <th class="p-3 sticky left-0 bg-gray-50 dark:bg-slate-800 z-10 min-w-[160px] border-r border-gray-200 dark:border-darkborder">Nama Santri</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Jan</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Feb</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Mar</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Apr</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Mei</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Jun</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Jul</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Agu</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Sep</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Okt</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Nov</th>
+                                <th class="p-2.5 text-center min-w-[50px]">Des</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyMatriksSpp" class="divide-y divide-gray-100 dark:divide-darkborder">
+                            <!-- Diisi oleh JS -->
+                        </tbody>
+                        <tfoot id="footMatriksSpp" class="bg-gray-50 dark:bg-slate-800 font-bold text-gray-700 dark:text-gray-200 border-t-2 border-gray-300 dark:border-darkborder">
+                            <!-- Diisi oleh JS -->
+                        </tfoot>
+                    </table>
+                </div>
             </div>
-            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationTagihan"></div>
+
+            <!-- TAB 3: SEMUA TAGIHAN -->
+            <div id="tabContentSemuaTagihan" class="hidden p-4 sm:p-5 space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-gray-50/50 dark:bg-slate-800/30 p-3 rounded-xl border border-gray-100 dark:border-darkborder">
+                    <div class="relative w-full sm:max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400 text-xs"></i>
+                        <input type="text" oninput="handleSearch('tagihan', this.value)" placeholder="Cari santri, no invoice, atau tagihan..." class="w-full pl-8 pr-3 py-2 text-xs sm:text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl outline-none focus:ring-2 focus:ring-[#9a2024]">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Filter Status Chips -->
+                        <div class="flex items-center gap-1">
+                            <button onclick="setFilterStatusSemuaTagihan('ALL')" id="btnStatusAll" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-[#9a2024] text-white transition">Semua</button>
+                            <button onclick="setFilterStatusSemuaTagihan('Belum Lunas')" id="btnStatusBelum" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition">Belum Lunas</button>
+                            <button onclick="setFilterStatusSemuaTagihan('Lunas')" id="btnStatusLunas" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 transition">Lunas</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tampilan Mobile: Kartu | Desktop: Tabel -->
+                <div class="hidden md:block overflow-x-auto rounded-xl border border-gray-200 dark:border-darkborder">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 dark:bg-slate-800 text-xs text-gray-500 uppercase tracking-wider border-b border-gray-200 dark:border-darkborder">
+                                <th class="p-3.5">Invoice / Santri</th>
+                                <th class="p-3.5">Rincian Tagihan</th>
+                                <th class="p-3.5">Nominal</th>
+                                <th class="p-3.5">Jatuh Tempo</th>
+                                <th class="p-3.5">Status</th>
+                                <th class="p-3.5 text-center">Aksi Bendahara</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableTagihanBody" class="divide-y divide-gray-100 dark:divide-darkborder">
+                            <!-- Diisi oleh JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="cardsTagihanMobile" class="md:hidden space-y-3">
+                    <!-- Diisi oleh JS untuk kartu mobile -->
+                </div>
+
+                <div class="p-3 border-t border-gray-100 dark:border-darkborder flex items-center justify-between" id="paginationTagihan"></div>
+            </div>
         </div>
     </template>
 

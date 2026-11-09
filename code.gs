@@ -149,6 +149,22 @@ function doPost(e) {
         result = createTagihan(args[0], args[1]);
         break;
 
+      case 'getSppConfig':
+        result = getSppConfig(args[0]);
+        break;
+
+      case 'saveSppConfig':
+        result = saveSppConfig(args[0], args[1]);
+        break;
+
+      case 'getStatusSpp':
+        result = getStatusSpp(args[0], args[1]);
+        break;
+
+      case 'terbitkanSppSekarang':
+        result = terbitkanSppSekarang(args[0], args[1]);
+        break;
+
       case 'bayarTagihan':
         result = bayarTagihan(args[0], args[1], args[2], args[3]);
         break;
@@ -223,8 +239,38 @@ const SHEET_CONFIG = {
     "Nama_Wali", "No_HP_Wali", "ID_Ustadz", "Status", "Timestamp"
   ],
   "Data_Setoran": ["ID_Setoran", "ID_Santri", "ID_Ustadz", "Tingkatan", "TM", "Jenis", "Juz", "Surah", "SurahNo", "Ayat", "Halaman", "Predikat", "Catatan", "Tanggal", "ParafUstadz"],
-  "Data_Tagihan": ["ID_Tagihan", "ID_Santri", "Kategori", "Judul_Tagihan", "Nominal", "Jatuh_Tempo", "Status", "Tgl_Bayar", "Metode_Bayar", "Catatan", "Timestamp"]
+  "Data_Tagihan": ["ID_Tagihan", "ID_Santri", "Kategori", "Judul_Tagihan", "Nominal", "Jatuh_Tempo", "Status", "Tgl_Bayar", "Metode_Bayar", "Catatan", "Timestamp", "Periode"]
 };
+
+// Helper: Parser Bulan & Tahun Indonesia (contoh "November 2026" -> "2026-11")
+function parseBulanTahunId_(text) {
+  if (!text) return "";
+  const months = {
+    "januari": "01", "jan": "01",
+    "februari": "02", "feb": "02",
+    "maret": "03", "mar": "03",
+    "april": "04", "apr": "04",
+    "mei": "05",
+    "juni": "06", "jun": "06",
+    "juli": "07", "jul": "07",
+    "agustus": "08", "agu": "08", "agt": "08",
+    "september": "09", "sep": "09",
+    "oktober": "10", "okt": "10",
+    "november": "11", "nov": "11",
+    "desember": "12", "des": "12"
+  };
+  const t = String(text).toLowerCase();
+  for (let m in months) {
+    const regex = new RegExp(m + "[^0-9]*([2][0-9]{3})", "i");
+    const match = t.match(regex);
+    if (match) {
+      return match[1] + "-" + months[m];
+    }
+  }
+  const matchYearMonth = t.match(/([2][0-9]{3})[-/](0[1-9]|1[0-2])/);
+  if (matchYearMonth) return matchYearMonth[1] + "-" + matchYearMonth[2];
+  return "";
+}
 
 function setupDatabase() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -264,8 +310,46 @@ function setupDatabase() {
   if (!currentPeng.find(x => x.Key === "Config_PSB")) {
     pengSheet.appendRow(["Config_PSB", JSON.stringify(DEFAULT_PSB_CONFIG), new Date()]);
   }
+  if (!currentPeng.find(x => x.Key === "Config_SPP")) {
+    const defaultSppConfig = {
+      "nominal": 200000,
+      "hariTerbit": 1,
+      "hariTempo": 10,
+      "otomatis": true,
+      "kategori": "Syahriyah (SPP)",
+      "catatan": "SPP Bulanan Santri Mukim"
+    };
+    pengSheet.appendRow(["Config_SPP", JSON.stringify(defaultSppConfig), new Date()]);
+    pasangTriggerSpp_();
+  }
 
-  return createResponse(true, null, "Database berhasil disiapkan & kolom dimutakhirkan. Refresh aplikasi Anda.");
+  // Backfill Data_Tagihan: Isi kolom Periode yang masih kosong pada tagihan Syahriyah/SPP
+  const tagihanSheet = ss.getSheetByName("Data_Tagihan");
+  if (tagihanSheet && tagihanSheet.getLastRow() > 1) {
+    const tData = tagihanSheet.getDataRange().getValues();
+    const tHeaders = tData[0];
+    const colPeriodeIdx = tHeaders.indexOf("Periode") + 1;
+    const colJudulIdx = tHeaders.indexOf("Judul_Tagihan");
+    const colKatIdx = tHeaders.indexOf("Kategori");
+
+    if (colPeriodeIdx > 0 && colJudulIdx >= 0) {
+      for (let i = 1; i < tData.length; i++) {
+        const row = tData[i];
+        const curPeriode = String(row[colPeriodeIdx - 1] || "").trim();
+        const curKat = String(row[colKatIdx] || "");
+        const curJudul = String(row[colJudulIdx] || "");
+
+        if (!curPeriode && (curKat.includes("SPP") || curKat.includes("Syahriyah") || curJudul.includes("SPP") || curJudul.includes("Syahriyah"))) {
+          const parsed = parseBulanTahunId_(curJudul);
+          if (parsed) {
+            tagihanSheet.getRange(i + 1, colPeriodeIdx).setValue(parsed);
+          }
+        }
+      }
+    }
+  }
+
+  return createResponse(true, null, "Database berhasil disiapkan, kolom Periode dimutakhirkan & data SPP lama di-backfill. Refresh aplikasi Anda.");
 }
 
 function getSheetDataAsObjects(sheetName) {
@@ -551,6 +635,7 @@ function registerCalonSantriOnline(data) {
       sheetTagihan.appendRow(headersTagihan.map(function(h) { return tagihan1.hasOwnProperty(h) ? tagihan1[h] : ""; }));
 
       // Tagihan 2: Syahriyah (SPP) Bulan Pertama (Dinamis dari Pengaturan)
+      const currentMonthStr = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM");
       const tagihan2 = {
         "ID_Tagihan": "INV-" + timePrefix + "-002",
         "ID_Santri": newId,
@@ -562,7 +647,8 @@ function registerCalonSantriOnline(data) {
         "Tgl_Bayar": "-",
         "Metode_Bayar": "-",
         "Catatan": "Syahriyah Bulanan Standar",
-        "Timestamp": new Date()
+        "Timestamp": new Date(),
+        "Periode": currentMonthStr
       };
       sheetTagihan.appendRow(headersTagihan.map(function(h) { return tagihan2.hasOwnProperty(h) ? tagihan2[h] : ""; }));
     }
@@ -821,68 +907,414 @@ function createTagihan(token, payloadData) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Tagihan");
     if (!sheet) return createResponse(false, null, "Sheet Data_Tagihan belum ada. Silakan jalankan 'Setup Database'.");
 
+    const target = String(payloadData.targetSantri || payloadData.target || payloadData.idSantri || "").trim();
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const santriList = getSheetDataAsObjects("Data_Santri");
 
-    // Mode 1: Generate Massal (misal: SPP Bulanan ke semua santri aktif)
-    if (payloadData.target === 'ALL_ACTIVE' || payloadData.idSantri === 'ALL_ACTIVE') {
-      const activeSantris = santriList.filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
-      if (activeSantris.length === 0) {
-        return createResponse(false, null, "Tidak ada santri aktif untuk diterbitkan tagihan.");
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (e) {
+      return createResponse(false, null, "Server sibuk. Silakan coba beberapa saat lagi.");
+    }
+
+    try {
+      const now = new Date();
+      const timeMs = now.getTime();
+      let periodeVal = payloadData.periode || "";
+      if (!periodeVal && (payloadData.kategori || "").includes("SPP")) {
+        periodeVal = parseBulanTahunId_(payloadData.judulTagihan) || Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM");
       }
 
-      let count = 0;
-      const timePrefix = new Date().getTime().toString().slice(-4);
-      activeSantris.forEach(function(s, idx) {
-        const idTagihan = "INV-" + timePrefix + "-" + (idx + 1).toString().padStart(3, '0');
+      // Mode 1: Generate Massal (misal: SPP Bulanan ke semua santri aktif)
+      if (target === 'ALL_ACTIVE') {
+        const activeSantris = santriList.filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+        if (activeSantris.length === 0) {
+          return createResponse(false, null, "Tidak ada santri aktif untuk diterbitkan tagihan.");
+        }
+
+        const newRows = [];
+        activeSantris.forEach(function(s, idx) {
+          const idTagihan = "INV-" + timeMs + "-" + (idx + 1).toString().padStart(3, '0');
+          const rowObj = {
+            "ID_Tagihan": idTagihan,
+            "ID_Santri": s.ID_Santri,
+            "Kategori": payloadData.kategori || "Syahriyah (SPP)",
+            "Judul_Tagihan": payloadData.judulTagihan || "Syahriyah (SPP)",
+            "Nominal": Number(payloadData.nominal) || 0,
+            "Jatuh_Tempo": payloadData.jatuhTempo || "-",
+            "Status": "Belum Lunas",
+            "Tgl_Bayar": "-",
+            "Metode_Bayar": "-",
+            "Catatan": payloadData.catatan || "",
+            "Timestamp": now,
+            "Periode": periodeVal
+          };
+          newRows.push(headers.map(function(h) { return rowObj.hasOwnProperty(h) ? rowObj[h] : ""; }));
+        });
+
+        const startRow = sheet.getLastRow() + 1;
+        sheet.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+        return createResponse(true, { count: newRows.length }, newRows.length + " tagihan berhasil diterbitkan!");
+      } else {
+        // Mode 2: Tagihan Individu per santri
+        const valid = validateRequired({
+          "Santri": target,
+          "Judul Tagihan": payloadData.judulTagihan,
+          "Nominal": payloadData.nominal
+        });
+        if (valid) return valid;
+
+        const idTagihan = "INV-" + timeMs + "-" + Math.floor(100 + Math.random() * 900);
         const rowObj = {
           "ID_Tagihan": idTagihan,
-          "ID_Santri": s.ID_Santri,
-          "Kategori": payloadData.kategori || "SPP Bulanan",
-          "Judul_Tagihan": payloadData.judulTagihan || "SPP Bulanan",
+          "ID_Santri": target.toUpperCase(),
+          "Kategori": payloadData.kategori || "Lainnya",
+          "Judul_Tagihan": String(payloadData.judulTagihan).trim(),
           "Nominal": Number(payloadData.nominal) || 0,
           "Jatuh_Tempo": payloadData.jatuhTempo || "-",
           "Status": "Belum Lunas",
           "Tgl_Bayar": "-",
           "Metode_Bayar": "-",
           "Catatan": payloadData.catatan || "",
-          "Timestamp": new Date()
+          "Timestamp": now,
+          "Periode": periodeVal
         };
 
         const newRow = headers.map(function(h) { return rowObj.hasOwnProperty(h) ? rowObj[h] : ""; });
         sheet.appendRow(newRow);
-        count++;
-      });
+        return createResponse(true, { idTagihan: idTagihan }, "Tagihan berhasil diterbitkan untuk santri.");
+      }
+    } finally {
+      lock.releaseLock();
+    }
+  });
+}
 
-      return createResponse(true, { count: count }, count + " tagihan SPP massal berhasil diterbitkan!");
+function getSppConfig(token) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
+    if (p && p.Value) {
+      try {
+        const parsed = JSON.parse(p.Value);
+        return createResponse(true, parsed, "Konfigurasi SPP berhasil dimuat");
+      } catch (err) {}
+    }
+    let defaultNominal = 200000;
+    try {
+      const psb = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_PSB");
+      if (psb && psb.Value) {
+        const parsedPsb = JSON.parse(psb.Value);
+        if (parsedPsb.sppBulanan) defaultNominal = Number(parsedPsb.sppBulanan) || 200000;
+      }
+    } catch(e) {}
+
+    const cfg = {
+      nominal: defaultNominal,
+      hariTerbit: 1,
+      hariTempo: 10,
+      otomatis: true,
+      kategori: "Syahriyah (SPP)",
+      catatan: "SPP Bulanan Santri Mukim"
+    };
+    return createResponse(true, cfg, "Konfigurasi SPP default");
+  });
+}
+
+function saveSppConfig(token, configData) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Pengaturan");
+    if (!sheet) return createResponse(false, null, "Sheet Pengaturan tidak ditemukan");
+
+    const data = sheet.getDataRange().getValues();
+    const parsedObj = typeof configData === "string" ? JSON.parse(configData) : configData;
+    const jsonStr = JSON.stringify(parsedObj);
+    let found = false;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === "Config_SPP") {
+        sheet.getRange(i + 1, 2).setValue(jsonStr);
+        sheet.getRange(i + 1, 3).setValue(new Date());
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      sheet.appendRow(["Config_SPP", jsonStr, new Date()]);
+    }
+
+    if (parsedObj.otomatis) {
+      pasangTriggerSpp_();
     } else {
-      // Mode 2: Tagihan Individu per santri
-      const valid = validateRequired({
-        "Santri": payloadData.idSantri,
-        "Judul Tagihan": payloadData.judulTagihan,
-        "Nominal": payloadData.nominal
-      });
-      if (valid) return valid;
+      hapusTriggerSpp_();
+    }
 
-      const idTagihan = "INV-" + new Date().getTime().toString().slice(-6);
+    if (parsedObj.nominal) {
+      try {
+        for (let i = 1; i < data.length; i++) {
+          if (data[i][0] === "Config_PSB") {
+            const psbObj = JSON.parse(data[i][1] || "{}");
+            psbObj.sppBulanan = Number(parsedObj.nominal) || 200000;
+            sheet.getRange(i + 1, 2).setValue(JSON.stringify(psbObj));
+            break;
+          }
+        }
+      } catch(e) {}
+    }
+
+    return createResponse(true, parsedObj, "Konfigurasi SPP & Otomatisasi berhasil disimpan!");
+  });
+}
+
+function pasangTriggerSpp_() {
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (let i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === "autoTerbitSppHarian") {
+        return;
+      }
+    }
+    ScriptApp.newTrigger("autoTerbitSppHarian")
+      .timeBased()
+      .everyDays(1)
+      .atHour(1)
+      .create();
+  } catch (err) {
+    Logger.log("Gagal memasang trigger SPP: " + err.message);
+  }
+}
+
+function hapusTriggerSpp_() {
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+    for (let i = 0; i < triggers.length; i++) {
+      if (triggers[i].getHandlerFunction() === "autoTerbitSppHarian") {
+        ScriptApp.deleteTrigger(triggers[i]);
+      }
+    }
+  } catch (err) {
+    Logger.log("Gagal menghapus trigger SPP: " + err.message);
+  }
+}
+
+function terbitkanSppPeriode_(periode, opsi) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetTagihan = ss.getSheetByName("Data_Tagihan");
+  if (!sheetTagihan) return { status: 'error', message: "Sheet Data_Tagihan tidak ditemukan" };
+
+  const targetPeriode = (periode || Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM")).trim();
+  const parts = targetPeriode.split("-");
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+
+  const monthNames = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
+  const namaBulan = monthNames[month - 1] || "Bulan";
+
+  let sppConfig = { nominal: 200000, hariTerbit: 1, hariTempo: 10, otomatis: true, kategori: "Syahriyah (SPP)", catatan: "SPP Bulanan Santri Mukim" };
+  try {
+    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
+    if (p && p.Value) sppConfig = Object.assign(sppConfig, JSON.parse(p.Value));
+  } catch(e) {}
+
+  const maxDays = new Date(year, month, 0).getDate();
+  const tempoDay = Math.min(Number(sppConfig.hariTempo) || 10, maxDays);
+  const jatuhTempoStr = tempoDay + " " + namaBulan + " " + year;
+  const judulStr = "Syahriyah (SPP) Bulan " + namaBulan + " " + year;
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(20000);
+  } catch (e) {
+    return { status: 'error', message: "Server sibuk. Gagal mendapatkan lock." };
+  }
+
+  try {
+    const headers = sheetTagihan.getRange(1, 1, 1, sheetTagihan.getLastColumn()).getValues()[0];
+    const santriList = getSheetDataAsObjects("Data_Santri");
+    let activeSantris = santriList.filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+
+    if (opsi && Array.isArray(opsi.hanyaSantriIds) && opsi.hanyaSantriIds.length > 0) {
+      const allowedSet = new Set(opsi.hanyaSantriIds.map(id => String(id).trim().toUpperCase()));
+      activeSantris = activeSantris.filter(s => allowedSet.has(String(s.ID_Santri).trim().toUpperCase()));
+    }
+
+    const allTagihan = getSheetDataAsObjects("Data_Tagihan");
+    const alreadyBilledSantriIds = new Set();
+
+    allTagihan.forEach(function(t) {
+      const kat = (t.Kategori || "").toLowerCase();
+      const jud = (t.Judul_Tagihan || "").toLowerCase();
+      const isSpp = kat.includes("spp") || kat.includes("syahriyah") || jud.includes("spp") || jud.includes("syahriyah");
+      if (!isSpp) return;
+
+      const per = t.Periode || parseBulanTahunId_(t.Judul_Tagihan);
+      if (per === targetPeriode || jud.includes(namaBulan.toLowerCase() + " " + year)) {
+        alreadyBilledSantriIds.add(String(t.ID_Santri).trim().toUpperCase());
+      }
+    });
+
+    const toBillSantris = activeSantris.filter(s => !alreadyBilledSantriIds.has(String(s.ID_Santri).trim().toUpperCase()));
+    const dilewatiCount = activeSantris.length - toBillSantris.length;
+
+    if (toBillSantris.length === 0) {
+      return {
+        status: 'success',
+        dibuat: 0,
+        dilewati: dilewatiCount,
+        periode: targetPeriode,
+        message: "Seluruh santri aktif (" + activeSantris.length + " santri) sudah memiliki tagihan SPP untuk periode " + targetPeriode
+      };
+    }
+
+    const now = new Date();
+    const timeMs = now.getTime();
+    const newRows = [];
+
+    toBillSantris.forEach(function(s, idx) {
+      const idTagihan = "INV-" + timeMs + "-" + (idx + 1).toString().padStart(3, '0');
       const rowObj = {
         "ID_Tagihan": idTagihan,
-        "ID_Santri": String(payloadData.idSantri).trim().toUpperCase(),
-        "Kategori": payloadData.kategori || "Lainnya",
-        "Judul_Tagihan": String(payloadData.judulTagihan).trim(),
-        "Nominal": Number(payloadData.nominal) || 0,
-        "Jatuh_Tempo": payloadData.jatuhTempo || "-",
+        "ID_Santri": s.ID_Santri,
+        "Kategori": sppConfig.kategori || "Syahriyah (SPP)",
+        "Judul_Tagihan": judulStr,
+        "Nominal": Number(sppConfig.nominal) || 200000,
+        "Jatuh_Tempo": jatuhTempoStr,
         "Status": "Belum Lunas",
         "Tgl_Bayar": "-",
         "Metode_Bayar": "-",
-        "Catatan": payloadData.catatan || "",
-        "Timestamp": new Date()
+        "Catatan": sppConfig.catatan || "SPP Bulanan Santri Mukim",
+        "Timestamp": now,
+        "Periode": targetPeriode
       };
+      newRows.push(headers.map(function(h) { return rowObj.hasOwnProperty(h) ? rowObj[h] : ""; }));
+    });
 
-      const newRow = headers.map(function(h) { return rowObj.hasOwnProperty(h) ? rowObj[h] : ""; });
-      sheet.appendRow(newRow);
-      return createResponse(true, { idTagihan: idTagihan }, "Tagihan berhasil diterbitkan untuk santri.");
+    const startRow = sheetTagihan.getLastRow() + 1;
+    sheetTagihan.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+
+    return {
+      status: 'success',
+      dibuat: newRows.length,
+      dilewati: dilewatiCount,
+      periode: targetPeriode,
+      message: newRows.length + " tagihan SPP berhasil diterbitkan untuk periode " + namaBulan + " " + year + " (" + dilewatiCount + " santri sudah ditagih sebelumnya)."
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Fungsi Trigger Harian Otomatis (tanpa token, tidak terdaftar di doPost)
+function autoTerbitSppHarian() {
+  try {
+    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
+    if (!p || !p.Value) return;
+    const cfg = JSON.parse(p.Value);
+    if (!cfg.otomatis) return;
+
+    const today = new Date();
+    const dayOfMonth = parseInt(Utilities.formatDate(today, "Asia/Jakarta", "d"), 10);
+    const hariTerbit = parseInt(cfg.hariTerbit, 10) || 1;
+
+    if (dayOfMonth < hariTerbit) return;
+
+    const currentPeriode = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
+    const result = terbitkanSppPeriode_(currentPeriode);
+    Logger.log("autoTerbitSppHarian selesai untuk " + currentPeriode + ": " + JSON.stringify(result));
+  } catch (err) {
+    Logger.log("Error pada autoTerbitSppHarian: " + err.message);
+  }
+}
+
+function getStatusSpp(token, periode) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const targetPeriode = (periode || Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM")).trim();
+    const parts = targetPeriode.split("-");
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    const namaBulan = monthNames[month - 1] || "Bulan";
+
+    let sppConfig = { nominal: 200000, hariTerbit: 1, hariTempo: 10, otomatis: true, kategori: "Syahriyah (SPP)", catatan: "SPP Bulanan Santri Mukim" };
+    try {
+      const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
+      if (p && p.Value) sppConfig = Object.assign(sppConfig, JSON.parse(p.Value));
+    } catch(e) {}
+
+    const santriList = getSheetDataAsObjects("Data_Santri");
+    const activeSantris = santriList.filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+    const allTagihan = getSheetDataAsObjects("Data_Tagihan");
+
+    const billedMap = new Map();
+    allTagihan.forEach(function(t) {
+      const kat = (t.Kategori || "").toLowerCase();
+      const jud = (t.Judul_Tagihan || "").toLowerCase();
+      const isSpp = kat.includes("spp") || kat.includes("syahriyah") || jud.includes("spp") || jud.includes("syahriyah");
+      if (!isSpp) return;
+
+      const per = t.Periode || parseBulanTahunId_(t.Judul_Tagihan);
+      if (per === targetPeriode || jud.includes(namaBulan.toLowerCase() + " " + year)) {
+        billedMap.set(String(t.ID_Santri).trim().toUpperCase(), t);
+      }
+    });
+
+    const sudahDitagihSantris = [];
+    const belumDitagihSantris = [];
+
+    activeSantris.forEach(function(s) {
+      const cleanId = String(s.ID_Santri).trim().toUpperCase();
+      if (billedMap.has(cleanId)) {
+        sudahDitagihSantris.push({
+          idSantri: s.ID_Santri,
+          namaSantri: s.Nama_Santri,
+          tagihan: billedMap.get(cleanId)
+        });
+      } else {
+        belumDitagihSantris.push({
+          idSantri: s.ID_Santri,
+          namaSantri: s.Nama_Santri
+        });
+      }
+    });
+
+    return createResponse(true, {
+      periode: targetPeriode,
+      namaPeriode: namaBulan + " " + year,
+      totalAktif: activeSantris.length,
+      sudahDitagih: sudahDitagihSantris.length,
+      belumDitagih: belumDitagihSantris,
+      nominal: Number(sppConfig.nominal) || 200000,
+      otomatis: !!sppConfig.otomatis,
+      hariTerbit: Number(sppConfig.hariTerbit) || 1,
+      hariTempo: Number(sppConfig.hariTempo) || 10
+    }, "Status SPP periode " + targetPeriode);
+  });
+}
+
+function terbitkanSppSekarang(token, periode) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const res = terbitkanSppPeriode_(periode);
+    if (res.status === 'error') {
+      return createResponse(false, null, res.message);
     }
+    return createResponse(true, res, res.message);
   });
 }
 

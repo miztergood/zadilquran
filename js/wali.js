@@ -403,6 +403,56 @@ function renderWaliList() {
     }
 }
 
+const INDO_MONTHS_WALI = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+function parseTempoWali(tempoStr) {
+    if (!tempoStr) return null;
+    const str = String(tempoStr).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        const parts = str.split('-');
+        return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+    for (let i = 0; i < INDO_MONTHS_WALI.length; i++) {
+        const mName = INDO_MONTHS_WALI[i];
+        const regex = new RegExp('(\\d{1,2})\\s+' + mName + '\\s+(\\d{4})', 'i');
+        const match = str.match(regex);
+        if (match) {
+            const d = parseInt(match[1], 10);
+            const y = parseInt(match[2], 10);
+            return new Date(y, i, d);
+        }
+    }
+    try {
+        const d = new Date(str);
+        if (!isNaN(d.getTime())) return d;
+    } catch (e) {}
+    return null;
+}
+
+function hitungStatusTempoWali(t) {
+    if (!t) return { status: 'normal', text: '-' };
+    if (t.Status === 'Lunas') return { status: 'lunas', text: 'Lunas' };
+    
+    const dueDate = parseTempoWali(t.Jatuh_Tempo);
+    if (!dueDate) return { status: 'normal', text: t.Jatuh_Tempo || '-' };
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = today.getTime() - dueDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+        return { status: 'overdue', days: diffDays, text: `Terlambat ${diffDays} hari` };
+    } else if (diffDays >= -7) {
+        const sisa = Math.abs(diffDays);
+        return { status: 'due-soon', days: sisa, text: sisa === 0 ? 'Jatuh tempo hari ini' : `Jatuh tempo ${sisa} hari lagi` };
+    } else {
+        return { status: 'normal', text: `Tempo: ${t.Jatuh_Tempo}` };
+    }
+}
+
 function renderWaliKeuangan() {
     const myTagihan = state.tagihan || [];
     const listEl = document.getElementById('waliTagihanList');
@@ -443,20 +493,55 @@ function renderWaliKeuangan() {
             </div>
         `;
     } else {
-        myTagihan.forEach(t => {
+        // Sort: Belum lunas selalu di atas (overdue terbanyak pertama, lalu tempo terdekat), lalu Lunas
+        unpaidList.sort((a, b) => {
+            const ketA = hitungStatusTempoWali(a);
+            const ketB = hitungStatusTempoWali(b);
+            const daysA = ketA.status === 'overdue' ? ketA.days : -9999;
+            const daysB = ketB.status === 'overdue' ? ketB.days : -9999;
+            if (daysA !== daysB) return daysB - daysA;
+            const dateA = parseTempoWali(a.Jatuh_Tempo) || new Date(0);
+            const dateB = parseTempoWali(b.Jatuh_Tempo) || new Date(0);
+            return dateA - dateB;
+        });
+
+        paidList.sort((a, b) => {
+            const timeA = new Date(a.Tgl_Bayar || a.Timestamp || 0).getTime();
+            const timeB = new Date(b.Tgl_Bayar || b.Timestamp || 0).getTime();
+            return timeB - timeA;
+        });
+
+        const sortedTagihan = [...unpaidList, ...paidList];
+
+        sortedTagihan.forEach(t => {
             const isLunas = t.Status === 'Lunas';
             const borderLeft = isLunas ? 'bg-[#1c6b45]' : 'bg-[#9a2024]';
-            const badge = isLunas
-                ? `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]"><i class="fa-solid fa-circle-check mr-1"></i>LUNAS</span>`
-                : `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/50 dark:text-[#f29fa3]"><i class="fa-solid fa-clock mr-1"></i>BELUM LUNAS</span>`;
+            const ket = hitungStatusTempoWali(t);
+
+            let badge = '';
+            let dueChip = '';
+
+            if (isLunas) {
+                badge = `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]"><i class="fa-solid fa-circle-check mr-1"></i>LUNAS</span>`;
+            } else {
+                badge = `<span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/50 dark:text-[#f29fa3]"><i class="fa-solid fa-clock mr-1"></i>BELUM LUNAS</span>`;
+                if (ket.status === 'overdue') {
+                    dueChip = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300"><i class="fa-solid fa-triangle-exclamation text-[9px]"></i> ${ket.text}</span>`;
+                } else if (ket.status === 'due-soon') {
+                    dueChip = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300"><i class="fa-solid fa-clock text-[9px]"></i> ${ket.text}</span>`;
+                }
+            }
 
             listEl.innerHTML += `
                 <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-4 overflow-hidden relative">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 ${borderLeft}"></div>
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">${t.Kategori || 'Administrasi'}</span>
-                            <h4 class="font-bold text-gray-900 dark:text-white text-sm leading-snug">${t.Judul_Tagihan}</h4>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400">${t.Kategori || 'Administrasi'}</span>
+                                ${dueChip}
+                            </div>
+                            <h4 class="font-bold text-gray-900 dark:text-white text-sm leading-snug mt-0.5">${t.Judul_Tagihan}</h4>
                         </div>
                         ${badge}
                     </div>
@@ -471,7 +556,10 @@ function renderWaliKeuangan() {
                                 <i class="fa-solid fa-file-invoice text-xs"></i>
                                 <span>Unduh Kwitansi</span>
                                </button>`
-                            : `<button onclick="konfirmasiBayarWaliWa('${t.ID_Tagihan}')" class="text-[#1c6b45] dark:text-[#83c9a6] font-bold hover:underline flex items-center gap-1"><i class="fa-brands fa-whatsapp"></i> Konfirmasi Bayar</button>`
+                            : `<button onclick="konfirmasiBayarWaliWa('${t.ID_Tagihan}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition active:scale-95" title="Konfirmasi Bayar via WhatsApp">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                                <span>Konfirmasi Bayar</span>
+                               </button>`
                         }
                     </div>
                 </div>
@@ -483,14 +571,22 @@ function renderWaliKeuangan() {
 function konfirmasiBayarWaliWa(idTagihan = null) {
     const s = state.santri;
     if (!s) return;
-    const t = idTagihan ? (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan) : null;
+    const myTagihan = state.tagihan || [];
+    let t = null;
+    if (idTagihan) {
+        t = myTagihan.find(x => x.ID_Tagihan === idTagihan);
+    } else {
+        const unpaid = myTagihan.filter(x => x.Status !== 'Lunas');
+        if (unpaid.length > 0) t = unpaid[0];
+    }
+    
     let pesan = `Assalamu'alaikum Wr. Wb. Admin Bendahara *PPTQ Zadil Qur'an*.\n\nSaya Orang Tua/Wali dari:\n• *Nama Santri:* ${s.Nama_Santri}\n• *ID Santri:* ${s.ID_Santri}\n\n`;
     if (t) {
-        pesan += `Ingin mengonfirmasi pembayaran tagihan:\n• *Tagihan:* ${t.Judul_Tagihan}\n• *Nominal:* ${formatRupiah(t.Nominal)}\n\n`;
+        pesan += `Ingin mengonfirmasi pembayaran tagihan:\n• *Tagihan:* ${t.Judul_Tagihan}\n• *Nominal:* ${formatRupiah(t.Nominal)}\n• *Jatuh Tempo:* ${t.Jatuh_Tempo || '-'}\n\n`;
     } else {
         pesan += `Ingin melakukan konfirmasi pembayaran Syahriyah (SPP) / Administrasi Pondok.\n\n`;
     }
-    pesan += `Mohon informasi dan verifikasinya. Terima kasih.`;
+    pesan += `Mohon informasi rekening dan verifikasinya. Terima kasih.`;
     window.open(`https://wa.me/6285731804663?text=${encodeURIComponent(pesan)}`, '_blank');
 }
 
