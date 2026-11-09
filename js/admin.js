@@ -96,6 +96,7 @@ function switchAdmin(menuId, pushHistory = true) {
         } catch (e) { }
     }
     buildSidebarMenu();
+    updateBottomNavState();
     loadContent();
     if (window.innerWidth < 768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) {
         toggleSidebar();
@@ -105,8 +106,35 @@ function switchAdmin(menuId, pushHistory = true) {
 window.addEventListener('popstate', () => {
     state.currentAdminMenu = detectInitialAdminMenu();
     buildSidebarMenu();
+    updateBottomNavState();
     loadContent();
 });
+
+function updateBottomNavState() {
+    const menus = ['dashboard', 'santri', 'keuangan', 'ustadz', 'pengaturan'];
+    menus.forEach(m => {
+        const btn = document.getElementById(`bottomNav-${m}`);
+        if (!btn) return;
+        if (state.currentAdminMenu === m) {
+            btn.className = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
+        } else {
+            btn.className = "bottom-nav-btn text-gray-500 dark:text-gray-400";
+        }
+    });
+}
+
+function openModalTambahSantri() {
+    if (state.currentAdminMenu !== 'santri') {
+        switchAdmin('santri');
+    }
+    setTimeout(() => {
+        if (typeof openModalSantri === 'function') openModalSantri();
+    }, 120);
+}
+
+function bukaWhatsAppBantuan() {
+    window.open('https://wa.me/6285731804663', '_blank');
+}
 
 function buildSidebarMenu() {
     const menu = document.getElementById('sidebarMenu');
@@ -813,6 +841,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     state.currentAdminMenu = detectInitialAdminMenu();
     buildSidebarMenu();
+    updateBottomNavState();
     refreshAdminData();
 });
 

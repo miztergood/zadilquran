@@ -150,7 +150,7 @@
                 <!-- Visual Mobile/Tablet (Menampilkan Kolase Santri dari hero image.png secara proporsional) -->
                 <div class="lg:col-span-5 lg:hidden">
                     <div class="rounded-2xl overflow-hidden shadow-xl border-2 border-white dark:border-darkborder">
-                        <img src="aset%20grafis/hero%20image.png" alt="Santri Pondok Pesantren Tahfizh Zadil Qur'an" class="w-full h-64 sm:h-80 object-cover object-right">
+                        <img src="aset%20grafis/hero%20image.png" alt="Santri Pondok Pesantren Tahfizh Zadil Qur'an" loading="eager" decoding="async" class="w-full h-64 sm:h-80 object-cover object-right">
                     </div>
                 </div>
             </div>
@@ -416,8 +416,30 @@
                 </button>
             </div>
 
-            <!-- Grid Galeri Foto (Di-render secara dinamis dari js/landing.js) -->
-            <div id="landingGalleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+            <!-- Mobile Carousel View (< sm: swipe-able, hemat space layaknya aplikasi mobile) -->
+            <div class="sm:hidden mb-4">
+                <div class="relative">
+                    <div id="landingGalleryCarousel" class="flex overflow-x-auto snap-x snap-mandatory gap-3.5 pb-2 px-1 scroll-smooth no-scrollbar" onscroll="updateCarouselIndicator()"></div>
+                </div>
+                <!-- Controls & Slide Indicator -->
+                <div class="flex items-center justify-between mt-3 px-1">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-100 dark:bg-slate-800 text-[11px] font-semibold text-gray-600 dark:text-gray-300">
+                        <i class="fa-solid fa-arrows-left-right text-[#9a2024] text-[10px]"></i>
+                        <span id="carouselSlideIndicator">1 dari 8 Foto</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="scrollGalleryCarousel(-1)" class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder text-gray-700 dark:text-gray-300 flex items-center justify-center shadow-xs active:scale-95 transition" aria-label="Foto Sebelumnya">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <button type="button" onclick="scrollGalleryCarousel(1)" class="w-8 h-8 rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-darkborder text-gray-700 dark:text-gray-300 flex items-center justify-center shadow-xs active:scale-95 transition" aria-label="Foto Berikutnya">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Galeri Foto Desktop (>= sm) -->
+            <div id="landingGalleryGrid" class="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
 
             <!-- Tombol Tampilkan Lebih Banyak / Ringkas -->
             <div id="landingGalleryToggleWrap" class="mt-10 text-center">

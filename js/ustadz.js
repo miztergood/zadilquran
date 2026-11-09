@@ -378,3 +378,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
     loadUstadzData();
 });
+
+function scrollUstadzView(target) {
+    const btnForm = document.getElementById('bottomNav-ustadz-form');
+    const btnRiwayat = document.getElementById('bottomNav-ustadz-riwayat');
+    const contentArea = document.getElementById('contentArea');
+
+    if (target === 'form') {
+        const formEl = document.getElementById('formSmartSetoran');
+        if (formEl) {
+            formEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (contentArea) {
+            contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (btnForm) btnForm.className = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
+        if (btnRiwayat) btnRiwayat.className = "bottom-nav-btn text-gray-500 dark:text-gray-400";
+    } else if (target === 'riwayat') {
+        const listEl = document.getElementById('listSetoranUstadz');
+        if (listEl) {
+            listEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        if (btnRiwayat) btnRiwayat.className = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
+        if (btnForm) btnForm.className = "bottom-nav-btn text-gray-500 dark:text-gray-400";
+    }
+}

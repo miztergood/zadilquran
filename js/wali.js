@@ -235,8 +235,8 @@ function switchWaliTab(tab) {
     const bHaf = document.getElementById('navBottomHafalan');
     const bKeu = document.getElementById('navBottomKeuangan');
     const bPro = document.getElementById('navBottomProfil');
-    const actBot = "flex flex-col items-center gap-0.5 text-[#9a2024] dark:text-[#f29fa3] text-xs font-bold";
-    const inactBot = "flex flex-col items-center gap-0.5 text-gray-500 dark:text-gray-400 text-xs transition";
+    const actBot = "bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold";
+    const inactBot = "bottom-nav-btn text-gray-500 dark:text-gray-400";
     if (bHaf) bHaf.className = tab === 'hafalan' ? actBot : inactBot;
     if (bKeu) bKeu.className = tab === 'keuangan' ? actBot : inactBot;
     if (bPro) bPro.className = tab === 'profil' ? actBot : inactBot;

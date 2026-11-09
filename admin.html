@@ -73,16 +73,52 @@
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-            <header id="mobileAdminHeader" class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-xs h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 theme-transition">
-                <a href="index.html" class="flex items-center gap-2.5 text-[#9a2024] dark:text-[#f29fa3] font-bold">
-                    <img src="logo.jpg" alt="Logo" class="w-8 h-8 rounded-lg object-cover">
-                    <span class="brand-name-display text-base">Zadil Quran</span>
+            <!-- Header Mobile Ramping & Elegan -->
+            <header id="mobileAdminHeader" class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-xs h-14 flex items-center justify-between px-3.5 z-30 flex-shrink-0 theme-transition">
+                <a href="index.html" class="flex items-center gap-2.5 text-[#9a2024] dark:text-[#f29fa3]">
+                    <img src="logo.jpg" alt="Logo" class="w-8 h-8 rounded-xl object-cover border border-gray-100 dark:border-darkborder shadow-2xs">
+                    <div class="leading-tight">
+                        <span class="brand-name-display text-sm font-extrabold block text-gray-900 dark:text-white">Zadil Quran</span>
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold block">Portal Superadmin</span>
+                    </div>
                 </a>
-                <button onclick="toggleSidebar()" class="text-gray-600 dark:text-gray-300 hover:text-[#9a2024] p-2"><i class="fa-solid fa-bars text-xl"></i></button>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 flex items-center justify-center transition active:scale-95" title="Mode Gelap / Terang">
+                        <i class="fa-solid fa-moon dark:hidden text-xs"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-xs"></i>
+                    </button>
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-[#9a2024] flex items-center justify-center transition active:scale-95" title="Menu Sidebar">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative" id="contentArea"></div>
+            <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 pb-24 md:pb-8 relative" id="contentArea"></div>
             <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+
+            <!-- Sticky Bottom Navigation Bar Khusus Mobile (Android App Style) -->
+            <nav id="adminBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-2 flex items-center justify-around shadow-xl">
+                <button type="button" onclick="switchAdmin('dashboard')" id="bottomNav-dashboard" class="bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold">
+                    <i class="fa-solid fa-gauge text-base"></i>
+                    <span class="text-[10px]">Beranda</span>
+                </button>
+                <button type="button" onclick="switchAdmin('santri')" id="bottomNav-santri" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-id-card text-base"></i>
+                    <span class="text-[10px]">Santri</span>
+                </button>
+                <button type="button" onclick="switchAdmin('keuangan')" id="bottomNav-keuangan" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-file-invoice-dollar text-base"></i>
+                    <span class="text-[10px]">Keuangan</span>
+                </button>
+                <button type="button" onclick="switchAdmin('ustadz')" id="bottomNav-ustadz" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-user-tie text-base"></i>
+                    <span class="text-[10px]">Asatidz</span>
+                </button>
+                <button type="button" onclick="switchAdmin('pengaturan')" id="bottomNav-pengaturan" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-gear text-base"></i>
+                    <span class="text-[10px]">Setelan</span>
+                </button>
+            </nav>
         </main>
     </div>
 
@@ -392,66 +428,100 @@
 
     <!-- ==================== TEMPLATES SUPERADMIN ==================== -->
     <template id="tpl-superadmin-dashboard">
-        <div class="mb-6">
-            <h2 class="text-2xl font-bold">Dashboard Eksekutif Pesantren</h2>
-            <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Ringkasan operasional terpadu <span class="brand-name-display font-medium">Zadil Quran</span>.</p>
+        <div class="mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">Dashboard Eksekutif Pesantren</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5">Ringkasan operasional terpadu <span class="brand-name-display font-medium">Zadil Quran</span>.</p>
         </div>
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-            <div onclick="switchAdmin('santri')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
-                <div class="absolute right-0 top-0 bottom-0 w-2 bg-[#9a2024] transition-all opacity-100"></div>
-                <div class="w-12 h-12 bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-users"></i></div>
-                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Buku Induk Santri</p><p class="text-2xl font-extrabold mt-0.5" id="statSantri">-</p></div>
+        <!-- 4 Kartu Metrik Utama (Mobile: 2 Kolom Grid / 2-Grid Hemat Space) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-5 sm:mb-8">
+            <div onclick="switchAdmin('santri')" class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-3 sm:gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition active:scale-98">
+                <div class="absolute right-0 top-0 bottom-0 w-1.5 sm:w-2 bg-[#9a2024]"></div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0"><i class="fa-solid fa-users"></i></div>
+                <div class="min-w-0"><p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider truncate">Buku Induk</p><p class="text-xl sm:text-2xl font-extrabold mt-0.5 text-gray-900 dark:text-white" id="statSantri">-</p></div>
             </div>
-            <div onclick="switchAdmin('ustadz')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
-                <div class="absolute right-0 top-0 bottom-0 w-2 bg-[#1c6b45] transition-all opacity-100"></div>
-                <div class="w-12 h-12 bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-user-tie"></i></div>
-                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Total Asatidz</p><p class="text-2xl font-extrabold mt-0.5" id="statUstadz">-</p></div>
+            <div onclick="switchAdmin('ustadz')" class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-3 sm:gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition active:scale-98">
+                <div class="absolute right-0 top-0 bottom-0 w-1.5 sm:w-2 bg-[#1c6b45]"></div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="min-w-0"><p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider truncate">Total Asatidz</p><p class="text-xl sm:text-2xl font-extrabold mt-0.5 text-gray-900 dark:text-white" id="statUstadz">-</p></div>
             </div>
-            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group">
-                <div class="absolute right-0 top-0 bottom-0 w-2 bg-amber-500 transition-all opacity-100"></div>
-                <div class="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-book-open"></i></div>
-                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Rekaman Setoran</p><p class="text-2xl font-extrabold mt-0.5" id="statSetoran">-</p></div>
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-3 sm:gap-4 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 bottom-0 w-1.5 sm:w-2 bg-amber-500"></div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0"><i class="fa-solid fa-book-open"></i></div>
+                <div class="min-w-0"><p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider truncate">Setoran Hafalan</p><p class="text-xl sm:text-2xl font-extrabold mt-0.5 text-gray-900 dark:text-white" id="statSetoran">-</p></div>
             </div>
-            <div onclick="switchAdmin('keuangan')" class="bg-white dark:bg-darkcard rounded-2xl p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition">
-                <div class="absolute right-0 top-0 bottom-0 w-2 bg-emerald-600 transition-all opacity-100"></div>
-                <div class="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center text-xl z-10"><i class="fa-solid fa-money-bill-wave"></i></div>
-                <div class="z-10"><p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Dana SPP Masuk</p><p class="text-lg font-extrabold mt-0.5 text-emerald-600 dark:text-emerald-400" id="statKeuanganMasuk">Rp 0</p></div>
+            <div onclick="switchAdmin('keuangan')" class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 shadow-xs border border-gray-100 dark:border-darkborder flex items-center gap-3 sm:gap-4 relative overflow-hidden group cursor-pointer hover:shadow-md transition active:scale-98">
+                <div class="absolute right-0 top-0 bottom-0 w-1.5 sm:w-2 bg-emerald-600"></div>
+                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl sm:rounded-2xl flex items-center justify-center text-base sm:text-xl shrink-0"><i class="fa-solid fa-money-bill-wave"></i></div>
+                <div class="min-w-0"><p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider truncate">SPP Masuk</p><p class="text-sm sm:text-lg font-extrabold mt-0.5 text-emerald-600 dark:text-emerald-400 truncate" id="statKeuanganMasuk">Rp 0</p></div>
             </div>
         </div>
 
-        <div class="mb-8">
-            <h3 class="text-base font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-                <i class="fa-solid fa-compass text-[#9a2024]"></i> Modul Operasional Pesantren
-            </h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button onclick="switchAdmin('santri')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#9a2024] text-left transition group">
-                    <div class="w-10 h-10 rounded-xl bg-[#fdf2f2] dark:bg-[#9a2024]/20 text-[#9a2024] dark:text-[#f29fa3] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+        <!-- Menu Cepat Aplikasi Android (Shopee / Tokopedia Style Icon Grid) -->
+        <div class="mb-6 sm:mb-8 bg-white dark:bg-darkcard rounded-3xl p-4 sm:p-6 border border-gray-100 dark:border-darkborder shadow-xs">
+            <div class="flex items-center justify-between mb-3.5">
+                <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-shapes text-[#9a2024]"></i> Fitur &amp; Menu Utama
+                </h3>
+                <span class="text-[11px] text-gray-400 hidden sm:inline">Akses Cepat SIM-Tren</span>
+            </div>
+            
+            <!-- Grid Icon Bulat / Squircle Ala Tokopedia/Shopee -->
+            <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 text-center">
+                <button onclick="switchAdmin('santri')" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-rose-500 to-[#9a2024] text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
                         <i class="fa-solid fa-address-book"></i>
                     </div>
-                    <p class="font-bold text-gray-800 dark:text-white text-sm">Buku Induk Santri</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Biodata lengkap, TTL, Ortu &amp; Kode ZQ</p>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">Buku Induk</span>
                 </button>
-                <button onclick="switchAdmin('keuangan')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#1c6b45] text-left transition group">
-                    <div class="w-10 h-10 rounded-xl bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+
+                <button onclick="switchAdmin('keuangan')" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-emerald-500 to-[#1c6b45] text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                     </div>
-                    <p class="font-bold text-gray-800 dark:text-white text-sm">Keuangan &amp; Syahriyah SPP</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tagihan pendaftaran, SPP &amp; rekap lunas</p>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">SPP &amp; Biaya</span>
                 </button>
-                <button onclick="switchAdmin('ustadz')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-[#1c6b45] text-left transition group">
-                    <div class="w-10 h-10 rounded-xl bg-[#edf7f2] dark:bg-[#1c6b45]/20 text-[#1c6b45] dark:text-[#83c9a6] flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
+
+                <button onclick="switchAdmin('ustadz')" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
                         <i class="fa-solid fa-user-tie"></i>
                     </div>
-                    <p class="font-bold text-gray-800 dark:text-white text-sm">Data Asatidz / Guru</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Kelola pembimbing halaqah tahfizh</p>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">Data Asatidz</span>
                 </button>
-                <button onclick="switchAdmin('pengaturan')" class="p-4 bg-white dark:bg-darkcard rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs hover:border-gray-400 text-left transition group">
-                    <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 flex items-center justify-center text-lg mb-2 group-hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-gear"></i>
+
+                <button onclick="switchAdmin('pengaturan')" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-sliders"></i>
                     </div>
-                    <p class="font-bold text-gray-800 dark:text-white text-sm">Pengaturan &amp; Database</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Sinkronisasi sheet, nama pondok &amp; sandi</p>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">Pengaturan</span>
+                </button>
+
+                <button onclick="openModalTambahSantri()" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">+ Santri Baru</span>
+                </button>
+
+                <button onclick="switchAdmin('keuangan')" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">Buat Tagihan</span>
+                </button>
+
+                <a href="index.html" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-700 text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">Web Profil</span>
+                </a>
+
+                <button onclick="bukaWhatsAppBantuan()" class="flex flex-col items-center gap-1.5 p-1.5 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/60 transition group tap-bounce">
+                    <div class="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white flex items-center justify-center text-lg sm:text-xl shadow-md group-hover:scale-105 transition-transform">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-200 leading-tight">Bantuan WA</span>
                 </button>
             </div>
         </div>
@@ -546,26 +616,27 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-circle-check"></i></div>
-                <div>
-                    <p class="text-xs font-semibold uppercase text-gray-400">Total Pembayaran Lunas</p>
-                    <p class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="keuStatLunas">Rp 0</p>
+        <!-- 3 Kartu Ringkasan Keuangan (Mobile: 2-Grid Hemat Space) -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 mb-5 sm:mb-6">
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center text-lg sm:text-xl shrink-0"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Total Lunas</p>
+                    <p class="text-base sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 truncate" id="keuStatLunas">Rp 0</p>
                 </div>
             </div>
-            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center text-xl"><i class="fa-solid fa-clock"></i></div>
-                <div>
-                    <p class="text-xs font-semibold uppercase text-gray-400">Total Belum Lunas (Piutang)</p>
-                    <p class="text-2xl font-extrabold text-red-600 dark:text-red-400 mt-0.5" id="keuStatBelum">Rp 0</p>
+            <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center text-lg sm:text-xl shrink-0"><i class="fa-solid fa-clock"></i></div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Belum Lunas</p>
+                    <p class="text-base sm:text-2xl font-extrabold text-red-600 dark:text-red-400 mt-0.5 truncate" id="keuStatBelum">Rp 0</p>
                 </div>
             </div>
-            <div class="bg-white dark:bg-darkcard rounded-2xl p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-4">
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-receipt"></i></div>
-                <div>
-                    <p class="text-xs font-semibold uppercase text-gray-400">Total Lembar Tagihan</p>
-                    <p class="text-2xl font-extrabold text-gray-800 dark:text-white mt-0.5" id="keuStatTotal">0 Tagihan</p>
+            <div class="col-span-2 md:col-span-1 bg-white dark:bg-darkcard rounded-2xl p-3.5 sm:p-5 border border-gray-100 dark:border-darkborder shadow-xs flex items-center gap-3 sm:gap-4">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center text-lg sm:text-xl shrink-0"><i class="fa-solid fa-receipt"></i></div>
+                <div class="min-w-0">
+                    <p class="text-[10px] sm:text-xs font-bold uppercase text-gray-400 truncate">Total Tagihan</p>
+                    <p class="text-base sm:text-2xl font-extrabold text-gray-800 dark:text-white mt-0.5 truncate" id="keuStatTotal">0 Tagihan</p>
                 </div>
             </div>
         </div>

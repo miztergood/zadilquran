@@ -209,9 +209,10 @@ let isGalleryExpanded = false;
 
 function renderLandingGallery() {
     const grid = document.getElementById('landingGalleryGrid');
+    const carousel = document.getElementById('landingGalleryCarousel');
     const toggleWrap = document.getElementById('landingGalleryToggleWrap');
     const toggleText = document.getElementById('btnToggleGalleryText');
-    if (!grid) return;
+    if (!grid && !carousel) return;
 
     const filtered = currentGalleryCategory === 'all'
         ? LANDING_GALLERY_ITEMS
@@ -235,29 +236,82 @@ function renderLandingGallery() {
         }
     }
 
-    grid.innerHTML = itemsToShow.map((item, idx) => {
-        const imgUrl = `aset%20grafis/${encodeURIComponent(item.file)}`;
-        return `
-            <div onclick="openGalleryLightbox('${imgUrl}', '${item.title.replace(/'/g, "\\'")}', '${item.categoryLabel}')" class="group cursor-pointer bg-gray-50 dark:bg-slate-900/70 rounded-2xl overflow-hidden border border-gray-200/80 dark:border-darkborder shadow-xs hover:shadow-xl transition duration-300 flex flex-col">
-                <div class="relative aspect-4/3 overflow-hidden bg-gray-200 dark:bg-slate-800">
-                    <img src="${imgUrl}" alt="${item.title}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition flex items-center justify-center">
-                        <span class="w-10 h-10 rounded-full bg-white/90 text-gray-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition shadow-md">
-                            <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+    // 1. Render Desktop Grid
+    if (grid) {
+        grid.innerHTML = itemsToShow.map((item, idx) => {
+            const imgUrl = `aset%20grafis/${encodeURIComponent(item.file)}`;
+            return `
+                <div onclick="openGalleryLightbox('${imgUrl}', '${item.title.replace(/'/g, "\\'")}', '${item.categoryLabel}')" class="group cursor-pointer bg-gray-50 dark:bg-slate-900/70 rounded-2xl overflow-hidden border border-gray-200/80 dark:border-darkborder shadow-xs hover:shadow-xl transition duration-300 flex flex-col">
+                    <div class="relative aspect-4/3 overflow-hidden bg-gray-200 dark:bg-slate-800">
+                        <img src="${imgUrl}" alt="${item.title}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition flex items-center justify-center">
+                            <span class="w-10 h-10 rounded-full bg-white/90 text-gray-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transform scale-75 group-hover:scale-100 transition shadow-md">
+                                <i class="fa-solid fa-magnifying-glass-plus text-sm"></i>
+                            </span>
+                        </div>
+                        <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-black/65 text-white backdrop-blur-xs">
+                            ${item.categoryLabel}
                         </span>
                     </div>
-                    <span class="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-black/65 text-white backdrop-blur-xs">
-                        ${item.categoryLabel}
-                    </span>
+                    <div class="p-4 flex-1 flex items-center">
+                        <h4 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-[#9a2024] dark:group-hover:text-[#f29fa3] transition leading-snug">
+                            ${item.title}
+                        </h4>
+                    </div>
                 </div>
-                <div class="p-4 flex-1 flex items-center">
-                    <h4 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-100 group-hover:text-[#9a2024] dark:group-hover:text-[#f29fa3] transition leading-snug">
-                        ${item.title}
-                    </h4>
+            `;
+        }).join('');
+    }
+
+    // 2. Render Mobile Carousel (Hemat space, swipeable kartu horizontal)
+    if (carousel) {
+        carousel.innerHTML = itemsToShow.map((item, idx) => {
+            const imgUrl = `aset%20grafis/${encodeURIComponent(item.file)}`;
+            return `
+                <div onclick="openGalleryLightbox('${imgUrl}', '${item.title.replace(/'/g, "\\'")}', '${item.categoryLabel}')" class="w-[78vw] max-w-[290px] flex-shrink-0 snap-center group cursor-pointer bg-gray-50 dark:bg-slate-900/85 rounded-2xl overflow-hidden border border-gray-200/90 dark:border-darkborder shadow-sm flex flex-col active:scale-98 transition">
+                    <div class="relative aspect-4/3 overflow-hidden bg-gray-200 dark:bg-slate-800">
+                        <img src="${imgUrl}" alt="${item.title}" loading="lazy" decoding="async" class="w-full h-full object-cover">
+                        <span class="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-black/70 text-white backdrop-blur-xs">
+                            ${item.categoryLabel}
+                        </span>
+                        <div class="absolute bottom-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-800 text-gray-800 dark:text-white flex items-center justify-center shadow-sm text-xs">
+                            <i class="fa-solid fa-magnifying-glass-plus"></i>
+                        </div>
+                    </div>
+                    <div class="p-3.5 flex-1 flex items-center">
+                        <h4 class="text-xs font-bold text-gray-800 dark:text-gray-100 line-clamp-2 leading-snug">
+                            ${item.title}
+                        </h4>
+                    </div>
                 </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+        updateCarouselIndicator();
+    }
+}
+
+function scrollGalleryCarousel(direction) {
+    const carousel = document.getElementById('landingGalleryCarousel');
+    if (!carousel) return;
+    const card = carousel.firstElementChild;
+    const scrollAmount = card ? (card.offsetWidth + 14) : 260;
+    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+    setTimeout(updateCarouselIndicator, 320);
+}
+
+function updateCarouselIndicator() {
+    const carousel = document.getElementById('landingGalleryCarousel');
+    const indicator = document.getElementById('carouselSlideIndicator');
+    if (!carousel || !indicator) return;
+    const total = carousel.children.length;
+    if (total === 0) {
+        indicator.textContent = '0 Foto';
+        return;
+    }
+    const card = carousel.firstElementChild;
+    const cardWidth = card ? (card.offsetWidth + 14) : 260;
+    const current = Math.min(total, Math.max(1, Math.round(carousel.scrollLeft / cardWidth) + 1));
+    indicator.textContent = `${current} dari ${total} Foto`;
 }
 
 function filterLandingGallery(category) {

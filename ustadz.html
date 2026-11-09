@@ -77,15 +77,26 @@
         </aside>
 
         <main class="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
-            <header id="mobileAdminHeader" class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-xs h-14 flex items-center justify-between px-4 z-30 flex-shrink-0 theme-transition">
-                <a href="index.html" class="flex items-center gap-2.5 text-[#9a2024] dark:text-[#f29fa3] font-bold">
-                    <img src="logo.jpg" alt="Logo" class="w-8 h-8 rounded-lg object-cover">
-                    <span class="brand-name-display text-base">Zadil Quran</span>
+            <header id="mobileAdminHeader" class="md:hidden bg-white dark:bg-darkcard border-b border-gray-200 dark:border-darkborder shadow-xs h-14 flex items-center justify-between px-3.5 z-30 flex-shrink-0 theme-transition">
+                <a href="index.html" class="flex items-center gap-2 text-[#9a2024] dark:text-[#f29fa3]">
+                    <img src="logo.jpg" alt="Logo" class="w-8 h-8 rounded-xl object-cover border border-gray-100 dark:border-darkborder shadow-2xs">
+                    <div class="leading-tight">
+                        <span class="brand-name-display text-sm font-extrabold block text-gray-900 dark:text-white">Zadil Quran</span>
+                        <span class="text-[10px] text-[#1c6b45] dark:text-[#83c9a6] font-semibold block">Workspace Ustadz</span>
+                    </div>
                 </a>
-                <button onclick="toggleSidebar()" class="text-gray-600 dark:text-gray-300 hover:text-[#9a2024] p-2"><i class="fa-solid fa-bars text-xl"></i></button>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-yellow-400 flex items-center justify-center transition active:scale-95" title="Mode Tampilan">
+                        <i class="fa-solid fa-moon dark:hidden text-xs"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-xs"></i>
+                    </button>
+                    <button onclick="toggleSidebar()" class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:text-[#9a2024] flex items-center justify-center transition active:scale-95" title="Menu Sidebar">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 relative" id="contentArea">
+            <div class="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 pb-24 md:pb-8 relative" id="contentArea">
                 <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Buku Mutaba'ah Harian Santri</h2>
@@ -303,6 +314,26 @@
                 </div>
             </div>
             <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+
+            <!-- Sticky Bottom Navigation Bar Khusus Mobile (Android App Style) -->
+            <nav id="ustadzBottomNav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-3 flex items-center justify-around shadow-xl">
+                <button type="button" onclick="scrollUstadzView('form')" id="bottomNav-ustadz-form" class="bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold">
+                    <i class="fa-solid fa-pen-to-square text-base"></i>
+                    <span class="text-[10px]">Input Setoran</span>
+                </button>
+                <button type="button" onclick="scrollUstadzView('riwayat')" id="bottomNav-ustadz-riwayat" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-clock-rotate-left text-base"></i>
+                    <span class="text-[10px]">Riwayat Binaan</span>
+                </button>
+                <a href="index.html" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-globe text-base"></i>
+                    <span class="text-[10px]">Portal Web</span>
+                </a>
+                <button type="button" onclick="logout()" class="bottom-nav-btn text-red-500 hover:text-red-600">
+                    <i class="fa-solid fa-right-from-bracket text-base"></i>
+                    <span class="text-[10px]">Keluar</span>
+                </button>
+            </nav>
         </main>
     </div>
 
