@@ -1,5 +1,116 @@
+/**
+ * ==============================================================================
+ * SISTEM MANAJEMEN TAHFIZH & PESANTREN ZADIL QUR'AN V4.0 (API GATEWAY & ENGINE)
+ * ==============================================================================
+ *
+ * Backend Google Apps Script untuk sistem SIM-Tren PPTQ Zadil Qur'an Tuban.
+ * Melayani:
+ * - REST API Endpoint (doGet & doPost) untuk Web App Cloudflare Pages
+ * - Otomasi penerbitan tagihan Syahriyah (SPP) terjadwal harian
+ * - Manajemen Buku Induk Santri, Setoran Mutaba'ah, dan Rekap Keuangan
+ * - Menu interaktif langsung di bilah menu Google Sheets
+ *
+ * CARA INSTALASI / DEPLOY:
+ * 1. Buka Google Sheet database Pesantren Zadil Qur'an.
+ * 2. Klik Extensions > Apps Script.
+ * 3. Hapus kode lama, salin dan tempelkan seluruh kode ini ke editor.
+ * 4. Klik Simpan (Ctrl+S / Cmd+S).
+ * 5. Klik Deploy > Manage deployments > Edit > New version > Deploy.
+ *    (Pastikan: Execute as = "Me", Who has access = "Anyone").
+ * 6. Muat ulang Google Sheet untuk memunculkan menu "PPTQ Zadil Qur'an".
+ * ==============================================================================
+ */
+
+// --- MENU SETUP (GOOGLE SHEETS UI) ---
+function onOpen() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('PPTQ Zadil Qur\'an')
+      .addItem('⚙️ Setup & Mutakhirkan Database', 'menuSetupDatabase')
+      .addItem('📢 Terbitkan SPP Bulan Berjalan', 'menuTerbitkanSpp')
+      .addSeparator()
+      .addItem('ℹ️ Status Sistem & Otomasi SPP', 'menuStatusSistem')
+      .addItem('🌐 Panduan & Alamat Web App', 'menuBukaPortalWeb')
+      .addToUi();
+  } catch (err) {
+    Logger.log('onOpen dilewati (non-interactive context): ' + err.message);
+  }
+}
+
+function menuSetupDatabase() {
+  const ui = SpreadsheetApp.getUi();
+  const res = setupDatabase();
+  SpreadsheetApp.flush();
+  if (res && res.status === 'success') {
+    ui.alert('Setup Database Berhasil', res.message || 'Seluruh tabel dan kolom telah disiapkan.', ui.ButtonSet.OK);
+  } else {
+    ui.alert('Setup Database Gagal', (res && res.message) ? res.message : 'Terjadi kendala.', ui.ButtonSet.OK);
+  }
+}
+
+function menuTerbitkanSpp() {
+  const ui = SpreadsheetApp.getUi();
+  const currentPeriode = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM");
+  const confirm = ui.alert(
+    'Konfirmasi Terbitkan SPP',
+    'Apakah Anda yakin ingin menerbitkan tagihan Syahriyah (SPP) bulan berjalan (' + currentPeriode + ') untuk seluruh santri aktif yang belum memiliki tagihan?',
+    ui.ButtonSet.YES_NO
+  );
+  if (confirm !== ui.Button.YES) return;
+
+  const res = terbitkanSppPeriode_(currentPeriode);
+  SpreadsheetApp.flush();
+  if (res && res.status === 'success') {
+    ui.alert('Penerbitan SPP Berhasil', res.message, ui.ButtonSet.OK);
+  } else {
+    ui.alert('Penerbitan SPP Gagal', (res && res.message) ? res.message : 'Gagal memproses SPP.', ui.ButtonSet.OK);
+  }
+}
+
+function menuStatusSistem() {
+  const ui = SpreadsheetApp.getUi();
+  const currentPeriode = Utilities.formatDate(new Date(), "Asia/Jakarta", "yyyy-MM");
+  let cfg = { otomatis: true, hariTerbit: 1, hariTempo: 10, nominal: 200000 };
+  try {
+    const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Config_SPP");
+    if (p && p.Value) cfg = normalizeSppConfig_(JSON.parse(p.Value));
+  } catch (e) {}
+
+  const triggers = ScriptApp.getProjectTriggers();
+  let triggerActive = false;
+  for (let i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "autoTerbitSppHarian") {
+      triggerActive = true;
+      break;
+    }
+  }
+
+  const msg = "Status SIM-Tren PPTQ Zadil Qur'an:\n\n" +
+    "• Periode Berjalan: " + currentPeriode + "\n" +
+    "• Nominal SPP: Rp " + Number(cfg.nominal).toLocaleString('id-ID') + "\n" +
+    "• Jadwal Terbit: Tanggal " + cfg.hariTerbit + " setiap bulan\n" +
+    "• Jatuh Tempo: Tanggal " + cfg.hariTempo + " setiap bulan\n" +
+    "• Status Trigger Otomatis: " + (triggerActive ? "AKTIF (Setiap Pukul 01:00 WIB)" : "NONAKTIF") + "\n\n" +
+    "Sistem idempoten & aman dari duplikasi tagihan.";
+  ui.alert('Status Sistem & Otomasi SPP', msg, ui.ButtonSet.OK);
+}
+
+function menuBukaPortalWeb() {
+  const ui = SpreadsheetApp.getUi();
+  const html = HtmlService.createHtmlOutput(
+    '<div style="font-family:sans-serif;padding:12px;line-height:1.6;font-size:13px;">' +
+    '<h3 style="color:#9a2024;margin-top:0;">Portal Web Pesantren Zadil Qur\'an</h3>' +
+    '<p>Akses portal web terpadu resmi:</p>' +
+    '<p><a href="https://zadilquran.pages.dev" target="_blank" style="background:#9a2024;color:white;padding:8px 16px;text-decoration:none;border-radius:8px;font-weight:bold;display:inline-block;">Buka Website zadilquran.pages.dev &rarr;</a></p>' +
+    '<hr style="border:none;border-top:1px solid #ddd;margin:15px 0;">' +
+    '<p style="font-size:11px;color:#666;">• <strong>Portal Staff:</strong> admin.html / ustadz.html<br>• <strong>Portal Wali:</strong> wali.html<br>• <strong>Pendaftaran:</strong> pendaftaran.html</p>' +
+    '</div>'
+  ).setWidth(380).setHeight(220);
+  ui.showModalDialog(html, 'SIM-Tren Zadil Qur\'an');
+}
+
 // ==============================================================================
-// SISTEM BACKEND MANAJEMEN TAHFIZH & PESANTREN ZADIL QURAN V4.0 (API GATEWAY & ENGINE)
+// HTTP API GATEWAY: DOGET & DOPOST
 // ==============================================================================
 
 /**
@@ -349,6 +460,7 @@ function setupDatabase() {
     }
   }
 
+  SpreadsheetApp.flush();
   return createResponse(true, null, "Database berhasil disiapkan, kolom Periode dimutakhirkan & data SPP lama di-backfill. Refresh aplikasi Anda.");
 }
 
@@ -464,6 +576,7 @@ function savePsbConfig(token, configData) {
     if (!found) {
       sheet.appendRow(["Config_PSB", jsonStr, new Date()]);
     }
+    SpreadsheetApp.flush();
     return createResponse(true, typeof configData === "string" ? JSON.parse(configData) : configData, "Pengaturan PSB & Biaya berhasil disimpan!");
   });
 }
@@ -517,6 +630,7 @@ function addUstadz(token, nama, username, password) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users_Ustadz");
     const newId = "U-" + new Date().getTime().toString().slice(-6);
     sheet.appendRow([newId, username, password, nama, new Date()]);
+    SpreadsheetApp.flush();
     return createResponse(true, null, "Ustadz berhasil ditambahkan.");
   });
 }
@@ -533,6 +647,7 @@ function editUstadz(token, id, nama, username, password) {
         sheet.getRange(i+1, 2).setValue(username);
         if(password) sheet.getRange(i+1, 3).setValue(password);
         sheet.getRange(i+1, 4).setValue(nama);
+        SpreadsheetApp.flush();
         return createResponse(true, null, "Data Ustadz berhasil diperbarui.");
       }
     }
@@ -653,6 +768,7 @@ function registerCalonSantriOnline(data) {
       sheetTagihan.appendRow(headersTagihan.map(function(h) { return tagihan2.hasOwnProperty(h) ? tagihan2[h] : ""; }));
     }
 
+    SpreadsheetApp.flush();
     return createResponse(true, {
       idSantri: newId,
       namaSantri: rowSantri.Nama_Santri,
@@ -720,12 +836,14 @@ function saveSantriData(token, data) {
           sheet.getRange(existingRowIndex, colIdx + 1).setValue(rowObj[headerName]);
         }
       });
+      SpreadsheetApp.flush();
       return createResponse(true, null, "Data Buku Induk Santri berhasil diperbarui.");
     } else {
       const newRow = headers.map(function(h) {
         return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
       });
       sheet.appendRow(newRow);
+      SpreadsheetApp.flush();
       return createResponse(true, null, "Santri baru berhasil didaftarkan ke Buku Induk.");
     }
   });
@@ -791,7 +909,7 @@ function saveSantriBatch(token, santriList) {
 
     const startRow = sheet.getLastRow() + 1;
     sheet.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
-
+    SpreadsheetApp.flush();
     return createResponse(true, { count: newRows.length }, "Berhasil mengimpor " + newRows.length + " data santri ke Buku Induk.");
   });
 }
@@ -842,6 +960,7 @@ function deleteDataGlobal(token, sheetName, id) {
     for(let i=1; i<data.length; i++) {
       if(String(data[i][0]).trim().toUpperCase() === String(id).trim().toUpperCase()) {
         sheet.deleteRow(i+1);
+        SpreadsheetApp.flush();
         return createResponse(true, null, "Data berhasil dihapus.");
       }
     }
@@ -893,6 +1012,7 @@ function saveSetoran(token, dataSetoran) {
       return rowObj.hasOwnProperty(h) ? rowObj[h] : "";
     });
     sheet.appendRow(newRow);
+    SpreadsheetApp.flush();
     return createResponse(true, { idSetoran: idSetoran }, "Setoran mutaba'ah harian berhasil disimpan!");
   });
 }
@@ -955,6 +1075,7 @@ function createTagihan(token, payloadData) {
 
         const startRow = sheet.getLastRow() + 1;
         sheet.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+        SpreadsheetApp.flush();
         return createResponse(true, { count: newRows.length }, newRows.length + " tagihan berhasil diterbitkan!");
       } else {
         // Mode 2: Tagihan Individu per santri
@@ -983,6 +1104,7 @@ function createTagihan(token, payloadData) {
 
         const newRow = headers.map(function(h) { return rowObj.hasOwnProperty(h) ? rowObj[h] : ""; });
         sheet.appendRow(newRow);
+        SpreadsheetApp.flush();
         return createResponse(true, { idTagihan: idTagihan }, "Tagihan berhasil diterbitkan untuk santri.");
       }
     } finally {
@@ -1101,6 +1223,7 @@ function saveSppConfig(token, configData) {
       } catch(e) {}
     }
 
+    SpreadsheetApp.flush();
     return createResponse(true, parsedObj, "Konfigurasi SPP & Otomatisasi berhasil disimpan!");
   });
 }
@@ -1233,6 +1356,7 @@ function terbitkanSppPeriode_(periode, opsi) {
 
     const startRow = sheetTagihan.getLastRow() + 1;
     sheetTagihan.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+    SpreadsheetApp.flush();
 
     return {
       status: 'success',
@@ -1383,6 +1507,7 @@ function bayarTagihan(token, idTagihan, metodeBayar, catatan) {
         if (metodeColIdx > 0) sheet.getRange(i + 1, metodeColIdx).setValue(metodeBayar || "Tunai di Kantor TU");
         if (catatan && catatanColIdx > 0) sheet.getRange(i + 1, catatanColIdx).setValue(catatan);
         
+        SpreadsheetApp.flush();
         return createResponse(true, null, "Tagihan " + idTagihan + " berhasil ditandai Lunas.");
       }
     }
@@ -1409,6 +1534,7 @@ function batalBayarTagihan(token, idTagihan) {
         if (statusColIdx > 0) sheet.getRange(i + 1, statusColIdx).setValue("Belum Lunas");
         if (tglBayarColIdx > 0) sheet.getRange(i + 1, tglBayarColIdx).setValue("-");
         if (metodeColIdx > 0) sheet.getRange(i + 1, metodeColIdx).setValue("-");
+        SpreadsheetApp.flush();
         return createResponse(true, null, "Status tagihan dikembalikan menjadi Belum Lunas.");
       }
     }
@@ -1436,6 +1562,7 @@ function updatePondokName(token, newName) {
       }
     }
     if(!found) sheet.appendRow(["Nama_Pondok", newName, new Date()]);
+    SpreadsheetApp.flush();
     return createResponse(true, null, "Nama lembaga berhasil diperbarui.");
   });
 }
@@ -1449,6 +1576,7 @@ function updateAdminPassword(token, oldPw, newPw) {
     for(let i=1; i<data.length; i++){
       if(data[i][0] === auth.data.id && data[i][1] === oldPw){
         sheet.getRange(i+1, 2).setValue(newPw);
+        SpreadsheetApp.flush();
         return createResponse(true, null, "Password berhasil diubah.");
       }
     }
