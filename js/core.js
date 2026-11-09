@@ -173,9 +173,11 @@ const AppNotify = {
     }
 };
 
-window.alert = function(msg) {
-    AppNotify.info('Pemberitahuan', msg);
-};
+if (typeof window !== 'undefined') {
+    window.alert = function(msg) {
+        AppNotify.info('Pemberitahuan', msg);
+    };
+}
 
 // ==================== API WRAPPER MULTI-ENVIRONMENT ====================
 async function apiCall(method, ...args) {
@@ -218,7 +220,12 @@ async function apiCall(method, ...args) {
 
 // ==================== FORMATTERS & HELPERS ====================
 function formatRupiah(angka) {
-    const num = Number(String(angka || 0).replace(/[^0-9.-]+/g, "")) || 0;
+    if (typeof angka === 'number') {
+        return "Rp " + Math.round(angka).toLocaleString('id-ID');
+    }
+    const cleanStr = String(angka || 0).trim();
+    const digitsOnly = cleanStr.replace(/[^0-9-]/g, "");
+    const num = Number(digitsOnly) || 0;
     return "Rp " + num.toLocaleString('id-ID');
 }
 
@@ -630,6 +637,7 @@ function closeModal(modalId, contentId) {
 
 // ==================== DARK MODE ====================
 function initTheme() {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
     const path = window.location.pathname.toLowerCase();
     // Cek apakah halaman saat ini adalah dashboard internal (admin, ustadz, wali)
     const isDashboard = path.includes('admin') || path.includes('ustadz') || path.includes('wali');
@@ -641,7 +649,7 @@ function initTheme() {
     }
 
     // Pada dashboard internal, muat preferensi tema yang disimpan
-    const savedTheme = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.THEME) || localStorage.theme;
+    const savedTheme = (typeof localStorage !== 'undefined') ? (localStorage.getItem(APP_CONFIG?.STORAGE_KEYS?.THEME || 'theme') || localStorage.theme) : null;
     if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark');
     } else {
@@ -900,3 +908,14 @@ async function triggerPwaInstall() {
         );
     }
 }
+
+// Export untuk lingkungan Node.js / Unit Testing jika tersedia
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        formatRupiah,
+        angkaKeTerbilang,
+        formatWaNumber,
+        getDashboardUrlByRole
+    };
+}
+

@@ -1,0 +1,26 @@
+{
+  "name": "zadilquran",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Sistem Informasi Manajemen & Portals Pesantren Zadil Qur'an",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miztergood/zadilquran.git"
+  },
+  "keywords": [
+    "zadil-quran",
+    "sim-tren",
+    "cloudflare-pages",
+    "google-apps-script"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vitest": "^5.1.0"
+  }
+}
