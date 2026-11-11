@@ -818,6 +818,58 @@ function normalizeSppConfig(raw = {}) {
     };
 }
 
+function getCurrentYearMonth() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function getActiveSppConfig() {
+    if (state && state.sppConfig && Number(state.sppConfig.nominal) > 0) {
+        return normalizeSppConfig(state.sppConfig);
+    }
+    try {
+        const cachedRaw = localStorage.getItem('zadil_spp_config_v4');
+        if (cachedRaw) {
+            const parsed = JSON.parse(cachedRaw);
+            if (parsed && typeof parsed === 'object') {
+                return normalizeSppConfig(parsed);
+            }
+        }
+    } catch (err) {}
+    if (state && state.psbConfig && Number(state.psbConfig.sppBulanan) > 0) {
+        return normalizeSppConfig({ nominal: Number(state.psbConfig.sppBulanan) });
+    }
+    return normalizeSppConfig({});
+}
+
+function isTagihanSpp(t) {
+    if (!t) return false;
+    const katLower = String(t.Kategori || '').toLowerCase();
+    const jdlLower = String(t.Judul_Tagihan || '').toLowerCase();
+    return katLower.includes('spp') || katLower.includes('syahriyah') || jdlLower.includes('spp') || jdlLower.includes('syahriyah');
+}
+
+function syncLocalUnpaidSppNominal(nominalBaru, periodTargets = [], allowEmptyPeriode = false) {
+    if (!Array.isArray(state.tagihan)) return 0;
+    const targetNom = Number(nominalBaru) || 0;
+    if (targetNom <= 0) return 0;
+    const validPeriods = (Array.isArray(periodTargets) ? periodTargets : [periodTargets]).filter(Boolean);
+    let updated = 0;
+
+    state.tagihan.forEach(t => {
+        if (!isTagihanSpp(t)) return;
+        const isUnpaid = String(t.Status || '').trim().toLowerCase() !== 'lunas';
+        if (!isUnpaid) return;
+        const tagPer = getTagihanPeriode(t);
+        const matchPeriode = validPeriods.length === 0 || validPeriods.includes('ALL') || validPeriods.includes(tagPer) || (allowEmptyPeriode && !tagPer);
+        if (matchPeriode) {
+            t.Nominal = targetNom;
+            updated++;
+        }
+    });
+    return updated;
+}
+
 function getLocalSppStatusForPeriode(periode) {
     const targetPeriode = periode || currentKeuanganPeriode;
     const activeSantris = (state.santri || []).filter(s => {
@@ -932,6 +984,10 @@ function renderCardStatusSpp() {
         // Normalisasi config dari backend maupun cache lokal jika backend lama belum menyimpan key `otomatis`
         const rawCfg = d.config ? d.config : (cachedCfg ? { ...d, ...cachedCfg } : d);
         const cfg = normalizeSppConfig(rawCfg);
+        state.sppConfig = cfg;
+        if (d.config) {
+            try { localStorage.setItem('zadil_spp_config_v4', JSON.stringify(cfg)); } catch (err) {}
+        }
         const localStat = getLocalSppStatusForPeriode(currentKeuanganPeriode);
 
         const totalSantriAktif = localStat.totalSantriAktif > 0
@@ -1576,6 +1632,7 @@ function openModalAturanSpp() {
 
         const rawData = (res && res.status === 'success' && res.data) ? res.data : (cachedCfg || {});
         const conf = normalizeSppConfig(rawData);
+        state.sppConfig = conf;
         
         const elAktif = document.getElementById('aturanSppOtomatis');
         const elNominal = document.getElementById('aturanSppNominal');
@@ -1615,7 +1672,7 @@ function saveAturanSppAction(e) {
     const catatanVal = document.getElementById('aturanSppCatatan')?.value || 'SPP Bulanan Santri Mukim';
     const syncUnpaid = document.getElementById('aturanSppSyncBelumLunas')?.checked ?? true;
 
-    const payload = normalizeSppConfig({
+    const baseConfig = normalizeSppConfig({
         aktif: isAktif,
         otomatis: isAktif,
         nominal: nominalVal,
@@ -1624,28 +1681,30 @@ function saveAturanSppAction(e) {
         hariTerbit: tglTerbitVal,
         tglJatuhTempo: tglTempoVal,
         hariTempo: tglTempoVal,
-        catatan: catatanVal,
-        perbaruiTagihanBelumLunas: syncUnpaid
+        catatan: catatanVal
     });
+    const targetPeriode = currentKeuanganPeriode || getCurrentYearMonth();
+    const payload = {
+        ...baseConfig,
+        perbaruiTagihanBelumLunas: syncUnpaid,
+        updateUnpaid: syncUnpaid,
+        targetPeriode: targetPeriode
+    };
 
+    state.sppConfig = baseConfig;
     try {
-        localStorage.setItem('zadil_spp_config_v4', JSON.stringify(payload));
+        localStorage.setItem('zadil_spp_config_v4', JSON.stringify(baseConfig));
     } catch (err) {}
     
     apiCall('saveSppConfig', token, payload).then(async (res) => {
         closeModal('modalAturanSpp', 'modalAturanSppContent');
         const now = new Date();
-        const curYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const curYearMonth = getCurrentYearMonth();
         const localStat = getLocalSppStatusForPeriode(curYearMonth);
 
         // Jika opsi sync dicentang, update tagihan belum lunas di state lokal
-        if (syncUnpaid && Array.isArray(state.tagihan)) {
-            state.tagihan.forEach(t => {
-                const isSpp = (t.Kategori || '').toLowerCase().includes('spp') || (t.Kategori || '').toLowerCase().includes('syahriyah') || (t.Judul_Tagihan || '').toLowerCase().includes('spp');
-                if (isSpp && t.Status !== 'Lunas' && (t.Periode === curYearMonth || t.Periode === currentKeuanganPeriode)) {
-                    t.Nominal = nominalVal;
-                }
-            });
+        if (syncUnpaid) {
+            syncLocalUnpaidSppNominal(nominalVal, [curYearMonth, targetPeriode], false);
         }
 
         // Jika otomatisasi aktif dan tanggal hari ini sudah melewati/sama dengan Tgl Terbit, langsung terbitkan tagihan SPP bulan berjalan!
@@ -2466,16 +2525,16 @@ async function triggerSyncNominalSpp() {
         AppNotify.close();
         if (res && res.status === 'success') {
             AppNotify.toast('success', res.message || 'Tagihan berhasil disinkronkan');
-            if (Array.isArray(state.tagihan)) {
-                state.tagihan.forEach(t => {
-                    const isSpp = (t.Kategori || '').toLowerCase().includes('spp') || (t.Kategori || '').toLowerCase().includes('syahriyah') || (t.Judul_Tagihan || '').toLowerCase().includes('spp');
-                    if (isSpp && t.Status !== 'Lunas' && (t.Periode === periode || !t.Periode)) {
-                        t.Nominal = curNominal;
-                    }
-                });
+            syncLocalUnpaidSppNominal(curNominal, [periode], true);
+            if (typeof renderKeuanganView === 'function') {
+                renderKeuanganView();
+            } else {
+                if (typeof renderTableTagihan === 'function') renderTableTagihan();
+                if (typeof renderCardStatusSpp === 'function') renderCardStatusSpp();
             }
-            if (typeof renderTableTagihan === 'function') renderTableTagihan();
-            if (typeof renderCardStatusSpp === 'function') renderCardStatusSpp();
+            if (typeof refreshAdminData === 'function') {
+                refreshAdminData();
+            }
         } else {
             AppNotify.toast('error', (res && res.message) || 'Gagal menyesuaikan tagihan SPP');
         }
@@ -3130,6 +3189,10 @@ function fallbackCopyPrompt(text, onSuccess) {
 }
 
 if (typeof window !== 'undefined') {
+    window.getCurrentYearMonth = getCurrentYearMonth;
+    window.getActiveSppConfig = getActiveSppConfig;
+    window.isTagihanSpp = isTagihanSpp;
+    window.syncLocalUnpaidSppNominal = syncLocalUnpaidSppNominal;
     window.triggerSyncNominalSpp = triggerSyncNominalSpp;
     window.initRekapTahfizhView = initRekapTahfizhView;
     window.handleRekapDragOver = handleRekapDragOver;

@@ -1512,6 +1512,7 @@ function saveSppConfig(token, configData) {
       hapusTriggerSpp_();
     }
 
+    let syncMsg = "";
     if (parsedObj.nominal) {
       try {
         for (let i = 1; i < data.length; i++) {
@@ -1528,8 +1529,12 @@ function saveSppConfig(token, configData) {
       if (rawObj.perbaruiTagihanBelumLunas || rawObj.updateUnpaid) {
         try {
           const today = new Date();
-          const curPeriod = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
-          syncNominalSppTagihan_(rawObj.targetPeriode || curPeriod, parsedObj.nominal);
+          const ssTz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone() || "Asia/Jakarta";
+          const curPeriod = Utilities.formatDate(today, ssTz, "yyyy-MM");
+          const syncRes = syncNominalSppTagihan_(rawObj.targetPeriode || curPeriod, parsedObj.nominal);
+          if (syncRes && syncRes.updated > 0) {
+            syncMsg = " (" + syncRes.updated + " tagihan belum lunas disesuaikan ke Rp " + parsedObj.nominal + ")";
+          }
         } catch (errSync) {
           Logger.log("Auto-sync tagihan SPP error: " + errSync.message);
         }
@@ -1537,8 +1542,22 @@ function saveSppConfig(token, configData) {
     }
 
     SpreadsheetApp.flush();
-    return createResponse(true, parsedObj, "Konfigurasi SPP & Otomatisasi berhasil disimpan!");
+    return createResponse(true, parsedObj, "Konfigurasi SPP & Otomatisasi berhasil disimpan!" + syncMsg);
   });
+}
+
+function extractPeriodeTagihanRow_(rawVal, displayVal, fallbackJudul, tz) {
+  if (rawVal instanceof Date && !isNaN(rawVal.getTime())) {
+    return Utilities.formatDate(rawVal, tz || "Asia/Jakarta", "yyyy-MM");
+  }
+  const candidates = [rawVal, displayVal];
+  for (let i = 0; i < candidates.length; i++) {
+    const str = String(candidates[i] || "").trim();
+    if (/^\d{4}-\d{2}$/.test(str)) return str;
+    const parsed = parseBulanTahunId_(str);
+    if (parsed) return parsed;
+  }
+  return parseBulanTahunId_(fallbackJudul);
 }
 
 function syncNominalSppTagihan(token, targetPeriode, nominalBaru) {
@@ -1547,16 +1566,26 @@ function syncNominalSppTagihan(token, targetPeriode, nominalBaru) {
 
   return safeExecute(function() {
     const res = syncNominalSppTagihan_(targetPeriode, nominalBaru);
-    return createResponse(true, res, "Berhasil memperbarui " + res.updated + " tagihan SPP belum lunas menjadi Rp " + res.nominal);
+    let msg = "Berhasil memperbarui " + res.updated + " tagihan SPP belum lunas menjadi Rp " + res.nominal;
+    if (res.updated === 0) {
+      msg = res.matchedUnpaid > 0
+        ? "Seluruh (" + res.matchedUnpaid + ") tagihan SPP belum lunas periode " + res.periode + " sudah sesuai Rp " + res.nominal
+        : "Tidak ada tagihan SPP belum lunas pada periode " + res.periode + " yang perlu disesuaikan.";
+    }
+    return createResponse(true, res, msg);
   });
 }
 
 function syncNominalSppTagihan_(targetPeriode, nominalBaru) {
-  const sheetTagihan = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Tagihan");
-  if (!sheetTagihan) return { updated: 0, nominal: nominalBaru };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetTagihan = ss.getSheetByName("Data_Tagihan");
+  if (!sheetTagihan) return { updated: 0, matchedUnpaid: 0, nominal: nominalBaru };
 
-  const data = sheetTagihan.getDataRange().getValues();
-  if (data.length <= 1) return { updated: 0, nominal: nominalBaru };
+  const range = sheetTagihan.getDataRange();
+  const data = range.getValues();
+  if (data.length <= 1) return { updated: 0, matchedUnpaid: 0, nominal: nominalBaru };
+  const displayData = range.getDisplayValues();
+  const ssTz = ss.getSpreadsheetTimeZone() || "Asia/Jakarta";
 
   const headers = data[0];
   const colNominal = headers.indexOf("Nominal");
@@ -1565,32 +1594,42 @@ function syncNominalSppTagihan_(targetPeriode, nominalBaru) {
   const colJudul = headers.indexOf("Judul_Tagihan");
   const colPeriode = headers.indexOf("Periode");
 
-  if (colNominal === -1 || colStatus === -1) return { updated: 0, nominal: nominalBaru };
+  if (colNominal === -1 || colStatus === -1) return { updated: 0, matchedUnpaid: 0, nominal: nominalBaru };
 
   const newNom = Number(nominalBaru) || 300000;
   const today = new Date();
-  const curPeriod = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
-  const perToMatch = targetPeriode || curPeriod;
+  const curPeriod = Utilities.formatDate(today, ssTz, "yyyy-MM");
+  const perToMatch = targetPeriode === "ALL"
+    ? "ALL"
+    : (extractPeriodeTagihanRow_(targetPeriode, targetPeriode, targetPeriode, ssTz) || curPeriod);
 
   let updatedCount = 0;
+  let matchedUnpaid = 0;
   for (let r = 1; r < data.length; r++) {
-    const rowStatus = String(data[r][colStatus] || "").trim();
-    const rowKat = String(data[r][colKat] || "").toLowerCase();
-    const rowJudul = String(data[r][colJudul] || "").toLowerCase();
-    const rowPer = String(data[r][colPeriode] || parseBulanTahunId_(rowJudul));
+    const rowStatus = String(data[r][colStatus] || "").trim().toLowerCase();
+    const rowKat = String(colKat !== -1 ? data[r][colKat] || "" : "").toLowerCase();
+    const rowJudulRaw = colJudul !== -1 ? data[r][colJudul] || "" : "";
+    const rowJudul = String(rowJudulRaw).toLowerCase();
+    const rowPerRaw = colPeriode !== -1 ? data[r][colPeriode] : "";
+    const rowPerDisp = colPeriode !== -1 ? displayData[r][colPeriode] : "";
+    const rowPer = extractPeriodeTagihanRow_(rowPerRaw, rowPerDisp, rowJudulRaw, ssTz);
 
     const isSpp = rowKat.includes("spp") || rowKat.includes("syahriyah") || rowJudul.includes("spp") || rowJudul.includes("syahriyah");
-    const isUnpaid = rowStatus !== "Lunas";
+    const isUnpaid = rowStatus !== "lunas";
     const isMatch = !perToMatch || perToMatch === "ALL" || rowPer === perToMatch;
 
     if (isSpp && isUnpaid && isMatch) {
-      sheetTagihan.getRange(r + 1, colNominal + 1).setValue(newNom);
-      updatedCount++;
+      matchedUnpaid++;
+      const curNom = Number(data[r][colNominal]);
+      if (curNom !== newNom) {
+        sheetTagihan.getRange(r + 1, colNominal + 1).setValue(newNom);
+        updatedCount++;
+      }
     }
   }
 
   SpreadsheetApp.flush();
-  return { updated: updatedCount, nominal: newNom, periode: perToMatch };
+  return { updated: updatedCount, matchedUnpaid: matchedUnpaid, nominal: newNom, periode: perToMatch };
 }
 
 function pasangTriggerSpp_() {
