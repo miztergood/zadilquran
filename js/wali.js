@@ -37,28 +37,29 @@ function shareProgressWa() {
     const tasmi = mySetoran.filter(x => (x.Jenis || '').toLowerCase().includes('tasmi')).length;
     const last = mySetoran.length > 0 ? mySetoran[0] : null;
 
-    let text = `*BUKU MUTABA'AH SETORAN HARIAN SANTRI*\n`;
+    let text = `*LAPORAN HAFALAN SANTRI*\n`;
     text += `*${state.appName || 'PPTQ Zadil Quran'}*\n\n`;
     text += `Nama Santri: *${s.Nama_Santri}*\n`;
     text += `ID Santri: *${s.ID_Santri}*\n`;
     text += `Pembimbing: *${u ? u.Nama : '-'}*\n\n`;
-    text += `*Ringkasan Mutaba'ah:*\n`;
+    text += `*Ringkasan Laporan Hafalan:*\n`;
     text += `• Total Sesi: ${mySetoran.length}\n`;
     text += `• Ziyadah (Hafalan Baru): ${ziyadah}\n`;
     text += `• Muroja'ah (Pengulangan): ${murojaah}\n`;
     text += `• Binnadhor (Melihat Mushaf/Jilid): ${binnadhor}\n`;
-    text += `• Tasmi' (Ujian Simakan Bil-Ghoib): ${tasmi}\n`;
+    text += `• Tasmi' (Penilaian Hafalan per Juz): ${tasmi}\n`;
     if (last) {
         const nilaiText = last.Nilai || last.Predikat || 'Mumtaz';
         const isJilid = last.Tingkatan === 'Jilid';
         const detailLast = (last.Jenis || '').toLowerCase().includes('tasmi') ? parseDetailTasmi(last.Detail_Tasmi) : null;
+        const lastMaxSkor = detailLast ? (detailLast.maksimalSkor || (String(detailLast.juz || last.Juz) === '30' ? 115 : 100)) : 100;
         text += `\n*Setoran Terakhir (${last.TM || 'TM'}):*\n`;
         text += `• Tingkatan: ${last.Tingkatan || "Al-Qur'an"}\n`;
         text += `• Materi: ${last.Surah} (${isJilid ? last.Juz : 'Juz ' + last.Juz}), ${isJilid ? 'Baris/Materi ' : 'Ayat '}${last.Ayat}, ${detailLast ? last.Halaman : 'Hal ' + last.Halaman}\n`;
         text += `• Kategori: ${last.Jenis}\n`;
         if (detailLast) {
-            text += `• Total Skor Tasmi': *${detailLast.totalSkor} / 100* (Min. Lulus 80)\n`;
-            text += `• Status Ikhtibar: *${detailLast.statusKelulusan}*\n`;
+            text += `• Total Skor Tasmi': *${detailLast.totalSkor} / ${lastMaxSkor}* (Min. Lulus 80)\n`;
+            text += `• Status Penilaian: *${detailLast.statusKelulusan}*\n`;
         } else {
             text += `• Nilai: ${nilaiText}\n`;
         }
@@ -102,7 +103,7 @@ function cetakMutabaahWali() {
                 ? `${item.Surah || '-'} (${item.Juz || '-'})`
                 : `QS. ${item.Surah || '-'} (Juz ${item.Juz || '-'})`;
             const ayatHal = detailTasmi
-                ? `20 Halaman &bull; Skor ${detailTasmi.totalSkor}/100`
+                ? `${detailTasmi.totalPages || (String(detailTasmi.juz || item.Juz) === '30' ? 23 : 20)} Halaman &bull; Skor ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || item.Juz) === '30' ? 115 : 100)}`
                 : `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${item.Ayat || '-'} / Hal ${item.Halaman || '-'}`;
             const paraf = item.ParafUstadz || (u ? u.Nama : 'Disahkan');
             return `
@@ -122,7 +123,7 @@ function cetakMutabaahWali() {
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Buku Mutaba'ah Harian - ${s.Nama_Santri}</title>
+<title>Laporan Hafalan Harian - ${s.Nama_Santri}</title>
 <style>
   @page { size: A4 portrait; margin: 12mm; }
   * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', Arial, sans-serif; }
@@ -148,7 +149,7 @@ function cetakMutabaahWali() {
 </head>
 <body>
   <div class="no-print">
-    <button class="btn btn-primary" onclick="window.print()">&#128424; Cetak / Simpan PDF Buku Mutaba'ah</button>
+    <button class="btn btn-primary" onclick="window.print()">&#128424; Cetak / Simpan PDF Laporan Hafalan</button>
     <button class="btn btn-close" onclick="window.close()">Tutup</button>
   </div>
   <div class="sheet">
@@ -156,8 +157,8 @@ function cetakMutabaahWali() {
       <img src="${logoUrl}" alt="Logo Zadilcel" onerror="this.style.display='none'">
       <div class="header-text">
         <h1>Pondok Pesantren Tahfizh Zadil Qur'an</h1>
-        <h2>Lembar Buku Mutaba'ah Setoran Harian Santri</h2>
-        <p>Program: Ziyadah &bull; Muroja'ah &bull; Binnadhor (Al-Qur'an &amp; Jilid)</p>
+        <h2>Laporan Hafalan &amp; Setoran Harian Santri</h2>
+        <p>Program: Ziyadah &bull; Muroja'ah &bull; Binnadhor &bull; Tasmi' (Al-Qur'an &amp; Jilid)</p>
       </div>
     </div>
     <div class="meta-grid">
@@ -192,7 +193,7 @@ function cetakMutabaahWali() {
 
     const win = window.open('', '_blank', 'width=860,height=720,scrollbars=yes');
     if (!win) {
-        AppNotify.toast('Izinkan pop-up browser untuk mengunduh PDF Mutaba\'ah', 'warning');
+        AppNotify.toast('Izinkan pop-up browser untuk mengunduh PDF Laporan Hafalan', 'warning');
         return;
     }
     win.document.open();
@@ -384,16 +385,18 @@ function renderWaliList() {
             let tasmiSectionHtml = '';
             if (isTasmi && detailTasmi) {
                 const totalSkor = detailTasmi.totalSkor || 0;
+                const totalPages = detailTasmi.totalPages || (String(detailTasmi.juz || set.Juz) === '30' ? 23 : 20);
+                const maxScore = detailTasmi.maksimalSkor || (totalPages * 5);
                 const statusBadge = isLulusTasmi
-                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8]">✅ LULUS IKHTIBAR</span>'
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8]">✅ LULUS TASMI\'</span>'
                     : '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-50 text-red-700 border border-red-200">🔁 TIDAK LULUS (Mengulang)</span>';
 
                 tasmiSectionHtml = `
                     <div class="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 rounded-xl p-3 my-2.5 space-y-2">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 block">Total Skor Kelancaran (20 Hal)</span>
-                                <span class="text-base font-black ${isLulusTasmi ? 'text-[#1c6b45] dark:text-[#83c9a6]' : 'text-red-600 dark:text-red-400'}">${totalSkor} / 100</span>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 block">Total Skor Kelancaran (${totalPages} Hal)</span>
+                                <span class="text-base font-black ${isLulusTasmi ? 'text-[#1c6b45] dark:text-[#83c9a6]' : 'text-red-600 dark:text-red-400'}">${totalSkor} / ${maxScore}</span>
                                 <span class="text-[10px] text-gray-500 dark:text-gray-400 ml-1">(Min. Lulus 80)</span>
                             </div>
                             ${statusBadge}
@@ -401,7 +404,7 @@ function renderWaliList() {
                         <div class="grid grid-cols-2 gap-2 pt-1.5 border-t border-indigo-200/60 dark:border-indigo-900/40">
                             <button type="button" onclick="openWaliTasmiDetail('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-white dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-table-list"></i>
-                                <span>Rincian 20 Hal &amp; Tajwid</span>
+                                <span>Rincian ${totalPages} Hal &amp; Tajwid</span>
                             </button>
                             <button type="button" onclick="cetakWaliTasmiCard('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
                                 <i class="fa-solid fa-file-pdf"></i>

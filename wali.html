@@ -102,8 +102,8 @@
 
             <!-- Segmented Tab Switcher (3 Menu Utama Wali Santri) -->
             <div class="grid grid-cols-3 gap-1.5 bg-white dark:bg-darkcard p-1.5 rounded-2xl border border-gray-200 dark:border-darkborder shadow-xs">
-                <button onclick="switchWaliTab('hafalan')" id="tabBtnWaliHafalan" class="py-2 px-2 rounded-xl text-xs font-bold bg-[#9a2024] text-white shadow-xs transition flex items-center justify-center gap-1.5 relative">
-                    <i class="fa-solid fa-book-quran"></i> <span>Mutaba'ah</span>
+                <button onclick="switchWaliTab('hafalan')" id="tabBtnWaliHafalan" class="py-2 px-1.5 rounded-xl text-[11px] sm:text-xs font-bold bg-[#9a2024] text-white shadow-xs transition flex items-center justify-center gap-1 relative">
+                    <i class="fa-solid fa-book-quran"></i> <span>Laporan Hafalan</span>
                 </button>
                 <button onclick="switchWaliTab('keuangan')" id="tabBtnWaliKeuangan" class="py-2 px-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition flex items-center justify-center gap-1.5 relative">
                     <i class="fa-solid fa-wallet"></i> <span>SPP &amp; Biaya</span>
@@ -139,22 +139,22 @@
                     </div>
                 </div>
 
-                <!-- Tombol Aksi: Bagikan WA & Cetak Buku Mutaba'ah PDF -->
+                <!-- Tombol Aksi: Bagikan WA & Cetak Laporan Hafalan PDF -->
                 <div class="grid grid-cols-2 gap-2.5">
                     <button onclick="shareProgressWa()" class="bg-[#1c6b45] hover:bg-[#165737] text-white py-2.5 px-3 rounded-2xl font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98">
                         <i class="fa-brands fa-whatsapp text-sm"></i>
                         <span>Bagikan ke WA</span>
                     </button>
-                    <button onclick="cetakMutabaahWali()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white py-2.5 px-3 rounded-2xl font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98">
-                        <i class="fa-solid fa-file-pdf text-sm"></i>
-                        <span>Unduh Mutaba'ah</span>
+                    <button onclick="cetakMutabaahWali()" class="bg-[#9a2024] hover:bg-[#871a1e] text-white py-2.5 px-2.5 rounded-2xl font-bold text-[11px] sm:text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98">
+                        <i class="fa-solid fa-file-pdf text-sm shrink-0"></i>
+                        <span>Unduh Laporan Hafalan</span>
                     </button>
                 </div>
 
                 <div class="space-y-2 pt-1">
                     <div class="flex items-center justify-between">
                         <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-book-open-reader text-[#9a2024]"></i> Catatan Mutaba'ah Harian
+                            <i class="fa-solid fa-book-open-reader text-[#9a2024]"></i> Laporan Hafalan Harian
                         </h3>
                         <span class="text-xs text-gray-400" id="waliCountDisplay">Memuat...</span>
                     </div>
@@ -181,7 +181,7 @@
                     </div>
                     <h4 class="font-bold text-gray-800 dark:text-white text-sm">Belum Ada Catatan Setoran</h4>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">
-                        Data rekaman mutaba'ah harian ananda akan muncul di sini segera setelah disimak dan dinilai oleh Ustadz pembimbing.
+                        Data rekaman laporan hafalan harian ananda akan muncul di sini segera setelah disimak dan dinilai oleh Ustadz pembimbing.
                     </p>
                 </div>
 
@@ -255,7 +255,7 @@
         <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-darkcard/95 backdrop-blur-md border-t border-gray-200/80 dark:border-darkborder py-1.5 px-3 flex items-center justify-around shadow-xl max-w-md mx-auto">
             <button onclick="switchWaliTab('hafalan')" id="navBottomHafalan" class="bottom-nav-btn active text-[#9a2024] dark:text-[#f29fa3] font-bold">
                 <i class="fa-solid fa-book-quran text-base"></i>
-                <span class="text-[10px]">Mutaba'ah</span>
+                <span class="text-[10px]">Laporan Hafalan</span>
             </button>
             <button onclick="switchWaliTab('keuangan')" id="navBottomKeuangan" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
                 <i class="fa-solid fa-wallet text-base"></i>

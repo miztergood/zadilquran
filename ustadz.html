@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workspace Ustadz - Sistem Mutaba'ah Zadil Qur'an</title>
+    <title>Workspace Ustadz - Penilaian &amp; Laporan Hafalan Zadil Qur'an</title>
     
     <!-- PWA Meta Tags & Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -63,7 +63,7 @@
                     <i class="fa-solid fa-chart-pie w-5 text-center text-sm"></i> <span>Dashboard Utama</span>
                 </button>
                 <button type="button" onclick="switchUstadzSection('input')" id="menu-ustadz-input" class="flex items-center gap-3 w-full p-2.5 rounded-xl transition cursor-pointer text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white">
-                    <i class="fa-solid fa-pen-nib w-5 text-center text-sm"></i> <span>Input Mutaba'ah</span>
+                    <i class="fa-solid fa-pen-nib w-5 text-center text-sm"></i> <span>Input Penilaian</span>
                 </button>
                 <button type="button" onclick="switchUstadzSection('rekapan')" id="menu-ustadz-rekapan" class="flex items-center gap-3 w-full p-2.5 rounded-xl transition cursor-pointer text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white">
                     <i class="fa-solid fa-table-list w-5 text-center text-sm"></i> <span>Buku Rekapan</span>
@@ -128,7 +128,7 @@
                                 <span>Halaqah Tahfizh Qur'an</span>
                             </div>
                             <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight">Ahlan wa Sahlan, <span id="dashUstadzName">Ustadz</span></h2>
-                            <p class="text-xs sm:text-sm text-white/80 mt-1">Pantau perkembangan hafalan santri binaan dan catat mutaba'ah hari ini.</p>
+                            <p class="text-xs sm:text-sm text-white/80 mt-1">Pantau perkembangan hafalan santri binaan dan catat penilaian hari ini.</p>
                         </div>
                         <div class="flex items-center gap-2 self-start sm:self-auto bg-black/20 px-3.5 py-2 rounded-2xl border border-white/10 text-xs">
                             <i class="fa-regular fa-calendar-check text-emerald-300"></i>
@@ -179,7 +179,7 @@
                                 </div>
                             </div>
                             <p class="text-2xl font-black text-[#9a2024] dark:text-[#f29fa3] mt-2" id="kpiTotalBulanIni">0</p>
-                            <span class="text-[11px] text-gray-400">Total catatan mutaba'ah</span>
+                            <span class="text-[11px] text-gray-400">Total catatan penilaian</span>
                         </div>
                     </div>
 
@@ -236,12 +236,12 @@
                 </section>
 
                 <!-- ============================================================
-                     VIEW 2: LEMBAR MUTABA'AH & INPUT CEPAT (QUICK MUTABA'AH)
+                     VIEW 2: INPUT PENILAIAN & SETORAN HARIAN
                      ============================================================ -->
                 <section id="ustadzViewInput" class="hidden space-y-6">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Lembar Mutaba'ah Harian</h2>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Input Penilaian Harian</h2>
                             <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Pencatatan Cepat Ziyadah, Muroja'ah, Binnadhor &amp; Tasmi'</p>
                         </div>
                         <div class="inline-flex items-center gap-2 bg-[#edf7f2] dark:bg-[#12452c]/40 border border-[#b2dfc8] dark:border-[#12452c] px-3.5 py-2 rounded-xl text-xs font-semibold text-[#1c6b45] dark:text-[#83c9a6] self-start">
@@ -402,7 +402,7 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nilai Evaluasi (Standar Mutaba'ah)</label>
+                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nilai Evaluasi (Standar Penilaian)</label>
                                             <div class="grid grid-cols-3 gap-2 pt-0.5">
                                                 <label class="cursor-pointer text-center">
                                                     <input type="radio" name="smartPredikat" value="Mumtaz" checked class="peer sr-only">
@@ -429,29 +429,29 @@
                                         </div>
                                     </div>
 
-                                    <!-- 3C. PANEL INPUT KHUSUS TASMI' (IKHTIBAR 1 JUZ RESMI) -->
+                                    <!-- 3C. PANEL INPUT KHUSUS PENILAIAN TASMI' -->
                                     <div id="panelInputTasmi" class="hidden space-y-4">
                                         <div class="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 rounded-2xl p-3 flex items-start gap-2.5">
                                             <i class="fa-solid fa-award text-indigo-600 dark:text-indigo-400 text-base mt-0.5"></i>
                                             <div class="text-xs text-indigo-900 dark:text-indigo-200 leading-relaxed">
-                                                <span class="font-bold block">Rubrik Penilaian Ikhtibar Tasmi' (1 Juz = 20 Halaman)</span>
-                                                <span class="text-[11px] opacity-90">Kelulusan ditentukan dari total skor Halaman 1–20 dengan <strong>Skor Minimal Lulus: 80</strong>. Nilai Tajwid menggunakan huruf A, B, C, atau D.</span>
+                                                <span class="font-bold block">Rubrik Penilaian Tasmi' (Juz 1–29: 20 Hal • Juz 30: 23 Hal)</span>
+                                                <span class="text-[11px] opacity-90">Kelulusan ditentukan dari total skor per halaman dengan <strong>Skor Minimal Lulus: 80</strong>. Nilai Tajwid menggunakan huruf A, B, C, atau D.</span>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Juz yang Diujikan (Ikhtibar)</label>
-                                            <select id="tasmiJuz" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Juz yang Diujikan (Penilaian Tasmi')</label>
+                                            <select id="tasmiJuz" onchange="onTasmiJuzChange()" class="w-full px-3 py-2 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-darkborder rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500">
                                                 <!-- Diisi oleh JS (Juz 1 - 30) -->
                                             </select>
                                         </div>
 
-                                        <!-- A. TABEL PENILAIAN KELANCARAN HAL 1-20 -->
+                                        <!-- A. TABEL PENILAIAN KELANCARAN PER HALAMAN -->
                                         <div class="bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-darkborder rounded-2xl p-3.5 space-y-3">
                                             <div class="flex flex-wrap items-center justify-between gap-2">
                                                 <div>
-                                                    <span class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-white block">A. Tabel Penilaian Kelancaran (Hal 1–20)</span>
-                                                    <span class="text-[10px] text-gray-500 dark:text-gray-400" id="tasmiFilledCountText">Terisi: 0 / 20 halaman</span>
+                                                    <span id="tasmiTableHeading" class="text-xs font-bold uppercase tracking-wider text-gray-800 dark:text-white block">A. Tabel Penilaian Kelancaran (Hal 1–23)</span>
+                                                    <span class="text-[10px] text-gray-500 dark:text-gray-400" id="tasmiFilledCountText">Terisi: 0 / 23 halaman</span>
                                                 </div>
                                                 <div class="flex items-center gap-1.5">
                                                     <button type="button" onclick="fillAllTasmiScore(5)" class="px-2.5 py-1 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-lg text-[11px] font-bold shadow-xs transition active:scale-95">
@@ -470,7 +470,7 @@
                                                 <span class="text-red-600 font-bold">2</span> = &ge;11x / Dituntun
                                             </div>
 
-                                            <!-- Grid 4 blok (1-5, 6-10, 11-15, 16-20) -->
+                                            <!-- Grid 4 blok (dinamis: 6,6,6,5 untuk Juz 30; 5,5,5,5 untuk Juz 1-29) -->
                                             <div id="tasmiPagesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                                                 <!-- Diisi oleh JS -->
                                             </div>
@@ -479,10 +479,10 @@
                                             <div id="tasmiLiveResultBox" class="p-3 rounded-xl border border-gray-200 dark:border-darkborder bg-white dark:bg-darkcard flex flex-wrap items-center justify-between gap-2">
                                                 <div>
                                                     <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block">Total Keseluruhan Skor</span>
-                                                    <span class="text-xl font-black text-gray-900 dark:text-white" id="tasmiTotalSkorDisplay">0 / 100</span>
+                                                    <span class="text-xl font-black text-gray-900 dark:text-white" id="tasmiTotalSkorDisplay">0 / 115</span>
                                                 </div>
                                                 <div id="tasmiStatusBadgeDisplay" class="px-3 py-1 rounded-full text-xs font-extrabold bg-gray-100 text-gray-500">
-                                                    Lengkapi 20 Halaman
+                                                    Lengkapi 23 Halaman
                                                 </div>
                                             </div>
                                         </div>
@@ -513,7 +513,7 @@
 
                                     <button type="submit" class="w-full bg-[#9a2024] hover:bg-[#871a1e] text-white font-bold py-3.5 rounded-2xl transition shadow-md text-sm flex items-center justify-center gap-2 active:scale-98">
                                         <i class="fa-solid fa-floppy-disk"></i>
-                                        <span>Simpan &amp; Paraf Mutaba'ah</span>
+                                        <span>Simpan &amp; Paraf Penilaian</span>
                                     </button>
                                 </form>
                             </div>
@@ -554,13 +554,13 @@
                 <section id="ustadzViewRekapan" class="hidden space-y-5">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Buku Rekapitulasi Mutaba'ah</h2>
-                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Rekapan mandiri seluruh setoran binaan halaqah dengan filter lengkap &amp; cetak.</p>
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Buku Rekapitulasi Laporan Hafalan</h2>
+                            <p class="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Rekapan mandiri seluruh setoran &amp; penilaian binaan halaqah dengan filter lengkap &amp; cetak.</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <button onclick="cetakRekapanUstadz()" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#9a2024] hover:bg-[#871a1e] text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95">
                                 <i class="fa-solid fa-print"></i>
-                                <span>Cetak Rapor Mutaba'ah</span>
+                                <span>Cetak Laporan Hafalan</span>
                             </button>
                         </div>
                     </div>
@@ -681,7 +681,7 @@
                 </button>
                 <button type="button" onclick="switchUstadzSection('input')" id="bottomNav-ustadz-input" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
                     <i class="fa-solid fa-pen-to-square text-base"></i>
-                    <span class="text-[10px]">Input Setor</span>
+                    <span class="text-[10px]">Penilaian</span>
                 </button>
                 <button type="button" onclick="switchUstadzSection('rekapan')" id="bottomNav-ustadz-rekapan" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
                     <i class="fa-solid fa-table-list text-base"></i>
@@ -699,13 +699,13 @@
         </main>
     </div>
 
-    <!-- Modal Cetak Rapor Mutaba'ah Digital -->
+    <!-- Modal Cetak Laporan Hafalan Digital -->
     <div id="modalCetakUstadz" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-5">
         <div class="bg-white text-gray-900 rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
             <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
                 <h3 class="font-bold text-sm sm:text-base flex items-center gap-2 text-[#9a2024]">
                     <i class="fa-solid fa-file-pdf"></i>
-                    <span>Pratinjau Rapor Buku Mutaba'ah Santri</span>
+                    <span>Pratinjau Laporan Hafalan Santri</span>
                 </h3>
                 <div class="flex items-center gap-2">
                     <button onclick="window.print()" class="px-3 py-1.5 bg-[#9a2024] hover:bg-[#871a1e] text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5">

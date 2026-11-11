@@ -635,7 +635,7 @@ function cetakKwitansiResmi(tagihan, santri) {
     }
 }
 
-// ==================== RUBRIK & GENERATOR KARTU TASMI' (IKHTIBAR 1 JUZ) ====================
+// ==================== RUBRIK & GENERATOR KARTU PENILAIAN TASMI' ====================
 const TASMI_PASSING_SCORE = 80;
 const TASMI_VALID_SCORES = [5, 4, 3, 2];
 const TASMI_VALID_GRADES = ['A', 'B', 'C', 'D'];
@@ -660,18 +660,53 @@ const TASMI_TAJWID_ASPEK = [
 ];
 
 /**
- * Menghitung total skor dan status kelulusan Ikhtibar Tasmi' 1 Juz (20 halaman).
- * Kelulusan murni ditentukan dari Total Skor Kelancaran >= 80.
+ * Mengembalikan konfigurasi struktur halaman per Juz.
+ * Khusus Juz 30 terdiri atas 23 halaman dengan pembagian 6, 6, 6, 5.
+ * Juz 1-29 terdiri atas 20 halaman dengan pembagian 5, 5, 5, 5.
  */
-function hitungHasilTasmi(skorHalaman) {
+function getTasmiConfigByJuz(juz) {
+    const cleanJuz = String(juz || '').trim();
+    if (cleanJuz === '30') {
+        return {
+            juz: '30',
+            totalPages: 23,
+            maxScore: 115,
+            blocks: [
+                { title: 'Halaman 1 – 6', start: 1, end: 6 },
+                { title: 'Halaman 7 – 12', start: 7, end: 12 },
+                { title: 'Halaman 13 – 18', start: 13, end: 18 },
+                { title: 'Halaman 19 – 23', start: 19, end: 23 }
+            ]
+        };
+    }
+    return {
+        juz: cleanJuz || '1',
+        totalPages: 20,
+        maxScore: 100,
+        blocks: [
+            { title: 'Halaman 1 – 5', start: 1, end: 5 },
+            { title: 'Halaman 6 – 10', start: 6, end: 10 },
+            { title: 'Halaman 11 – 15', start: 11, end: 15 },
+            { title: 'Halaman 16 – 20', start: 16, end: 20 }
+        ]
+    };
+}
+
+/**
+ * Menghitung total skor dan status kelulusan Penilaian Tasmi' 1 Juz.
+ * Khusus Juz 30 memiliki 23 halaman (maks 115), Juz 1-29 memiliki 20 halaman (maks 100).
+ * Kelulusan ditentukan murni dari Total Skor Mentah >= 80 (Opsi A).
+ */
+function hitungHasilTasmi(skorHalaman, juz = '1') {
     const map = skorHalaman || {};
+    const cfg = getTasmiConfigByJuz(juz);
     let totalSkor = 0;
     let filledCount = 0;
     const missingPages = [];
     const invalidPages = [];
     const sanitizedScores = {};
 
-    for (let p = 1; p <= 20; p++) {
+    for (let p = 1; p <= cfg.totalPages; p++) {
         const rawVal = map[p] !== undefined ? map[p] : map[String(p)];
         if (rawVal === undefined || rawVal === null || rawVal === '') {
             missingPages.push(p);
@@ -687,13 +722,16 @@ function hitungHasilTasmi(skorHalaman) {
         filledCount++;
     }
 
-    const isComplete = filledCount === 20 && invalidPages.length === 0;
+    const isComplete = filledCount === cfg.totalPages && invalidPages.length === 0;
     const lulus = isComplete && totalSkor >= TASMI_PASSING_SCORE;
 
     return {
+        juz: cfg.juz,
+        totalPages: cfg.totalPages,
+        blocks: cfg.blocks,
         skorPerHalaman: sanitizedScores,
         totalSkor,
-        maksimalSkor: 100,
+        maksimalSkor: cfg.maxScore,
         passingScore: TASMI_PASSING_SCORE,
         filledCount,
         isComplete,
@@ -743,31 +781,26 @@ function parseDetailTasmi(raw) {
 }
 
 /**
- * Menampilkan popup rincian skor 20 halaman & 9 aspek Tajwid untuk catatan Tasmi'.
+ * Menampilkan popup rincian skor halaman & 9 aspek Tajwid untuk catatan Penilaian Tasmi'.
  */
 function tampilkanDetailTasmiModal(setoran, santri, pengujiName) {
     if (!setoran) return;
     const detail = parseDetailTasmi(setoran.Detail_Tasmi);
     if (!detail) {
-        AppNotify.info('Rincian Tasmi\'', 'Catatan Tasmi\' ini belum memiliki rincian tabel skor 20 halaman.');
+        AppNotify.info('Rincian Penilaian Tasmi\'', 'Catatan Tasmi\' ini belum memiliki rincian tabel skor per halaman.');
         return;
     }
 
     const s = santri || {};
-    const hasil = hitungHasilTasmi(detail.skorPerHalaman || {});
+    const juzTarget = detail.juz || setoran.Juz || '1';
+    const hasil = hitungHasilTasmi(detail.skorPerHalaman || {}, juzTarget);
     const total = detail.totalSkor !== undefined ? Number(detail.totalSkor) : hasil.totalSkor;
+    const maxScore = detail.maksimalSkor !== undefined ? Number(detail.maksimalSkor) : hasil.maksimalSkor;
     const isLulus = detail.statusKelulusan ? detail.statusKelulusan === 'LULUS' : total >= TASMI_PASSING_SCORE;
     const tajwid = detail.tajwid || {};
     const penguji = pengujiName || setoran.ParafUstadz || 'Ustadz Penguji';
 
-    const colBlocks = [
-        { start: 1, end: 5 },
-        { start: 6, end: 10 },
-        { start: 11, end: 15 },
-        { start: 16, end: 20 }
-    ];
-
-    const tableColsHtml = colBlocks.map(blk => {
+    const tableColsHtml = hasil.blocks.map(blk => {
         let rows = '';
         let sub = 0;
         for (let p = blk.start; p <= blk.end; p++) {
@@ -816,18 +849,18 @@ function tampilkanDetailTasmiModal(setoran, santri, pengujiName) {
     }).join('');
 
     const statusBadge = isLulus
-        ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8] font-extrabold text-xs">✅ LULUS IKHTIBAR</span>'
+        ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8] font-extrabold text-xs">✅ LULUS TASMI\'</span>'
         : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 font-extrabold text-xs">🔁 TIDAK LULUS (Wajib Mengulang)</span>';
 
     const htmlBody = `
         <div class="text-left space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-3">
                 <div>
-                    <div class="text-[11px] text-gray-500 font-semibold">Santri: <strong class="text-gray-900">${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</strong> &bull; Juz ${escapeHtml(detail.juz || setoran.Juz)}</div>
+                    <div class="text-[11px] text-gray-500 font-semibold">Santri: <strong class="text-gray-900">${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</strong> &bull; Juz ${escapeHtml(juzTarget)} (${hasil.totalPages} Hal)</div>
                     <div class="text-[11px] text-gray-500 mt-0.5">Penguji: <strong class="text-gray-800">${escapeHtml(penguji)}</strong> &bull; ${escapeHtml(setoran.Tanggal || '-')}</div>
                 </div>
                 <div class="text-right">
-                    <div class="text-lg font-black ${isLulus ? 'text-[#1c6b45]' : 'text-red-600'}">Total Skor: ${total} / 100</div>
+                    <div class="text-lg font-black ${isLulus ? 'text-[#1c6b45]' : 'text-red-600'}">Total Skor: ${total} / ${maxScore}</div>
                     <div class="mt-0.5">${statusBadge}</div>
                 </div>
             </div>
@@ -853,7 +886,7 @@ function tampilkanDetailTasmiModal(setoran, santri, pengujiName) {
     `;
 
     Swal.fire({
-        title: `Hasil Ikhtibar Tasmi' Juz ${escapeHtml(detail.juz || setoran.Juz)}`,
+        title: `Hasil Penilaian Tasmi' Juz ${escapeHtml(juzTarget)}`,
         html: htmlBody,
         width: '720px',
         showCancelButton: true,
@@ -875,8 +908,8 @@ function tampilkanDetailTasmiModal(setoran, santri, pengujiName) {
 }
 
 /**
- * Generator Kartu Hasil Penilaian Tasmi' / Ikhtibar Resmi PPTQ Zadil Qur'an Tuban (PDF / Print)
- * Menyesuaikan 100% tata letak & ketentuan resmi pondok dengan batas kelulusan skor >= 80.
+ * Generator Kartu Hasil Penilaian Tasmi' Resmi PPTQ Zadil Qur'an Tuban (PDF / Print)
+ * Mendukung Juz 1-29 (20 halaman: 5,5,5,5) dan Juz 30 (23 halaman: 6,6,6,5). Batas kelulusan >= 80.
  */
 function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
     if (!setoran) {
@@ -891,8 +924,10 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
     }
 
     const s = santri || {};
-    const hasil = hitungHasilTasmi(detail.skorPerHalaman || {});
+    const juzTarget = detail.juz || setoran.Juz || '1';
+    const hasil = hitungHasilTasmi(detail.skorPerHalaman || {}, juzTarget);
     const totalSkor = detail.totalSkor !== undefined ? Number(detail.totalSkor) : hasil.totalSkor;
+    const maxScore = detail.maksimalSkor !== undefined ? Number(detail.maksimalSkor) : hasil.maksimalSkor;
     const isLulus = detail.statusKelulusan ? detail.statusKelulusan === 'LULUS' : totalSkor >= TASMI_PASSING_SCORE;
     const tajwid = detail.tajwid || {};
     const penguji = pengujiName || setoran.ParafUstadz || 'Ustadz Penguji';
@@ -902,28 +937,21 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
 
     let halRowsHtml = '';
     const subTotals = [0, 0, 0, 0];
-    for (let r = 1; r <= 5; r++) {
-        const p1 = r;
-        const p2 = r + 5;
-        const p3 = r + 10;
-        const p4 = r + 15;
-        const s1 = detail.skorPerHalaman ? (detail.skorPerHalaman[p1] ?? detail.skorPerHalaman[String(p1)] ?? '-') : '-';
-        const s2 = detail.skorPerHalaman ? (detail.skorPerHalaman[p2] ?? detail.skorPerHalaman[String(p2)] ?? '-') : '-';
-        const s3 = detail.skorPerHalaman ? (detail.skorPerHalaman[p3] ?? detail.skorPerHalaman[String(p3)] ?? '-') : '-';
-        const s4 = detail.skorPerHalaman ? (detail.skorPerHalaman[p4] ?? detail.skorPerHalaman[String(p4)] ?? '-') : '-';
-        if (!isNaN(Number(s1))) subTotals[0] += Number(s1);
-        if (!isNaN(Number(s2))) subTotals[1] += Number(s2);
-        if (!isNaN(Number(s3))) subTotals[2] += Number(s3);
-        if (!isNaN(Number(s4))) subTotals[3] += Number(s4);
+    const maxRows = Math.max(...hasil.blocks.map(b => b.end - b.start + 1));
 
-        halRowsHtml += `
-            <tr>
-                <td class="center bold">${p1}</td><td class="center bold">${escapeHtml(s1)}</td>
-                <td class="center bold">${p2}</td><td class="center bold">${escapeHtml(s2)}</td>
-                <td class="center bold">${p3}</td><td class="center bold">${escapeHtml(s3)}</td>
-                <td class="center bold">${p4}</td><td class="center bold">${escapeHtml(s4)}</td>
-            </tr>
-        `;
+    for (let r = 0; r < maxRows; r++) {
+        let cellsHtml = '';
+        hasil.blocks.forEach((blk, bIdx) => {
+            const pageNum = blk.start + r;
+            if (pageNum <= blk.end) {
+                const sc = detail.skorPerHalaman ? (detail.skorPerHalaman[pageNum] ?? detail.skorPerHalaman[String(pageNum)] ?? '-') : '-';
+                if (!isNaN(Number(sc))) subTotals[bIdx] += Number(sc);
+                cellsHtml += `<td class="center bold">${pageNum}</td><td class="center bold">${escapeHtml(sc)}</td>`;
+            } else {
+                cellsHtml += `<td style="background:#f9fafb;"></td><td style="background:#f9fafb;"></td>`;
+            }
+        });
+        halRowsHtml += `<tr>${cellsHtml}</tr>`;
     }
 
     const tajwidRowsHtml = TASMI_TAJWID_ASPEK.map((asp, idx) => {
@@ -945,7 +973,7 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kartu Penilaian Tasmi' Juz ${escapeHtml(detail.juz || setoran.Juz)} - ${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</title>
+    <title>Kartu Penilaian Tasmi' Juz ${escapeHtml(juzTarget)} - ${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</title>
     <style>
         @page { size: A4 portrait; margin: 10mm 12mm; }
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; }
@@ -995,11 +1023,11 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
             </div>
         </div>
 
-        <div class="sec-title">Tabel Penilaian Kelancaran Ikhtibar Tasmi'</div>
+        <div class="sec-title">Tabel Penilaian Kelancaran Tasmi'</div>
 
         <div class="meta-grid">
             <div>Santri: <strong>${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</strong> (${escapeHtml(setoran.ID_Santri)})</div>
-            <div>JUZ: <strong>${escapeHtml(detail.juz || setoran.Juz)}</strong></div>
+            <div>JUZ: <strong>${escapeHtml(juzTarget)}</strong> (${hasil.totalPages} Hal)</div>
             <div>Tanggal: <strong>${escapeHtml(setoran.Tanggal || '-')}</strong></div>
         </div>
 
@@ -1022,7 +1050,7 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
                 </tr>
                 <tr style="background:#eef2ff;">
                     <td colspan="6" class="center bold" style="font-size:11.5px;padding:6px;">JUMLAH KESELURUHAN SKOR</td>
-                    <td colspan="2" class="center bold" style="font-size:14px;color:${isLulus ? '#1c6b45' : '#9a2024'};">${totalSkor} / 100</td>
+                    <td colspan="2" class="center bold" style="font-size:14px;color:${isLulus ? '#1c6b45' : '#9a2024'};">${totalSkor} / ${maxScore}</td>
                 </tr>
             </tbody>
         </table>
@@ -1043,14 +1071,14 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
                     </tbody>
                 </table>
 
-                <div class="sub-head" style="margin-top:10px;">Ketentuan Penilaian &amp; Kelulusan Ikhtibar</div>
+                <div class="sub-head" style="margin-top:10px;">Ketentuan Penilaian &amp; Kelulusan Tasmi'</div>
                 <table>
                     <tbody>
                         <tr><td class="center" style="width:28px;">1</td><td>Ketentuan skor berlaku perhalaman/pojok pada setiap juz nya</td></tr>
                         <tr><td class="center">2</td><td>Skor kelulusan adalah jumlah keseluruhan skor dalam 1 juz</td></tr>
-                        <tr><td class="center">3</td><td>Santri yang dinyatakan lulus ikhtibar adalah santri yang mampu mencapai minimal skor kelulusan</td></tr>
+                        <tr><td class="center">3</td><td>Santri yang dinyatakan lulus adalah santri yang mampu mencapai minimal skor kelulusan</td></tr>
                         <tr><td class="center">4</td><td><strong>Skor minimal kelulusan adalah 80</strong></td></tr>
-                        <tr><td class="center">5</td><td>Santri yang memperoleh skor di bawah 80 wajib mengulang ikhtibar</td></tr>
+                        <tr><td class="center">5</td><td>Santri yang memperoleh skor di bawah 80 wajib mengulang penilaian Tasmi'</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1422,6 +1450,7 @@ if (typeof module !== 'undefined' && module.exports) {
         TASMI_VALID_SCORES,
         TASMI_VALID_GRADES,
         TASMI_TAJWID_ASPEK,
+        getTasmiConfigByJuz,
         hitungHasilTasmi,
         validasiTajwidTasmi,
         parseDetailTasmi

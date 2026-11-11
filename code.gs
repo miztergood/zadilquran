@@ -1117,7 +1117,7 @@ function saveSetoran(token, dataSetoran) {
     let predikatVal = dataSetoran.predikat || "Mumtaz";
     let detailTasmiJson = "";
 
-    // Validasi & Kalkulasi Ulang Penilaian Khusus Tasmi' (Ikhtibar 1 Juz, Batas Lulus >= 80)
+    // Validasi & Kalkulasi Ulang Penilaian Khusus Tasmi' (Juz 30 = 23 Hal, Juz 1-29 = 20 Hal, Batas Lulus >= 80)
     const isTasmi = String(dataSetoran.type || "").toLowerCase().indexOf("tasmi") !== -1;
     if (isTasmi && dataSetoran.detailTasmi) {
       let rawDetail = dataSetoran.detailTasmi;
@@ -1128,12 +1128,16 @@ function saveSetoran(token, dataSetoran) {
         return createResponse(false, null, "Format data penilaian Tasmi' tidak valid.");
       }
 
+      const tasmiJuz = String(rawDetail.juz || juzVal || "30").trim();
+      const totalPages = tasmiJuz === "30" ? 23 : 20;
+      const maxScore = totalPages * 5;
+
       const validScores = [5, 4, 3, 2];
       const skorMap = rawDetail.skorPerHalaman || {};
       const cleanSkorMap = {};
       let serverTotalSkor = 0;
 
-      for (let p = 1; p <= 20; p++) {
+      for (let p = 1; p <= totalPages; p++) {
         const sc = Number(skorMap[p] !== undefined ? skorMap[p] : skorMap[String(p)]);
         if (validScores.indexOf(sc) === -1) {
           return createResponse(false, null, "Skor Halaman " + p + " wajib diisi dengan nilai 5, 4, 3, atau 2.");
@@ -1159,11 +1163,12 @@ function saveSetoran(token, dataSetoran) {
         cleanTajwid[k] = g;
       }
 
-      const tasmiJuz = String(rawDetail.juz || juzVal || "30").trim();
       const statusKelulusan = serverTotalSkor >= 80 ? "LULUS" : "TIDAK LULUS";
 
       const sanitizedDetail = {
         juz: tasmiJuz,
+        totalPages: totalPages,
+        maksimalSkor: maxScore,
         skorPerHalaman: cleanSkorMap,
         totalSkor: serverTotalSkor,
         passingScore: 80,
@@ -1172,10 +1177,10 @@ function saveSetoran(token, dataSetoran) {
       };
 
       juzVal = tasmiJuz;
-      surahVal = "Ikhtibar Tasmi' Juz " + tasmiJuz;
+      surahVal = "Penilaian Tasmi' Juz " + tasmiJuz;
       surahNoVal = "";
-      ayatVal = "20 Halaman";
-      halVal = "Skor: " + serverTotalSkor + "/100";
+      ayatVal = totalPages + " Halaman";
+      halVal = "Skor: " + serverTotalSkor + "/" + maxScore;
       predikatVal = statusKelulusan + " (" + serverTotalSkor + ")";
       detailTasmiJson = JSON.stringify(sanitizedDetail);
     }
@@ -1205,7 +1210,7 @@ function saveSetoran(token, dataSetoran) {
     });
     sheet.appendRow(newRow);
     SpreadsheetApp.flush();
-    return createResponse(true, { idSetoran: idSetoran }, "Setoran mutaba'ah harian berhasil disimpan!");
+    return createResponse(true, { idSetoran: idSetoran }, "Setoran dan penilaian harian berhasil disimpan!");
   });
 }
 
