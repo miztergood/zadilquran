@@ -1155,13 +1155,31 @@ function formatWaNumber(hp) {
     return clean;
 }
 
-function closeModal(modalId, contentId) {
+function openModal(modalId, contentId) {
+    if (typeof document === 'undefined') return;
     const modal = document.getElementById(modalId);
-    const content = document.getElementById(contentId);
-    if (!modal || !content) return;
+    if (!modal) return;
+    const content = document.getElementById(contentId || `${modalId}Content`);
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        if (content) content.classList.remove('scale-95');
+    }, 10);
+}
+
+function closeModal(modalId, contentId) {
+    if (typeof document === 'undefined') return;
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    const content = document.getElementById(contentId || `${modalId}Content`);
     modal.classList.add('opacity-0');
-    content.classList.add('scale-95');
+    if (content) content.classList.add('scale-95');
     setTimeout(() => { modal.classList.add('hidden'); }, 300);
+}
+
+if (typeof window !== 'undefined') {
+    window.openModal = openModal;
+    window.closeModal = closeModal;
 }
 
 // ==================== DARK MODE ====================
@@ -1446,6 +1464,8 @@ if (typeof module !== 'undefined' && module.exports) {
         angkaKeTerbilang,
         formatWaNumber,
         getDashboardUrlByRole,
+        openModal,
+        closeModal,
         TASMI_PASSING_SCORE,
         TASMI_VALID_SCORES,
         TASMI_VALID_GRADES,

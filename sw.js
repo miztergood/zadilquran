@@ -3,7 +3,7 @@
  * Mendukung instalasi PWA lintas platform (Android, iOS/iPadOS, Windows, Mac) & akses offline
  */
 
-const CACHE_NAME = 'zadil-quran-pwa-v6';
+const CACHE_NAME = 'zadil-quran-pwa-v7';
 
 // Aset inti lokal yang wajib tersedia saat offline
 const CORE_ASSETS = [
@@ -36,6 +36,7 @@ const CORE_ASSETS = [
 const CDN_ASSETS = [
   'https://cdn.tailwindcss.com',
   'https://cdn.jsdelivr.net/npm/sweetalert2@11',
+  'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css',
   'https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js',

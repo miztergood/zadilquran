@@ -7,6 +7,34 @@
  * ============================================================================
  */
 
+// Fallback helper modal jika terpapar browser cache / perbedaan waktu muat core.js
+if (typeof window !== 'undefined') {
+    if (typeof window.openModal !== 'function') {
+        window.openModal = function(modalId, contentId) {
+            if (typeof document === 'undefined') return;
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const content = document.getElementById(contentId || `${modalId}Content`);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                if (content) content.classList.remove('scale-95');
+            }, 10);
+        };
+    }
+    if (typeof window.closeModal !== 'function') {
+        window.closeModal = function(modalId, contentId) {
+            if (typeof document === 'undefined') return;
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            const content = document.getElementById(contentId || `${modalId}Content`);
+            modal.classList.add('opacity-0');
+            if (content) content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        };
+    }
+}
+
 let state = {
     ustadz: [],
     santri: [],
@@ -2120,7 +2148,21 @@ function openModalImportSantri() {
             (state.ustadz || []).map(u => `<option value="${u.ID_Ustadz}">${u.Nama} (${u.ID_Ustadz})</option>`).join('');
     }
     resetExcelFileSelection();
-    openModal('modalImportSantri', 'modalImportSantriContent');
+    if (typeof openModal === 'function') {
+        openModal('modalImportSantri', 'modalImportSantriContent');
+    } else if (typeof window !== 'undefined' && typeof window.openModal === 'function') {
+        window.openModal('modalImportSantri', 'modalImportSantriContent');
+    } else {
+        const modal = document.getElementById('modalImportSantri');
+        const content = document.getElementById('modalImportSantriContent');
+        if (modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                if (content) content.classList.remove('scale-95');
+            }, 10);
+        }
+    }
 }
 
 function resetExcelFileSelection() {

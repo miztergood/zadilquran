@@ -4,7 +4,9 @@ import {
   formatRupiah,
   angkaKeTerbilang,
   formatWaNumber,
-  getDashboardUrlByRole
+  getDashboardUrlByRole,
+  openModal,
+  closeModal
 } from '../js/core.js';
 
 describe('Zadil Quran Core Helpers (js/core.js)', () => {
@@ -91,6 +93,18 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
     it('mengarahkan peran yang tidak dikenal ke login.html', () => {
       expect(getDashboardUrlByRole('tamu')).toBe('login.html');
       expect(getDashboardUrlByRole('')).toBe('login.html');
+    });
+  });
+
+  describe('openModal() & closeModal() helpers', () => {
+    it('terekspor sebagai fungsi yang valid', () => {
+      expect(typeof openModal).toBe('function');
+      expect(typeof closeModal).toBe('function');
+    });
+
+    it('berjalan aman tanpa crash bila elemen DOM tidak ditemukan', () => {
+      expect(() => openModal('nonExistentModal', 'nonExistentContent')).not.toThrow();
+      expect(() => closeModal('nonExistentModal', 'nonExistentContent')).not.toThrow();
     });
   });
 });
