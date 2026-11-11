@@ -104,11 +104,12 @@ function toggleSidebar() {
 function detectInitialAdminMenu() {
     const params = new URLSearchParams(window.location.search);
     const menuParam = params.get('menu');
-    if (menuParam && ['dashboard', 'santri', 'keuangan', 'ustadz', 'pengaturan'].includes(menuParam)) {
+    if (menuParam && ['dashboard', 'santri', 'rekaptahfizh', 'keuangan', 'ustadz', 'pengaturan'].includes(menuParam)) {
         return menuParam;
     }
     const path = window.location.pathname.toLowerCase();
     if (path.includes('/santri')) return 'santri';
+    if (path.includes('/rekaptahfizh') || path.includes('/rekap')) return 'rekaptahfizh';
     if (path.includes('/keuangan') || path.includes('/spp')) return 'keuangan';
     if (path.includes('/ustadz')) return 'ustadz';
     if (path.includes('/pengaturan')) return 'pengaturan';
@@ -139,7 +140,7 @@ window.addEventListener('popstate', () => {
 });
 
 function updateBottomNavState() {
-    const menus = ['dashboard', 'santri', 'keuangan', 'ustadz', 'pengaturan'];
+    const menus = ['dashboard', 'santri', 'rekaptahfizh', 'keuangan', 'ustadz', 'pengaturan'];
     menus.forEach(m => {
         const btn = document.getElementById(`bottomNav-${m}`);
         if (!btn) return;
@@ -175,6 +176,7 @@ function buildSidebarMenu() {
     };
     menu.innerHTML += cItem('dashboard', 'fa-gauge', 'Dashboard Global');
     menu.innerHTML += cItem('santri', 'fa-id-card', 'Buku Induk Santri');
+    menu.innerHTML += cItem('rekaptahfizh', 'fa-book-bookmark', 'Rekap Tahfizh');
     menu.innerHTML += cItem('keuangan', 'fa-file-invoice-dollar', 'Keuangan & SPP');
     menu.innerHTML += cItem('ustadz', 'fa-user-tie', 'Data Ustadz');
     menu.innerHTML += cItem('pengaturan', 'fa-gear', 'Pengaturan');
@@ -207,6 +209,8 @@ function loadContent() {
         renderTableUstadz();
     } else if (state.currentAdminMenu === 'santri') {
         renderTableSantri();
+    } else if (state.currentAdminMenu === 'rekaptahfizh') {
+        initRekapTahfizhView();
     } else if (state.currentAdminMenu === 'keuangan') {
         renderTableTagihan();
     } else if (state.currentAdminMenu === 'pengaturan') {
@@ -240,13 +244,19 @@ function generateUstadzCreds() {
 function openModalUstadz(idToEdit = null, isDuplicate = false) {
     document.getElementById('formTambahUstadz').reset();
     const title = document.getElementById('titleModalUstadz');
+    const elKode = document.getElementById('inputUstadzKode');
 
     if (idToEdit) {
         const u = state.ustadz.find(x => x.ID_Ustadz === idToEdit);
         if (u) {
             document.getElementById('inputUstadzName').value = u.Nama + (isDuplicate ? " (Copy)" : "");
+            const uIdx = state.ustadz.findIndex(x => x.ID_Ustadz === u.ID_Ustadz);
+            const defaultKode = 'U' + String(uIdx + 1).padStart(2, '0');
+            if (elKode) elKode.value = u.Kode || defaultKode;
+
             if (isDuplicate) {
                 generateUstadzCreds();
+                if (elKode) elKode.value = 'U' + String(state.ustadz.length + 1).padStart(2, '0');
                 editModeId = null;
                 title.textContent = 'Duplikasi Data Ustadz';
             } else {
@@ -260,6 +270,7 @@ function openModalUstadz(idToEdit = null, isDuplicate = false) {
         editModeId = null;
         title.textContent = 'Tambah Ustadz Baru';
         generateUstadzCreds();
+        if (elKode) elKode.value = 'U' + String(state.ustadz.length + 1).padStart(2, '0');
     }
 
     const modal = document.getElementById('modalUstadz');
@@ -272,15 +283,18 @@ function renderTableUstadz() {
     const tb = document.getElementById('tableUstadzBody');
     if (!tb) return;
     tb.innerHTML = '';
-    const paginationResult = getPaginatedData(state.ustadz, ['Nama', 'Username'], 'ustadz');
+    const paginationResult = getPaginatedData(state.ustadz, ['Nama', 'Username', 'Kode'], 'ustadz');
 
     if (paginationResult.pageData.length === 0) {
-        tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Data tidak ditemukan</td></tr>';
+        tb.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Data tidak ditemukan</td></tr>';
     } else {
         paginationResult.pageData.forEach(u => {
             const jmlSantri = state.santri.filter(s => s.ID_Ustadz === u.ID_Ustadz).length;
+            const uIdx = state.ustadz.findIndex(x => x.ID_Ustadz === u.ID_Ustadz);
+            const kodeDisplay = u.Kode || ('U' + String(uIdx + 1).padStart(2, '0'));
             tb.innerHTML += `
                 <tr class="border-b dark:border-darkborder hover:bg-gray-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="p-4 font-mono font-bold text-xs"><span class="px-2.5 py-1 rounded-lg bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-slate-600">${kodeDisplay}</span></td>
                     <td class="p-4 font-bold text-gray-900 dark:text-white">${u.Nama}</td>
                     <td class="p-4 font-mono text-xs text-gray-600 dark:text-gray-400">${u.Username}</td>
                     <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]">${jmlSantri} Santri</span></td>
@@ -304,12 +318,13 @@ function saveUstadz(e) {
     const n = document.getElementById('inputUstadzName').value;
     const u = document.getElementById('inputUstadzUsername').value;
     const p = document.getElementById('inputUstadzPassword').value;
+    const k = document.getElementById('inputUstadzKode')?.value.trim().toUpperCase() || '';
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
 
     if (editModeId) {
-        apiCall('editUstadz', token, editModeId, n, u, p).then(res => handleRes(res, 'modalUstadz'));
+        apiCall('editUstadz', token, editModeId, n, u, p, k).then(res => handleRes(res, 'modalUstadz'));
     } else {
-        apiCall('addUstadz', token, n, u, p).then(res => handleRes(res, 'modalUstadz'));
+        apiCall('addUstadz', token, n, u, p, k).then(res => handleRes(res, 'modalUstadz'));
     }
 }
 
@@ -1598,6 +1613,7 @@ function saveAturanSppAction(e) {
     const tglTerbitVal = Number(document.getElementById('aturanSppHariTerbit')?.value) || 1;
     const tglTempoVal = Number(document.getElementById('aturanSppHariTempo')?.value) || 10;
     const catatanVal = document.getElementById('aturanSppCatatan')?.value || 'SPP Bulanan Santri Mukim';
+    const syncUnpaid = document.getElementById('aturanSppSyncBelumLunas')?.checked ?? true;
 
     const payload = normalizeSppConfig({
         aktif: isAktif,
@@ -1608,7 +1624,8 @@ function saveAturanSppAction(e) {
         hariTerbit: tglTerbitVal,
         tglJatuhTempo: tglTempoVal,
         hariTempo: tglTempoVal,
-        catatan: catatanVal
+        catatan: catatanVal,
+        perbaruiTagihanBelumLunas: syncUnpaid
     });
 
     try {
@@ -1620,6 +1637,16 @@ function saveAturanSppAction(e) {
         const now = new Date();
         const curYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         const localStat = getLocalSppStatusForPeriode(curYearMonth);
+
+        // Jika opsi sync dicentang, update tagihan belum lunas di state lokal
+        if (syncUnpaid && Array.isArray(state.tagihan)) {
+            state.tagihan.forEach(t => {
+                const isSpp = (t.Kategori || '').toLowerCase().includes('spp') || (t.Kategori || '').toLowerCase().includes('syahriyah') || (t.Judul_Tagihan || '').toLowerCase().includes('spp');
+                if (isSpp && t.Status !== 'Lunas' && (t.Periode === curYearMonth || t.Periode === currentKeuanganPeriode)) {
+                    t.Nominal = nominalVal;
+                }
+            });
+        }
 
         // Jika otomatisasi aktif dan tanggal hari ini sudah melewati/sama dengan Tgl Terbit, langsung terbitkan tagihan SPP bulan berjalan!
         if (payload.aktif && now.getDate() >= payload.tglTerbit && localStat.santriBelumTerbit > 0) {
@@ -2415,6 +2442,715 @@ async function executeSantriImport() {
     } finally {
         resetExcelFileSelection();
     }
+}
+
+// ==================== SINKRONISASI ATURAN SPP & TAGIHAN BELUM LUNAS ====================
+async function triggerSyncNominalSpp() {
+    const config = getActiveSppConfig();
+    const curNominal = Number(config.nominal) || 300000;
+    const periode = currentKeuanganPeriode || getCurrentYearMonth();
+
+    const confirmed = await AppNotify.confirm(
+        'Sinkronisasi Tagihan SPP',
+        `Sesuaikan seluruh tagihan SPP periode <b>${periode}</b> yang <b>BELUM LUNAS</b> ke nominal aturan terbaru (<b>${formatRupiah(curNominal)}</b>)?<br><br><span class="text-xs text-gray-500">Tagihan yang sudah Lunas tetap dipertahankan pada nominal saat dibayar untuk menjaga integritas kas.</span>`,
+        'Ya, Sesuaikan Sekarang',
+        'Batal'
+    );
+    if (!confirmed) return;
+
+    AppNotify.loading(`Menyesuaikan tagihan SPP periode ${periode}...`);
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+
+    try {
+        const res = await apiCall('syncNominalSppTagihan', token, periode, curNominal);
+        AppNotify.close();
+        if (res && res.status === 'success') {
+            AppNotify.toast('success', res.message || 'Tagihan berhasil disinkronkan');
+            if (Array.isArray(state.tagihan)) {
+                state.tagihan.forEach(t => {
+                    const isSpp = (t.Kategori || '').toLowerCase().includes('spp') || (t.Kategori || '').toLowerCase().includes('syahriyah') || (t.Judul_Tagihan || '').toLowerCase().includes('spp');
+                    if (isSpp && t.Status !== 'Lunas' && (t.Periode === periode || !t.Periode)) {
+                        t.Nominal = curNominal;
+                    }
+                });
+            }
+            if (typeof renderTableTagihan === 'function') renderTableTagihan();
+            if (typeof renderCardStatusSpp === 'function') renderCardStatusSpp();
+        } else {
+            AppNotify.toast('error', (res && res.message) || 'Gagal menyesuaikan tagihan SPP');
+        }
+    } catch (err) {
+        AppNotify.close();
+        AppNotify.toast('error', 'Terjadi kesalahan: ' + (err.message || err));
+    }
+}
+
+// ==================== REKAP TAHFIZH MINGGUAN (AI MARKDOWN IMPORT) ====================
+let parsedRekapSetoranList = [];
+let rekapFilterMode = 'all';
+
+function initRekapTahfizhView() {
+    const selU = document.getElementById('selectDefaultUstadzRekap');
+    if (selU) {
+        selU.innerHTML = '<option value="">-- Berdasarkan Paraf / Santri --</option>';
+        (state.ustadz || []).forEach((u, idx) => {
+            const kode = u.Kode || ('U' + String(idx + 1).padStart(2, '0'));
+            selU.innerHTML += `<option value="${u.ID_Ustadz}">[${kode}] ${u.Nama}</option>`;
+        });
+    }
+
+    const selS = document.getElementById('selectDefaultSantriRekap');
+    if (selS) {
+        selS.innerHTML = '<option value="">-- Deteksi Otomatis dari Nama --</option>';
+        (state.santri || []).forEach(s => {
+            selS.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
+        });
+    }
+
+    if (parsedRekapSetoranList && parsedRekapSetoranList.length > 0) {
+        const sec = document.getElementById('sectionPreviewRekapTahfizh');
+        if (sec) sec.classList.remove('hidden');
+        renderRekapPreviewTable();
+    }
+}
+
+function handleRekapDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const zone = document.getElementById('dropzoneRekapMd');
+    if (zone) zone.classList.add('border-emerald-500', 'bg-emerald-50/20', 'dark:bg-emerald-950/20');
+}
+
+function handleRekapDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const zone = document.getElementById('dropzoneRekapMd');
+    if (zone) zone.classList.remove('border-emerald-500', 'bg-emerald-50/20', 'dark:bg-emerald-950/20');
+}
+
+function handleRekapDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const zone = document.getElementById('dropzoneRekapMd');
+    if (zone) zone.classList.remove('border-emerald-500', 'bg-emerald-50/20', 'dark:bg-emerald-950/20');
+
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+        readUploadedRekapFiles(Array.from(dt.files));
+    }
+}
+
+function handleRekapFilesSelected(e) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+        readUploadedRekapFiles(Array.from(files));
+    }
+}
+
+async function readUploadedRekapFiles(files) {
+    const validFiles = files.filter(f => {
+        const name = (f.name || '').toLowerCase();
+        return name.endsWith('.md') || name.endsWith('.markdown') || name.endsWith('.txt');
+    });
+
+    if (validFiles.length === 0) {
+        AppNotify.warning('Format Tidak Sesuai', 'Silakan pilih file dengan ekstensi .md atau .txt');
+        return;
+    }
+
+    AppNotify.loading(`Membaca ${validFiles.length} file Markdown...`);
+    const fileContents = [];
+
+    for (const f of validFiles) {
+        try {
+            const text = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsText(f);
+            });
+            fileContents.push(text.trim());
+        } catch (err) {
+            console.error('Error membaca file:', f.name, err);
+        }
+    }
+
+    AppNotify.close();
+
+    const combinedText = fileContents.join('\n\n---\n\n');
+    const ta = document.getElementById('textareaRekapMd');
+    if (ta) {
+        ta.value = combinedText;
+    }
+
+    const summaryBox = document.getElementById('fileListSummaryRekap');
+    const summaryText = document.getElementById('fileListSummaryText');
+    if (summaryBox && summaryText) {
+        summaryText.innerHTML = `<i class="fa-solid fa-check-circle mr-1.5 text-emerald-600"></i> ${validFiles.length} file berhasil dimuat (${validFiles.map(f => f.name).slice(0, 3).join(', ')}${validFiles.length > 3 ? '...' : ''})`;
+        summaryBox.classList.remove('hidden');
+    }
+
+    prosesParseRekapTahfizh();
+}
+
+async function pasteFromClipboardToRekap() {
+    try {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            AppNotify.toast('info', 'Gunakan pintasan Ctrl+V pada kotak teks.');
+            return;
+        }
+        const text = await navigator.clipboard.readText();
+        if (!text || text.trim().length === 0) {
+            AppNotify.warning('Clipboard Kosong', 'Tidak ada teks yang dapat disalin dari clipboard.');
+            return;
+        }
+        const ta = document.getElementById('textareaRekapMd');
+        if (ta) ta.value = text;
+        prosesParseRekapTahfizh();
+    } catch (err) {
+        AppNotify.toast('info', 'Silakan tempel (Ctrl+V) langsung ke kotak teks.');
+    }
+}
+
+function muatContohTemplateRekapMd() {
+    const sample = `# Catatan Perkembangan Setoran Al-Qur'an
+- Nama Santri : Abdullah (Contoh)
+- Tingkatan : Al Qur'an
+
+| TM | Tanggal | Surat / Jilid | Ayat / Hal | Nilai | Paraf | Kode |
+| :---: | :---: | :--- | :--- | :---: | :---: | :---: |
+| 1821 | 20-10-26 | Al-Ahqaf (الأحقاف) | Ayat 29 – s.d. akhir | B | U01 | M |
+| 1822 | 21-10-26 | Muhammad (محمد) | Ayat 1 – 11 | B | U01 | M |
+| 1823 | 22-10-26 | Al-A'raf (الأعراف) | Ayat 196 – s.d. akhir | B | U02 | B |
+| 1824 | 22-10-26 | Muhammad (محمد) | Ayat 12 – 19 | B | U01 | M |
+| 1825 | 24-10-26 | Muhammad (محمد) | Ayat 20 – 28 | B | U01 | M |
+| 1826 | 25-10-26 | Al-Anfal (الأنفال) | Ayat 1 – 10 | B | U02 | B |
+| 1827 | 25-10-26 | As-Sajdah (السجدة) | Ayat 1 – 11 | B | U03 | Z |
+| 1828 | 26-10-26 | As-Sajdah (السجدة) | Ayat 12 – 20 | B | U03 | Z |
+| 1829 | 27-10-26 | As-Sajdah (السجدة) | Ayat 21 – s.d. akhir | B | U03 | Z |
+| 1830 | 28-10-26 | Muhammad (محمد) | Ayat 29 – s.d. akhir | B | U01 | M |
+| 1831 | 28-10-26 | Al-Ahzab (الأحزاب) | Ayat 1 – 6 | B | U03 | Z |
+| 1832 | 29-10-26 | Al-Anfal (الأنفال) | Ayat 11 – 18 | B | U02 | B |
+| 1833 | 29-10-26 | Al-Ahzab (الأحزاب) | Ayat 7 – 15 | B | U03 | Z |
+| 1834 | 31-10-26 | Al-Fath (الفتح) | Ayat 1 – 9 | B | U01 | M |
+| 1835 | 01-11-26 | Al-Ahzab (الأحزاب) | Ayat 16 – 22 | B | U03 | Z |`;
+
+    const ta = document.getElementById('textareaRekapMd');
+    if (ta) ta.value = sample;
+    AppNotify.toast('success', 'Contoh transkripsi riil PPTQ Zadil Quran berhasil dimuat!');
+    prosesParseRekapTahfizh();
+}
+
+function resetRekapInput() {
+    const ta = document.getElementById('textareaRekapMd');
+    if (ta) ta.value = '';
+    const fInput = document.getElementById('inputRekapFiles');
+    if (fInput) fInput.value = '';
+    const fFolder = document.getElementById('inputRekapFolder');
+    if (fFolder) fFolder.value = '';
+    const summaryBox = document.getElementById('fileListSummaryRekap');
+    if (summaryBox) summaryBox.classList.add('hidden');
+    const sec = document.getElementById('sectionPreviewRekapTahfizh');
+    if (sec) sec.classList.add('hidden');
+    parsedRekapSetoranList = [];
+}
+
+function prosesParseRekapTahfizh() {
+    const ta = document.getElementById('textareaRekapMd');
+    const mdText = (ta ? ta.value : '').trim();
+    if (!mdText) {
+        AppNotify.warning('Data Kosong', 'Harap masukkan dokumen Markdown atau upload file terlebih dahulu.');
+        return;
+    }
+
+    const defaultUstadzId = document.getElementById('selectDefaultUstadzRekap')?.value || '';
+    const defaultSantriId = document.getElementById('selectDefaultSantriRekap')?.value || '';
+
+    // Panggil parser canggih dari core.js
+    const parsed = parseTahfizhMarkdownTable(mdText, state.santri, state.ustadz);
+
+    if (!parsed || parsed.length === 0) {
+        AppNotify.warning('Format Tidak Dikenali', 'Tidak ditemukan baris tabel setoran yang valid. Pastikan format tabel memiliki kolom TM, Tanggal, Surat / Jilid, Ayat / Hal, Nilai, Paraf, Kode.');
+        return;
+    }
+
+    // Normalisasi dan lengkapi ID ustadz & santri
+    parsedRekapSetoranList = parsed.map((item, index) => {
+        let sId = item.santriId || defaultSantriId;
+        let sNama = item.santriNama;
+        let isSantriMatched = item.isSantriMatched;
+
+        if (!sId && defaultSantriId) {
+            sId = defaultSantriId;
+            const foundS = (state.santri || []).find(s => s.ID_Santri === defaultSantriId);
+            if (foundS) {
+                sNama = foundS.Nama_Santri;
+                isSantriMatched = true;
+            }
+        }
+
+        let uId = item.ustadzId || defaultUstadzId;
+        let uNama = item.ustadzNama;
+        let isUstadzMatched = item.isUstadzMatched;
+
+        if (!uId && sId) {
+            const foundS = (state.santri || []).find(s => s.ID_Santri === sId);
+            if (foundS && foundS.ID_Ustadz) {
+                uId = foundS.ID_Ustadz;
+                const foundU = (state.ustadz || []).find(u => u.ID_Ustadz === uId);
+                if (foundU) {
+                    uNama = foundU.Nama;
+                    isUstadzMatched = true;
+                }
+            }
+        }
+
+        if (!uId && defaultUstadzId) {
+            uId = defaultUstadzId;
+            const foundU = (state.ustadz || []).find(u => u.ID_Ustadz === defaultUstadzId);
+            if (foundU) {
+                uNama = foundU.Nama;
+                isUstadzMatched = true;
+            }
+        }
+
+        return {
+            ...item,
+            _id: `rekap_${Date.now()}_${index}`,
+            selected: true,
+            santriId: sId,
+            santriNama: sNama,
+            isSantriMatched: isSantriMatched,
+            ustadzId: uId,
+            ustadzNama: uNama,
+            isUstadzMatched: isUstadzMatched
+        };
+    });
+
+    updateRekapKpis();
+    const sec = document.getElementById('sectionPreviewRekapTahfizh');
+    if (sec) sec.classList.remove('hidden');
+    renderRekapPreviewTable();
+
+    // Scroll halus ke tabel preview
+    setTimeout(() => {
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function updateRekapKpis() {
+    const total = parsedRekapSetoranList.length;
+    const santriMatched = parsedRekapSetoranList.filter(r => r.santriId && r.isSantriMatched).length;
+    const materiMatched = parsedRekapSetoranList.filter(r => r.isSuratMatched || r.tingkatan === 'Jilid').length;
+    const perluReview = parsedRekapSetoranList.filter(r => !r.santriId || !r.ustadzId || (!r.isSuratMatched && r.tingkatan === "Al Qur'an")).length;
+
+    const elTotal = document.getElementById('kpiTotalSetoranRekap');
+    if (elTotal) elTotal.textContent = total;
+    const elSantri = document.getElementById('kpiSantriMatchedRekap');
+    if (elSantri) elSantri.textContent = `${santriMatched}/${total}`;
+    const elMateri = document.getElementById('kpiMateriMatchedRekap');
+    if (elMateri) elMateri.textContent = `${materiMatched}/${total}`;
+    const elReview = document.getElementById('kpiPerluReviewRekap');
+    if (elReview) elReview.textContent = perluReview;
+
+    const elCount = document.getElementById('rekapTableCountInfo');
+    if (elCount) elCount.textContent = `(${parsedRekapSetoranList.filter(r => r.selected).length} terpilih dari ${total} baris)`;
+
+    const btnSave = document.getElementById('btnExecuteRekapSaveText');
+    if (btnSave) {
+        const selCount = parsedRekapSetoranList.filter(r => r.selected).length;
+        btnSave.textContent = `Simpan Semua Setoran (${selCount} Baris)`;
+    }
+}
+
+function filterRekapTable(mode) {
+    rekapFilterMode = mode;
+    const btnAll = document.getElementById('btnFilterRekapAll');
+    const btnRev = document.getElementById('btnFilterRekapReview');
+    if (btnAll && btnRev) {
+        if (mode === 'all') {
+            btnAll.className = 'rekap-filter-btn active text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+            btnRev.className = 'rekap-filter-btn text-xs font-semibold px-2.5 py-1 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800';
+        } else {
+            btnRev.className = 'rekap-filter-btn active text-xs font-semibold px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300';
+            btnAll.className = 'rekap-filter-btn text-xs font-semibold px-2.5 py-1 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800';
+        }
+    }
+    renderRekapPreviewTable();
+}
+
+function renderRekapPreviewTable() {
+    const tbody = document.getElementById('tablePreviewRekapBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const list = parsedRekapSetoranList.filter(r => {
+        if (rekapFilterMode === 'review') {
+            return !r.santriId || !r.ustadzId || (!r.isSuratMatched && r.tingkatan === "Al Qur'an");
+        }
+        return true;
+    });
+
+    if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="p-6 text-center text-gray-400">Tidak ada baris setoran yang cocok dengan filter.</td></tr>`;
+        return;
+    }
+
+    list.forEach((item) => {
+        const realIdx = parsedRekapSetoranList.findIndex(x => x._id === item._id);
+
+        let katBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">${item.jenis}</span>`;
+        if (item.jenis === 'Ziyadah') {
+            katBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">Ziyadah</span>`;
+        } else if (item.jenis === "Muroja'ah") {
+            katBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300">Muroja'ah</span>`;
+        } else if (item.jenis === 'Binnadhor') {
+            katBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300">Binnadhor</span>`;
+        }
+
+        let santriHtml = '';
+        if (item.santriId) {
+            santriHtml = `
+                <div class="flex items-center justify-between gap-1">
+                    <span class="font-semibold text-gray-900 dark:text-white truncate" title="${item.santriNama}">${item.santriNama}</span>
+                    <button type="button" onclick="showSantriSelectorInline(${realIdx})" class="text-[10px] text-gray-400 hover:text-emerald-600"><i class="fa-solid fa-pen"></i></button>
+                </div>
+                <div class="text-[10px] text-gray-400 font-mono">${item.santriId}</div>
+            `;
+        } else {
+            santriHtml = `
+                <select onchange="updateRekapRowSantri(${realIdx}, this.value)" class="w-full text-xs p-1 bg-red-50 text-red-900 border border-red-300 rounded font-semibold focus:ring-1 focus:ring-red-500">
+                    <option value="">-- Pilih Santri --</option>
+                    ${(state.santri || []).map(s => `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`).join('')}
+                </select>
+                <div class="text-[10px] text-red-500 mt-0.5">Teks: "${item.santriNama || '-'}"</div>
+            `;
+        }
+
+        let ustadzOptions = (state.ustadz || []).map((u, i) => {
+            const kd = u.Kode || ('U' + String(i + 1).padStart(2, '0'));
+            const isSel = item.ustadzId === u.ID_Ustadz ? 'selected' : '';
+            return `<option value="${u.ID_Ustadz}" ${isSel}>[${kd}] ${u.Nama}</option>`;
+        }).join('');
+
+        const ustadzHtml = `
+            <select onchange="updateRekapRowUstadz(${realIdx}, this.value)" class="w-full text-xs p-1 bg-white dark:bg-slate-800 border ${item.ustadzId ? 'border-gray-200 dark:border-darkborder' : 'border-amber-300 bg-amber-50'} rounded focus:ring-1 focus:ring-emerald-500">
+                <option value="">-- Pilih Ustadz --</option>
+                ${ustadzOptions}
+            </select>
+            ${item.paraf ? `<div class="text-[10px] text-gray-400 font-mono mt-0.5">Paraf: ${item.paraf}</div>` : ''}
+        `;
+
+        let materiHtml = '';
+        if (item.tingkatan === "Al Qur'an") {
+            const isMatch = item.isSuratMatched;
+            materiHtml = `
+                <div class="font-bold ${isMatch ? 'text-gray-900 dark:text-white' : 'text-amber-600 dark:text-amber-400'}">${item.suratNama || item.materiNama}</div>
+                <div class="text-[10px] text-gray-400">Juz ${item.juz || '-'} &bull; Surat ke-${item.suratNo || '-'}</div>
+            `;
+        } else {
+            materiHtml = `
+                <div class="font-bold text-gray-900 dark:text-white">${item.materiNama}</div>
+                <div class="text-[10px] text-gray-400">${item.tingkatan}</div>
+            `;
+        }
+
+        const ayatHtml = `
+            <div class="font-mono text-gray-800 dark:text-gray-200 font-semibold">${item.ayatRentang || (item.ayatAwal ? `Ayat ${item.ayatAwal}-${item.ayatAkhir}` : (item.halaman ? `Hal ${item.halaman}` : '-'))}</div>
+        `;
+
+        const nilaiHtml = `
+            <span class="w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-xs ${item.predikat === 'A' ? 'bg-emerald-100 text-emerald-800' : item.predikat === 'B' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700'}">${item.predikat || 'B'}</span>
+        `;
+
+        const isReady = !!item.santriId && !!item.ustadzId && (item.isSuratMatched || item.tingkatan === 'Jilid');
+        const statusHtml = isReady
+            ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"><i class="fa-solid fa-check text-[9px] mr-1"></i>Siap</span>`
+            : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800"><i class="fa-solid fa-triangle-exclamation text-[9px] mr-1"></i>Review</span>`;
+
+        tbody.innerHTML += `
+            <tr class="hover:bg-gray-50/70 dark:hover:bg-slate-800/40 transition border-b border-gray-100 dark:border-darkborder ${item.selected ? '' : 'opacity-40'}">
+                <td class="p-3 text-center">
+                    <input type="checkbox" ${item.selected ? 'checked' : ''} onchange="toggleRekapRowSelect(${realIdx}, this.checked)" class="rounded text-emerald-600 focus:ring-emerald-500">
+                </td>
+                <td class="p-3 font-mono font-bold text-gray-600 dark:text-gray-400">${item.tm || '-'}</td>
+                <td class="p-3 text-gray-700 dark:text-gray-300 whitespace-nowrap">${item.tanggal || '-'}</td>
+                <td class="p-3" id="santriCellRekap_${realIdx}">${santriHtml}</td>
+                <td class="p-3">${ustadzHtml}</td>
+                <td class="p-3 text-center">${katBadge}</td>
+                <td class="p-3">${materiHtml}</td>
+                <td class="p-3">${ayatHtml}</td>
+                <td class="p-3 text-center">${nilaiHtml}</td>
+                <td class="p-3 text-center">${statusHtml}</td>
+                <td class="p-3 text-center">
+                    <button type="button" onclick="deleteRekapRow(${realIdx})" class="p-1 text-gray-400 hover:text-red-600 rounded transition" title="Hapus baris ini">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function showSantriSelectorInline(index) {
+    const cell = document.getElementById(`santriCellRekap_${index}`);
+    if (!cell) return;
+    const curItem = parsedRekapSetoranList[index];
+    cell.innerHTML = `
+        <select onchange="updateRekapRowSantri(${index}, this.value)" class="w-full text-xs p-1 bg-white dark:bg-slate-800 border border-emerald-500 rounded font-semibold focus:ring-1 focus:ring-emerald-500">
+            <option value="">-- Ganti Santri --</option>
+            ${(state.santri || []).map(s => `<option value="${s.ID_Santri}" ${s.ID_Santri === curItem.santriId ? 'selected' : ''}>${s.Nama_Santri} (${s.ID_Santri})</option>`).join('')}
+        </select>
+    `;
+}
+
+function toggleSelectAllRekap(checked) {
+    parsedRekapSetoranList.forEach(r => r.selected = checked);
+    updateRekapKpis();
+    renderRekapPreviewTable();
+}
+
+function toggleRekapRowSelect(index, checked) {
+    if (parsedRekapSetoranList[index]) {
+        parsedRekapSetoranList[index].selected = checked;
+        updateRekapKpis();
+        renderRekapPreviewTable();
+    }
+}
+
+function updateRekapRowSantri(index, santriId) {
+    if (parsedRekapSetoranList[index]) {
+        parsedRekapSetoranList[index].santriId = santriId;
+        const found = (state.santri || []).find(s => s.ID_Santri === santriId);
+        if (found) {
+            parsedRekapSetoranList[index].santriNama = found.Nama_Santri;
+            parsedRekapSetoranList[index].isSantriMatched = true;
+            if (!parsedRekapSetoranList[index].ustadzId && found.ID_Ustadz) {
+                parsedRekapSetoranList[index].ustadzId = found.ID_Ustadz;
+            }
+        }
+        updateRekapKpis();
+        renderRekapPreviewTable();
+    }
+}
+
+function updateRekapRowUstadz(index, ustadzId) {
+    if (parsedRekapSetoranList[index]) {
+        parsedRekapSetoranList[index].ustadzId = ustadzId;
+        const found = (state.ustadz || []).find(u => u.ID_Ustadz === ustadzId);
+        if (found) {
+            parsedRekapSetoranList[index].ustadzNama = found.Nama;
+            parsedRekapSetoranList[index].isUstadzMatched = true;
+        }
+        updateRekapKpis();
+        renderRekapPreviewTable();
+    }
+}
+
+function deleteRekapRow(index) {
+    if (parsedRekapSetoranList[index]) {
+        parsedRekapSetoranList.splice(index, 1);
+        updateRekapKpis();
+        renderRekapPreviewTable();
+    }
+}
+
+async function executeBatchRekapSave() {
+    const selectedRows = parsedRekapSetoranList.filter(r => r.selected);
+    if (selectedRows.length === 0) {
+        AppNotify.warning('Pilih Baris', 'Centang minimal satu baris setoran yang ingin disimpan.');
+        return;
+    }
+
+    const missingSantri = selectedRows.filter(r => !r.santriId);
+    if (missingSantri.length > 0) {
+        const confirmed = await AppNotify.confirm(
+            'Santri Belum Ditentukan',
+            `Terdapat <b>${missingSantri.length} baris</b> yang belum memiliki nama/ID santri valid.<br><br>Apakah Anda ingin tetap menyimpan <b>${selectedRows.length - missingSantri.length} baris</b> yang sudah lengkap saja?`,
+            'Ya, Simpan yang Lengkap',
+            'Batal'
+        );
+        if (!confirmed) return;
+    }
+
+    const validRows = selectedRows.filter(r => r.santriId);
+    if (validRows.length === 0) {
+        AppNotify.warning('Data Belum Lengkap', 'Tidak ada data setoran yang memiliki santri valid.');
+        return;
+    }
+
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    const progressContainer = document.getElementById('rekapProgressContainer');
+    const progressBar = document.getElementById('rekapProgressBar');
+    const progressText = document.getElementById('rekapProgressText');
+    const progressPercent = document.getElementById('rekapProgressPercent');
+    const btnSave = document.getElementById('btnExecuteRekapSave');
+
+    if (progressContainer) progressContainer.classList.remove('hidden');
+    if (btnSave) btnSave.disabled = true;
+
+    // Susun payload terstandarisasi untuk sheet Data_Setoran
+    const setoranPayloadList = validRows.map(r => {
+        const suratVal = r.suratNama || r.materiNama || 'Al-Baqarah';
+        const juzVal = r.juz ? String(r.juz) : '1';
+        const ayatVal = r.ayatRentang || (r.ayatAwal ? `${r.ayatAwal} - ${r.ayatAkhir}` : '-');
+        const halVal = r.halaman || '-';
+        const tglVal = r.tanggal || new Date().toISOString().split('T')[0];
+        const catatanVal = `TM: ${r.tm || '-'} | Paraf: ${r.paraf || '-'}${r.kategoriRaw ? ' | Kode: ' + r.kategoriRaw : ''}`;
+
+        return {
+            ID_Santri: r.santriId,
+            ID_Ustadz: r.ustadzId || (state.santri.find(s => s.ID_Santri === r.santriId)?.ID_Ustadz || ''),
+            Jenis: r.jenis || 'Ziyadah',
+            Juz: juzVal,
+            Surat: suratVal,
+            Ayat: ayatVal,
+            Halaman: halVal,
+            Nilai: r.predikat || 'B',
+            Catatan: catatanVal,
+            Tgl_Setoran: tglVal
+        };
+    });
+
+    try {
+        if (progressBar) progressBar.style.width = '30%';
+        if (progressPercent) progressPercent.textContent = '30%';
+        if (progressText) progressText.textContent = `Menyimpan ${setoranPayloadList.length} setoran via Batch Save...`;
+
+        const res = await apiCall('saveSetoranBatch', token, setoranPayloadList);
+
+        if (res && res.status === 'success') {
+            if (progressBar) progressBar.style.width = '100%';
+            if (progressPercent) progressPercent.textContent = '100%';
+            if (progressText) progressText.textContent = 'Penyimpanan berhasil!';
+
+            AppNotify.success(
+                'Rekap Setoran Berhasil!',
+                `<p class="text-sm">Berhasil merekap dan menyimpan <b>${setoranPayloadList.length} catatan setoran</b> ke database santri.</p>`
+            );
+
+            // Bersihkan input dan refresh data
+            setTimeout(() => {
+                resetRekapInput();
+                refreshAdminData();
+            }, 1200);
+            return;
+        } else {
+            throw new Error((res && res.message) ? res.message : 'Gagal simpan batch');
+        }
+    } catch (err) {
+        console.warn('Batch save fallback ke sequential save:', err);
+        let successCount = 0;
+        for (let i = 0; i < setoranPayloadList.length; i++) {
+            const item = setoranPayloadList[i];
+            const pct = Math.round(((i + 1) / setoranPayloadList.length) * 100);
+            if (progressBar) progressBar.style.width = `${pct}%`;
+            if (progressPercent) progressPercent.textContent = `${pct}%`;
+            if (progressText) progressText.textContent = `Menyimpan ${i + 1} dari ${setoranPayloadList.length} setoran...`;
+
+            try {
+                const singlePayload = {
+                    santriId: item.ID_Santri,
+                    tingkatan: "Al Qur'an",
+                    tm: 'TM-Auto',
+                    type: item.Jenis,
+                    juz: item.Juz,
+                    surah: item.Surat,
+                    surahNo: item.Surat,
+                    ayat: item.Ayat,
+                    halaman: item.Halaman,
+                    predikat: item.Nilai,
+                    catatan: item.Catatan,
+                    date: item.Tgl_Setoran,
+                    parafUstadz: item.ID_Ustadz
+                };
+                await apiCall('saveSetoran', token, singlePayload);
+                successCount++;
+            } catch (e) {
+                console.error('Error saving single setoran:', e);
+            }
+        }
+
+        AppNotify.success(
+            'Rekap Setoran Selesai!',
+            `<p class="text-sm">Berhasil menyimpan <b>${successCount} dari ${setoranPayloadList.length} setoran</b> ke database.</p>`
+        );
+
+        setTimeout(() => {
+            resetRekapInput();
+            refreshAdminData();
+        }, 1200);
+    } finally {
+        if (btnSave) btnSave.disabled = false;
+    }
+}
+
+function openModalPromptAiGuide() {
+    openModal('modalPromptAiGuide', 'modalPromptAiGuideContent');
+}
+
+function copyAiPromptText() {
+    const el = document.getElementById('textAiPromptContent');
+    if (!el) return;
+    const text = el.textContent || el.innerText || '';
+
+    const setCopied = () => {
+        const btn = document.getElementById('btnCopyAiPromptText');
+        if (btn) {
+            const prev = btn.textContent;
+            btn.textContent = '✓ Tersalin!';
+            setTimeout(() => { btn.textContent = prev; }, 2000);
+        }
+        AppNotify.toast('success', 'Prompt AI berhasil disalin ke clipboard');
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(setCopied).catch(() => {
+            fallbackCopyPrompt(text, setCopied);
+        });
+    } else {
+        fallbackCopyPrompt(text, setCopied);
+    }
+}
+
+function fallbackCopyPrompt(text, onSuccess) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand('copy');
+        if (onSuccess) onSuccess();
+    } catch (e) {
+        AppNotify.toast('error', 'Gagal menyalin otomatis. Silakan salin manual teks di kotak.');
+    }
+    document.body.removeChild(ta);
+}
+
+if (typeof window !== 'undefined') {
+    window.triggerSyncNominalSpp = triggerSyncNominalSpp;
+    window.initRekapTahfizhView = initRekapTahfizhView;
+    window.handleRekapDragOver = handleRekapDragOver;
+    window.handleRekapDragLeave = handleRekapDragLeave;
+    window.handleRekapDrop = handleRekapDrop;
+    window.handleRekapFilesSelected = handleRekapFilesSelected;
+    window.pasteFromClipboardToRekap = pasteFromClipboardToRekap;
+    window.muatContohTemplateRekapMd = muatContohTemplateRekapMd;
+    window.resetRekapInput = resetRekapInput;
+    window.prosesParseRekapTahfizh = prosesParseRekapTahfizh;
+    window.filterRekapTable = filterRekapTable;
+    window.renderRekapPreviewTable = renderRekapPreviewTable;
+    window.toggleSelectAllRekap = toggleSelectAllRekap;
+    window.toggleRekapRowSelect = toggleRekapRowSelect;
+    window.updateRekapRowSantri = updateRekapRowSantri;
+    window.updateRekapRowUstadz = updateRekapRowUstadz;
+    window.deleteRekapRow = deleteRekapRow;
+    window.executeBatchRekapSave = executeBatchRekapSave;
+    window.openModalPromptAiGuide = openModalPromptAiGuide;
+    window.copyAiPromptText = copyAiPromptText;
+    window.showSantriSelectorInline = showSantriSelectorInline;
 }
 
 // ==================== INITIALIZATION ====================

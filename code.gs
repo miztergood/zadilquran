@@ -229,11 +229,11 @@ function doPost(e) {
         break;
 
       case 'addUstadz':
-        result = addUstadz(args[0], args[1], args[2], args[3]);
+        result = addUstadz(args[0], args[1], args[2], args[3], args[4]);
         break;
 
       case 'editUstadz':
-        result = editUstadz(args[0], args[1], args[2], args[3], args[4]);
+        result = editUstadz(args[0], args[1], args[2], args[3], args[4], args[5]);
         break;
 
       case 'generateNewSantriId':
@@ -269,9 +269,17 @@ function doPost(e) {
         result = saveSetoran(args[0], args[1]);
         break;
 
+      case 'saveSetoranBatch':
+        result = saveSetoranBatch(args[0], args[1]);
+        break;
+
       // MODUL 2: KEUANGAN & SPP
       case 'createTagihan':
         result = createTagihan(args[0], args[1]);
+        break;
+
+      case 'syncNominalSppTagihan':
+        result = syncNominalSppTagihan(args[0], args[1], args[2]);
         break;
 
       case 'getSppConfig':
@@ -354,7 +362,7 @@ const DEFAULT_PSB_CONFIG = {
 const SHEET_CONFIG = {
   "Pengaturan": ["Key", "Value", "Timestamp"],
   "Users_Admin": ["Username", "Password", "Nama", "Role", "Timestamp"],
-  "Users_Ustadz": ["ID_Ustadz", "Username", "Password", "Nama", "Timestamp"],
+  "Users_Ustadz": ["ID_Ustadz", "Username", "Password", "Nama", "Timestamp", "Kode"],
   "Data_Santri": [
     "ID_Santri", "Nama_Santri", "Nama_Panggilan", "Jenis_Kelamin", "Tempat_Lahir", "Tanggal_Lahir",
     "Alamat", "RT", "RW", "Desa", "Kecamatan", "Kab_Kota", "Provinsi",
@@ -733,7 +741,7 @@ function fetchWaliData(arg1, arg2) {
 }
 
 // --- CRUD USTADZ ---
-function addUstadz(token, nama, username, password) {
+function addUstadz(token, nama, username, password, kode) {
   const auth = checkRole(token, ["superadmin"]);
   if (auth.status === "error") return auth;
   const valid = validateRequired({ "Nama": nama, "Username": username, "Password": password });
@@ -745,25 +753,48 @@ function addUstadz(token, nama, username, password) {
 
   return safeExecute(function() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users_Ustadz");
+    const numCols = Math.max(sheet.getLastColumn(), 5);
+    const headers = sheet.getRange(1, 1, 1, numCols).getValues()[0];
+    let kodeCol = headers.indexOf("Kode") + 1;
+    if (kodeCol === 0) {
+      kodeCol = headers.length + 1;
+      sheet.getRange(1, kodeCol).setValue("Kode");
+    }
     const newId = "U-" + new Date().getTime().toString().slice(-6);
-    sheet.appendRow([newId, username, password, nama, new Date()]);
+    const row = new Array(Math.max(kodeCol, 5)).fill("");
+    row[0] = newId;
+    row[1] = username;
+    row[2] = password;
+    row[3] = nama;
+    row[4] = new Date();
+    row[kodeCol - 1] = kode ? String(kode).trim().toUpperCase() : "";
+    sheet.appendRow(row);
     SpreadsheetApp.flush();
     return createResponse(true, null, "Ustadz berhasil ditambahkan.");
   });
 }
 
-function editUstadz(token, id, nama, username, password) {
+function editUstadz(token, id, nama, username, password, kode) {
   const auth = checkRole(token, ["superadmin"]);
   if (auth.status === "error") return auth;
   
   return safeExecute(function() {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users_Ustadz");
     const data = sheet.getDataRange().getValues();
+    const headers = data[0] || [];
+    let kodeCol = headers.indexOf("Kode") + 1;
+    if (kodeCol === 0 && kode) {
+      kodeCol = headers.length + 1;
+      sheet.getRange(1, kodeCol).setValue("Kode");
+    }
     for(let i=1; i<data.length; i++) {
       if(data[i][0] === id) {
         sheet.getRange(i+1, 2).setValue(username);
         if(password) sheet.getRange(i+1, 3).setValue(password);
         sheet.getRange(i+1, 4).setValue(nama);
+        if(kodeCol > 0 && kode !== undefined && kode !== null) {
+          sheet.getRange(i+1, kodeCol).setValue(String(kode).trim().toUpperCase());
+        }
         SpreadsheetApp.flush();
         return createResponse(true, null, "Data Ustadz berhasil diperbarui.");
       }
@@ -1214,6 +1245,80 @@ function saveSetoran(token, dataSetoran) {
   });
 }
 
+function saveSetoranBatch(token, setoranList) {
+  const auth = checkRole(token, ["ustadz", "superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    if (!Array.isArray(setoranList) || setoranList.length === 0) {
+      return createResponse(false, null, "Daftar setoran kosong.");
+    }
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Setoran");
+    if (!sheet) return createResponse(false, null, "Sheet Data_Setoran tidak ditemukan.");
+
+    const expectedHeaders = SHEET_CONFIG["Data_Setoran"];
+    const lastCol = Math.max(sheet.getLastColumn(), 1);
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0] || [];
+    expectedHeaders.forEach(function(col) {
+      if (headers.indexOf(col) === -1) {
+        const nextCol = sheet.getLastColumn() + 1;
+        sheet.getRange(1, nextCol).setValue(col).setBackground("#9a2024").setFontColor("white").setFontWeight("bold");
+        headers.push(col);
+      }
+    });
+
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (e) {
+      return createResponse(false, null, "Server sibuk. Silakan coba sesaat lagi.");
+    }
+
+    try {
+      const now = new Date();
+      const timeMs = now.getTime();
+      const newRows = [];
+
+      for (let i = 0; i < setoranList.length; i++) {
+        const item = setoranList[i];
+        const idSetoran = "SET-" + timeMs + "-" + (i + 1).toString().padStart(4, '0');
+        const rowObj = {
+          "ID_Setoran": idSetoran,
+          "ID_Santri": item.santriId || item.idSantri || item.ID_Santri || "",
+          "ID_Ustadz": item.ustadzId || item.idUstadz || item.ID_Ustadz || auth.data.id,
+          "Tingkatan": item.tingkatan || "Al-Qur'an",
+          "TM": item.tm || item.TM || "-",
+          "Jenis": item.type || item.jenis || item.Jenis || "Ziyadah",
+          "Juz": item.juz || item.Juz || "-",
+          "Surah": item.surah || item.Surah || "-",
+          "SurahNo": item.surahNo || item.SurahNo || "",
+          "Ayat": item.ayat || item.Ayat || "-",
+          "Halaman": item.halaman || item.Halaman || "-",
+          "Predikat": item.predikat || item.Predikat || "Mumtaz",
+          "Catatan": item.catatan || item.Catatan || "",
+          "Tanggal": item.date || item.tanggal || item.Tanggal || Utilities.formatDate(now, "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
+          "ParafUstadz": item.parafUstadz || item.ParafUstadz || item.paraf || item.namaUstadz || auth.data.name || "Ustadz Pembimbing",
+          "Detail_Tasmi": item.detailTasmi ? (typeof item.detailTasmi === 'string' ? item.detailTasmi : JSON.stringify(item.detailTasmi)) : ""
+        };
+
+        const rowValues = headers.map(function(h) {
+          return sanitizeSpreadsheetCell_(rowObj.hasOwnProperty(h) ? rowObj[h] : "");
+        });
+        newRows.push(rowValues);
+      }
+
+      const startRow = sheet.getLastRow() + 1;
+      sheet.getRange(startRow, 1, newRows.length, headers.length).setValues(newRows);
+      SpreadsheetApp.flush();
+
+      return createResponse(true, { totalSaved: newRows.length }, "Alhamdulillah, berhasil menyimpan " + newRows.length + " rekapan setoran sekaligus!");
+    } finally {
+      lock.releaseLock();
+    }
+  });
+}
+
 // --- MANAJEMEN KEUANGAN & TAGIHAN SPP (MODUL 2) ---
 
 function createTagihan(token, payloadData) {
@@ -1418,11 +1523,74 @@ function saveSppConfig(token, configData) {
           }
         }
       } catch(e) {}
+
+      // Jika opsi perbarui tagihan belum lunas aktif, sinkronkan nominal tagihan SPP belum lunas periode berjalan
+      if (rawObj.perbaruiTagihanBelumLunas || rawObj.updateUnpaid) {
+        try {
+          const today = new Date();
+          const curPeriod = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
+          syncNominalSppTagihan_(rawObj.targetPeriode || curPeriod, parsedObj.nominal);
+        } catch (errSync) {
+          Logger.log("Auto-sync tagihan SPP error: " + errSync.message);
+        }
+      }
     }
 
     SpreadsheetApp.flush();
     return createResponse(true, parsedObj, "Konfigurasi SPP & Otomatisasi berhasil disimpan!");
   });
+}
+
+function syncNominalSppTagihan(token, targetPeriode, nominalBaru) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const res = syncNominalSppTagihan_(targetPeriode, nominalBaru);
+    return createResponse(true, res, "Berhasil memperbarui " + res.updated + " tagihan SPP belum lunas menjadi Rp " + res.nominal);
+  });
+}
+
+function syncNominalSppTagihan_(targetPeriode, nominalBaru) {
+  const sheetTagihan = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Tagihan");
+  if (!sheetTagihan) return { updated: 0, nominal: nominalBaru };
+
+  const data = sheetTagihan.getDataRange().getValues();
+  if (data.length <= 1) return { updated: 0, nominal: nominalBaru };
+
+  const headers = data[0];
+  const colNominal = headers.indexOf("Nominal");
+  const colStatus = headers.indexOf("Status");
+  const colKat = headers.indexOf("Kategori");
+  const colJudul = headers.indexOf("Judul_Tagihan");
+  const colPeriode = headers.indexOf("Periode");
+
+  if (colNominal === -1 || colStatus === -1) return { updated: 0, nominal: nominalBaru };
+
+  const newNom = Number(nominalBaru) || 300000;
+  const today = new Date();
+  const curPeriod = Utilities.formatDate(today, "Asia/Jakarta", "yyyy-MM");
+  const perToMatch = targetPeriode || curPeriod;
+
+  let updatedCount = 0;
+  for (let r = 1; r < data.length; r++) {
+    const rowStatus = String(data[r][colStatus] || "").trim();
+    const rowKat = String(data[r][colKat] || "").toLowerCase();
+    const rowJudul = String(data[r][colJudul] || "").toLowerCase();
+    const rowPer = String(data[r][colPeriode] || parseBulanTahunId_(rowJudul));
+
+    const isSpp = rowKat.includes("spp") || rowKat.includes("syahriyah") || rowJudul.includes("spp") || rowJudul.includes("syahriyah");
+    const isUnpaid = rowStatus !== "Lunas";
+    const isMatch = !perToMatch || perToMatch === "ALL" || rowPer === perToMatch;
+
+    if (isSpp && isUnpaid && isMatch) {
+      sheetTagihan.getRange(r + 1, colNominal + 1).setValue(newNom);
+      updatedCount++;
+    }
+  }
+
+  SpreadsheetApp.flush();
+  return { updated: updatedCount, nominal: newNom, periode: perToMatch };
 }
 
 function pasangTriggerSpp_() {

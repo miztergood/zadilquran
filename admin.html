@@ -111,6 +111,10 @@
                     <i class="fa-solid fa-id-card text-base"></i>
                     <span class="text-[10px]">Santri</span>
                 </button>
+                <button type="button" onclick="switchAdmin('rekaptahfizh')" id="bottomNav-rekaptahfizh" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-book-bookmark text-base"></i>
+                    <span class="text-[10px]">Rekap</span>
+                </button>
                 <button type="button" onclick="switchAdmin('keuangan')" id="bottomNav-keuangan" class="bottom-nav-btn text-gray-500 dark:text-gray-400">
                     <i class="fa-solid fa-file-invoice-dollar text-base"></i>
                     <span class="text-[10px]">Keuangan</span>
@@ -139,6 +143,11 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Nama Lengkap Ustadz</label>
                     <input type="text" id="inputUstadzName" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Kode Asatidz (Paraf Setoran) <span class="text-xs text-gray-400 font-normal">(Contoh: U01, FAU, dll)</span></label>
+                    <input type="text" id="inputUstadzKode" placeholder="Contoh: U01" class="w-full px-3 py-2 bg-transparent border border-gray-300 dark:border-darkborder rounded-xl focus:ring-2 focus:ring-[#9a2024] outline-none font-mono uppercase text-sm">
+                    <p class="text-[11px] text-gray-500 mt-1">Kode singkat ini yang ditulis di kolom Paraf lembar setoran fisik santri.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Username Login <button type="button" onclick="generateUstadzCreds()" class="text-xs text-blue-500 ml-2 hover:underline"><i class="fa-solid fa-rotate mr-1"></i>Generate Ulang</button></label>
@@ -469,6 +478,13 @@
                     <p>Sistem otomatis menerbitkan SPP setiap bulan. Santri baru yang masuk di pertengahan bulan akan otomatis ikut tertagih pada jadwal berikutnya.</p>
                 </div>
 
+                <div class="p-3 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex items-start gap-2.5">
+                    <input type="checkbox" id="aturanSppSyncBelumLunas" checked class="mt-0.5 w-4 h-4 text-[#1c6b45] rounded accent-[#1c6b45] cursor-pointer">
+                    <label for="aturanSppSyncBelumLunas" class="text-xs text-emerald-900 dark:text-emerald-200 font-semibold cursor-pointer">
+                        Perbarui juga seluruh tagihan SPP yang <b>belum lunas</b> di bulan berjalan ke nominal baru ini
+                    </label>
+                </div>
+
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="closeModal('modalAturanSpp', 'modalAturanSppContent')" class="px-4 py-2 bg-gray-100 dark:bg-slate-800 rounded-xl font-medium">Batal</button>
                     <button type="submit" class="px-5 py-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-semibold rounded-xl shadow-md flex items-center gap-1.5">
@@ -642,6 +658,110 @@
                     <i class="fa-solid fa-file-import"></i>
                     <span>Mulai Impor Data</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL PANDUAN & PROMPT AI TRANSKRIPSI ==================== -->
+    <div id="modalPromptAiGuide" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity p-3 sm:p-4">
+        <div class="bg-white dark:bg-darkcard border dark:border-darkborder rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col transform scale-95 transition-transform" id="modalPromptAiGuideContent">
+            <div class="p-4 sm:p-5 border-b border-gray-100 dark:border-darkborder flex justify-between items-center bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 rounded-t-2xl">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center text-base shadow-xs">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg text-gray-900 dark:text-white">Panduan &amp; Prompt AI Foto &rarr; Markdown</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Gunakan ChatGPT atau Google Gemini untuk mengubah foto lembar fisik menjadi teks tabel siap import.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModal('modalPromptAiGuide', 'modalPromptAiGuideContent')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition">&times;</button>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs sm:text-sm">
+                <!-- Alur Kerja Cepat -->
+                <div class="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/40 p-4 rounded-xl space-y-2">
+                    <h4 class="font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1.5 text-xs sm:text-sm">
+                        <i class="fa-solid fa-circle-check text-purple-600 dark:text-purple-400"></i>
+                        <span>Alur Rekap Mingguan Mudah (Hanya 3 Langkah):</span>
+                    </h4>
+                    <ol class="list-decimal list-inside text-gray-700 dark:text-gray-300 space-y-1 text-xs leading-relaxed">
+                        <li><strong>Foto lembar penilaian fisik</strong> santri di akhir pekan menggunakan kamera ponsel.</li>
+                        <li>Buka <strong>ChatGPT</strong> atau <strong>Google Gemini</strong>, upload foto-foto tersebut, lalu <strong>tempel (paste) Prompt AI</strong> di bawah ini.</li>
+                        <li><strong>Salin hasil tabel Markdown dari AI</strong>, lalu paste ke formulir <em>Rekap Tahfizh</em> di aplikasi ini, dan klik <em>Simpan Semua Setoran</em>. Selesai!</li>
+                    </ol>
+                </div>
+
+                <!-- Box Prompt AI -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="font-bold text-gray-800 dark:text-gray-200 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-copy text-indigo-500"></i>
+                            <span>Teks Prompt Siap Pakai:</span>
+                        </label>
+                        <button type="button" id="btnCopyAiPrompt" onclick="copyAiPromptText()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+                            <i class="fa-regular fa-clone"></i>
+                            <span id="btnCopyAiPromptText">Salin Prompt AI</span>
+                        </button>
+                    </div>
+                    <pre id="textAiPromptContent" class="w-full text-[11px] sm:text-xs font-mono p-3.5 bg-gray-900 text-gray-100 rounded-xl overflow-x-auto whitespace-pre-wrap leading-relaxed select-all">Kamu adalah asisten transkripsi data setoran tahfizh Al-Qur'an untuk PPTQ Zadil Quran.
+Tugasmu adalah membaca foto lembar fisik catatan perkembangan setoran Al-Qur'an santri terlampir dan mengubahnya menjadi format tabel Markdown terstandar.
+
+ATURAN TRANSKRIPSI:
+1. Awali setiap lembar santri dengan header:
+# Catatan Perkembangan Setoran Al-Qur'an
+- Nama Santri : [Nama Santri Lengkap]
+- Tingkatan : [Al Qur'an / Jilid]
+
+2. Buat tabel dengan format persis berikut:
+| TM | Tanggal | Surat / Jilid | Ayat / Hal | Nilai | Paraf | Kode |
+| :---: | :---: | :--- | :--- | :---: | :---: | :---: |
+| 1821 | 20-10-26 | Al-Ahqaf (الأحقاف) | Ayat 29 – s.d. akhir | B | U01 | M |
+
+3. Keterangan Kolom:
+- TM: Nomor urut tatap muka (angka latin)
+- Tanggal: Format YYYY-MM-DD atau DD-MM-YYYY (ubah angka arab ke angka latin)
+- Surat / Jilid: Nama surat resmi Al-Qur'an (misal: Al-Baqarah, An-Nisa, Al-Ahqaf, Muhammad) atau nama jilid
+- Ayat / Hal: Rentang ayat (misal: Ayat 1 - 10 atau Ayat 29 – s.d. akhir) atau nomor halaman jilid
+- Nilai: Huruf nilai (A / B / C dll)
+- Paraf: Tulis kode ustadz (misal U01, U02) atau nama ustadz penyimak
+- Kode Kategori:
+  * Z = Ziyadah (Hafalan baru)
+  * M = Muroja'ah (Pengulangan hafalan)
+  * B = Bin-Nazhar / Binnadhor (Membaca mushaf)
+
+4. Jika mentranskripsikan lebih dari 1 santri sekaligus, pisahkan antar santri dengan garis pembatas:
+---</pre>
+                </div>
+
+                <!-- Info Kode Asatidz & Kategori -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+                    <div class="p-3 bg-gray-50 dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-darkborder">
+                        <div class="font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-tags text-emerald-600"></i>
+                            <span>Kode Kategori Lembar Fisik:</span>
+                        </div>
+                        <ul class="text-gray-600 dark:text-gray-400 space-y-0.5 text-[11px]">
+                            <li><strong class="text-emerald-700 dark:text-emerald-300">Z</strong> : Ziyadah (Setoran baru)</li>
+                            <li><strong class="text-amber-700 dark:text-amber-300">M</strong> : Muroja'ah (Ulang hafalan)</li>
+                            <li><strong class="text-blue-700 dark:text-blue-300">B</strong> : Bin-Nazhar / Binnadhor (Tilawah)</li>
+                            <li><em>* Tasmi' 1 Juz menggunakan rubrik khusus terpisah.</em></li>
+                        </ul>
+                    </div>
+                    <div class="p-3 bg-gray-50 dark:bg-slate-800/60 rounded-xl border border-gray-100 dark:border-darkborder">
+                        <div class="font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-signature text-purple-600"></i>
+                            <span>Kode Asatidz (Kolom Paraf):</span>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 text-[11px] leading-relaxed">
+                            Cukup tulis kode singkat seperti <code>U01</code>, <code>U02</code>, atau nama ustadz pada kolom paraf lembar fisik. Sistem otomatis menghubungkan ke akun ustadz terkait.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-100 dark:border-darkborder flex justify-end flex-shrink-0 bg-gray-50 dark:bg-slate-900/50 rounded-b-2xl">
+                <button type="button" onclick="closeModal('modalPromptAiGuide', 'modalPromptAiGuideContent')" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl font-semibold text-xs sm:text-sm">Tutup</button>
             </div>
         </div>
     </div>
@@ -825,6 +945,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-darkborder text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-slate-800/50">
+                            <th class="p-4">Kode Paraf</th>
                             <th class="p-4">Nama Ustadz</th>
                             <th class="p-4">Username Login</th>
                             <th class="p-4">Jumlah Santri</th>
@@ -894,6 +1015,189 @@
         </div>
     </template>
 
+    <template id="tpl-superadmin-rekaptahfizh">
+        <!-- Header Rekap Tahfizh -->
+        <div class="mb-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <div>
+                <h2 class="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>Rekap Setoran Tahfizh Mingguan</span>
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">AI Markdown Import</span>
+                </h2>
+                <p class="text-gray-500 dark:text-gray-400 text-xs sm:text-sm mt-0.5">
+                    Import massal catatan perkembangan setoran santri dari transkripsi foto lembar fisik (Multi-file / Folder / Paste Markdown).
+                </p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="openModalPromptAiGuide()" class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                    <span>Panduan &amp; Prompt AI</span>
+                </button>
+                <button type="button" onclick="muatContohTemplateRekapMd()" class="px-3 py-2 bg-white dark:bg-darkcard hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-darkborder rounded-xl text-xs sm:text-sm font-semibold transition shadow-2xs flex items-center gap-1.5" title="Muat contoh transkripsi lembar fisik nyata PPTQ Zadil Quran">
+                    <i class="fa-solid fa-file-code text-[#1c6b45]"></i>
+                    <span class="hidden sm:inline">Muat Contoh Format</span>
+                    <span class="sm:hidden">Contoh</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Input Area (Drag & Drop Zone & Paste Box) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-6">
+            <!-- Dropzone & File Picker (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col gap-3">
+                <div id="dropzoneRekapMd" ondragover="handleRekapDragOver(event)" ondragleave="handleRekapDragLeave(event)" ondrop="handleRekapDrop(event)" class="border-2 border-dashed border-gray-300 dark:border-darkborder rounded-2xl p-6 text-center hover:border-emerald-500 dark:hover:border-emerald-500 transition cursor-pointer bg-white dark:bg-darkcard flex flex-col items-center justify-center min-h-[220px]">
+                    <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mb-3 shadow-inner">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <p class="font-bold text-gray-900 dark:text-white text-sm sm:text-base">Tarik &amp; Lepas File / Folder .md di Sini</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs">Mendukung banyak file Markdown sekaligus atau 1 folder penuh hasil transkripsi AI</p>
+                    
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <button type="button" onclick="document.getElementById('inputRekapFiles').click()" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-xs font-semibold rounded-lg border border-emerald-200 dark:border-emerald-800/50 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-lines"></i>
+                            <span>Pilih File (.md)</span>
+                        </button>
+                        <button type="button" onclick="document.getElementById('inputRekapFolder').click()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-lg border border-gray-200 dark:border-darkborder flex items-center gap-1.5">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <span>Pilih Folder</span>
+                        </button>
+                    </div>
+
+                    <input type="file" id="inputRekapFiles" multiple accept=".md,.markdown,.txt" onchange="handleRekapFilesSelected(event)" class="hidden">
+                    <input type="file" id="inputRekapFolder" webkitdirectory directory multiple onchange="handleRekapFilesSelected(event)" class="hidden">
+                </div>
+
+                <div id="fileListSummaryRekap" class="hidden text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between">
+                    <span id="fileListSummaryText"><i class="fa-solid fa-check-circle mr-1.5"></i> 0 file dimuat</span>
+                    <button type="button" onclick="resetRekapInput()" class="text-red-500 hover:underline font-semibold text-[11px]">Hapus</button>
+                </div>
+            </div>
+
+            <!-- Paste Markdown Textarea & Fallback Selects (7 cols) -->
+            <div class="lg:col-span-7 flex flex-col justify-between bg-white dark:bg-darkcard border border-gray-200 dark:border-darkborder rounded-2xl p-5 shadow-xs">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="textareaRekapMd" class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                            <i class="fa-solid fa-paste text-indigo-500"></i>
+                            <span>Atau Salin-Tempel (Paste) Teks Markdown Transkripsi:</span>
+                        </label>
+                        <button type="button" onclick="pasteFromClipboardToRekap()" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold flex items-center gap-1">
+                            <i class="fa-regular fa-clipboard"></i>
+                            <span>Tempel dari Clipboard</span>
+                        </button>
+                    </div>
+                    <textarea id="textareaRekapMd" rows="6" placeholder="# Catatan Perkembangan Setoran Al-Qur'an&#10;- Nama Santri : Abdullah&#10;- Tingkatan : Al Qur'an&#10;&#10;| TM | Tanggal | Surat / Jilid | Ayat / Hal | Nilai | Paraf | Kode |&#10;| 1821 | 20-10-26 | Al-Ahqaf | Ayat 29 – s.d. akhir | B | U01 | M |" class="w-full text-xs sm:text-sm font-mono p-3 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-darkborder rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none leading-relaxed"></textarea>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-darkborder flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">Ustadz Penyimak Bawaan (Default):</label>
+                            <select id="selectDefaultUstadzRekap" class="w-full text-xs p-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-darkborder rounded-lg focus:ring-1 focus:ring-emerald-500">
+                                <option value="">-- Berdasarkan Paraf / Santri --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1">Santri Bawaan (Jika header kosong):</label>
+                            <select id="selectDefaultSantriRekap" class="w-full text-xs p-2 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-darkborder rounded-lg focus:ring-1 focus:ring-emerald-500">
+                                <option value="">-- Deteksi Otomatis dari Nama --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="prosesParseRekapTahfizh()" class="px-5 py-2.5 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition flex items-center justify-center gap-2 self-end sm:self-auto min-w-[170px]">
+                        <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                        <span>Analisis &amp; Cocokkan</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Pratinjau & Validasi (Tersembunyi sampai diproses) -->
+        <div id="sectionPreviewRekapTahfizh" class="hidden space-y-4">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-darkborder p-3.5 rounded-xl shadow-2xs">
+                    <div class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Total Baris Setoran</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white mt-1" id="kpiTotalSetoranRekap">0</div>
+                </div>
+                <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-darkborder p-3.5 rounded-xl shadow-2xs">
+                    <div class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Santri Teridentifikasi</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1" id="kpiSantriMatchedRekap">0</div>
+                </div>
+                <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-darkborder p-3.5 rounded-xl shadow-2xs">
+                    <div class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Surat &amp; Materi Cocok</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-blue-600 dark:text-blue-400 mt-1" id="kpiMateriMatchedRekap">0</div>
+                </div>
+                <div class="bg-white dark:bg-darkcard border border-gray-100 dark:border-darkborder p-3.5 rounded-xl shadow-2xs">
+                    <div class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Perlu Penyesuaian</div>
+                    <div class="text-xl sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1" id="kpiPerluReviewRekap">0</div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder overflow-hidden">
+                <div class="p-4 border-b border-gray-100 dark:border-darkborder flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-gray-50/50 dark:bg-slate-800/30">
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-sm text-gray-900 dark:text-white">Daftar Pratinjau Baris Setoran</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400" id="rekapTableCountInfo"></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btnFilterRekapAll" onclick="filterRekapTable('all')" class="rekap-filter-btn active text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Semua</button>
+                        <button type="button" id="btnFilterRekapReview" onclick="filterRekapTable('review')" class="rekap-filter-btn text-xs font-semibold px-2.5 py-1 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800">Perlu Review</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto max-h-[500px]">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-slate-800/90 backdrop-blur-xs z-10 border-b border-gray-200 dark:border-darkborder text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="p-3 w-10 text-center">
+                                    <input type="checkbox" id="checkAllRekapRows" checked onchange="toggleSelectAllRekap(this.checked)" class="rounded text-emerald-600 focus:ring-emerald-500">
+                                </th>
+                                <th class="p-3">TM</th>
+                                <th class="p-3">Tanggal</th>
+                                <th class="p-3 min-w-[180px]">Santri</th>
+                                <th class="p-3 min-w-[140px]">Ustadz / Paraf</th>
+                                <th class="p-3 text-center">Kategori</th>
+                                <th class="p-3 min-w-[160px]">Materi (Surat / Jilid)</th>
+                                <th class="p-3 min-w-[130px]">Ayat / Hal</th>
+                                <th class="p-3 text-center">Nilai</th>
+                                <th class="p-3 text-center">Status</th>
+                                <th class="p-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablePreviewRekapBody" class="divide-y divide-gray-100 dark:divide-darkborder"></tbody>
+                    </table>
+                </div>
+
+                <!-- Progress Bar Saving -->
+                <div id="rekapProgressContainer" class="hidden p-4 border-t border-gray-100 dark:border-darkborder bg-emerald-50/50 dark:bg-emerald-950/20 space-y-2">
+                    <div class="flex justify-between text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                        <span id="rekapProgressText">Menyimpan setoran ke database...</span>
+                        <span id="rekapProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                        <div id="rekapProgressBar" class="h-full bg-emerald-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Bottom Save Actions -->
+                <div class="p-4 border-t border-gray-100 dark:border-darkborder flex flex-col sm:flex-row justify-between sm:items-center gap-3 bg-gray-50 dark:bg-slate-900/40">
+                    <button type="button" onclick="resetRekapInput()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-xl transition">
+                        Bersihkan &amp; Ulangi
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btnExecuteRekapSave" onclick="executeBatchRekapSave()" class="px-6 py-2.5 bg-[#1c6b45] hover:bg-[#165737] text-white rounded-xl text-xs sm:text-sm font-bold shadow-md transition flex items-center gap-2 active:scale-95">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span id="btnExecuteRekapSaveText">Simpan Semua Setoran Terpilih</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
     <template id="tpl-superadmin-keuangan">
         <!-- Header Keuangan & SPP -->
         <div class="mb-5 flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -921,6 +1225,13 @@
                 <button onclick="openModalAturanSpp()" class="px-3 py-2 bg-white dark:bg-darkcard hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-darkborder rounded-xl text-xs sm:text-sm font-semibold transition shadow-2xs flex items-center gap-1.5" title="Konfigurasi Aturan &amp; Otomatisasi SPP">
                     <i class="fa-solid fa-gear text-[#9a2024]"></i>
                     <span class="hidden sm:inline">Aturan SPP</span>
+                </button>
+
+                <!-- Tombol Sesuaikan Tagihan Belum Lunas -->
+                <button type="button" onclick="triggerSyncNominalSpp()" class="px-3 py-2 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 rounded-xl text-xs sm:text-sm font-semibold transition shadow-2xs flex items-center gap-1.5" title="Sesuaikan seluruh tagihan SPP yang belum lunas di periode ini dengan nominal aturan SPP terbaru">
+                    <i class="fa-solid fa-arrows-rotate text-amber-600 dark:text-amber-400"></i>
+                    <span class="hidden lg:inline">Sesuaikan Tagihan Belum Lunas</span>
+                    <span class="lg:hidden">Sync SPP</span>
                 </button>
 
                 <!-- Tombol Utama: Buat Tagihan -->

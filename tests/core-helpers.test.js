@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import fs from 'fs';
 import {
   escapeHtml,
   formatRupiah,
@@ -6,7 +7,10 @@ import {
   formatWaNumber,
   getDashboardUrlByRole,
   openModal,
-  closeModal
+  closeModal,
+  QURAN_DB,
+  convertArabicNumerals,
+  parseTahfizhMarkdownTable
 } from '../js/core.js';
 
 describe('Zadil Quran Core Helpers (js/core.js)', () => {
@@ -105,6 +109,94 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
     it('berjalan aman tanpa crash bila elemen DOM tidak ditemukan', () => {
       expect(() => openModal('nonExistentModal', 'nonExistentContent')).not.toThrow();
       expect(() => closeModal('nonExistentModal', 'nonExistentContent')).not.toThrow();
+    });
+  });
+
+  describe('Authoritative Quran DB (QURAN_DB)', () => {
+    it('memiliki 114 surat lengkap', () => {
+      expect(QURAN_DB).toHaveLength(114);
+      expect(QURAN_DB[0].nama).toBe('Al-Fatihah');
+      expect(QURAN_DB[113].nama).toBe('An-Nas');
+    });
+
+    it('setiap Juz dari 1 sampai 30 memiliki minimal 1 surat yang cocok (termasuk Juz 2 & Juz 5)', () => {
+      for (let j = 1; j <= 30; j++) {
+        const matchingSurahs = QURAN_DB.filter(q => Array.isArray(q.juz) ? q.juz.includes(j) : q.juz === j);
+        expect(matchingSurahs.length, `Juz ${j} harus memiliki surat`).toBeGreaterThan(0);
+      }
+    });
+
+    it('Juz 2 secara spesifik memuat QS. Al-Baqarah', () => {
+      const juz2Surahs = QURAN_DB.filter(q => q.juz.includes(2));
+      expect(juz2Surahs.map(s => s.nama)).toContain('Al-Baqarah');
+    });
+  });
+
+  describe('convertArabicNumerals()', () => {
+    it('mengubah angka Arab ke digit latin dengan benar', () => {
+      expect(convertArabicNumerals('۲۰-۱۰-۲۶')).toBe('20-10-26');
+      expect(convertArabicNumerals('۱۸۲۱')).toBe('1821');
+    });
+  });
+
+  describe('parseTahfizhMarkdownTable()', () => {
+    it('mem-parsing file catatan setoran riil (15 baris)', () => {
+      const sampleMd = fs.readFileSync('catatan_perkembangan_setoran_al_qur_an.md', 'utf8');
+      const santriList = [{ ID_Santri: 'ZQ-2026-TEST', Nama_Santri: 'Ahmad Fatih' }];
+      const ustadzList = [{ ID_Ustadz: 'U-001', Kode: 'U01', Nama: 'Ust. Ahmad Fauzi' }];
+
+      const parsed = parseTahfizhMarkdownTable(sampleMd, santriList, ustadzList);
+      expect(parsed).toHaveLength(15);
+
+      // Cek baris pertama (1821 - Al-Ahqaf)
+      expect(parsed[0].tm).toBe('1821');
+      expect(parsed[0].tanggal).toBe('2026-10-20');
+      expect(parsed[0].surah).toBe('Al-Ahqaf');
+      expect(parsed[0].surahNo).toBe('46');
+      expect(parsed[0].juz).toBe('26');
+      expect(parsed[0].jenis).toBe('Binnadhor'); // Kode B
+
+      // Cek baris kedua (1822 - Al-A'raf Muroja'ah)
+      expect(parsed[1].tm).toBe('1822');
+      expect(parsed[1].jenis).toBe("Muroja'ah"); // Kode M
+
+      // Cek baris ketiga (1823 - Luqman Ziyadah)
+      expect(parsed[2].tm).toBe('1823');
+      expect(parsed[2].jenis).toBe('Ziyadah'); // Kode Z
+
+      // Cek baris materi Jilid (1825)
+      expect(parsed[4].tm).toBe('1825');
+      expect(parsed[4].tingkatan).toBe('Jilid');
+      expect(parsed[4].halaman).toBe('5');
+    });
+
+    it('mencocokkan multi-ustadz berdasarkan Kode Paraf (U01, U02, U03) secara fleksibel', () => {
+      const mdContent = `
+| TM | Tanggal | Surat / Jilid | Ayat / Hal | Nilai | Paraf | Kode |
+| :---: | :---: | :--- | :--- | :---: | :---: | :---: |
+| 101 | 2026-11-01 | Al-Baqarah | Ayat 1-10 | A | U01 | Z |
+| 102 | 2026-11-02 | Al-Baqarah | Ayat 11-20 | B | U02 | M |
+| 103 | 2026-11-03 | Al-Baqarah | Ayat 21-30 | A | U03 | B |
+`;
+      const ustadzList = [
+        { ID_Ustadz: 'UST-A', Kode: 'U01', Nama: 'Ust. Ahmad' },
+        { ID_Ustadz: 'UST-B', Kode: 'U02', Nama: 'Ust. Badrus' },
+        { ID_Ustadz: 'UST-C', Kode: 'U03', Nama: 'Ust. Choirul' }
+      ];
+
+      const res = parseTahfizhMarkdownTable(mdContent, [], ustadzList);
+      expect(res).toHaveLength(3);
+      expect(res[0].ustadzId).toBe('UST-A');
+      expect(res[0].ustadzNama).toBe('Ust. Ahmad');
+      expect(res[0].jenis).toBe('Ziyadah');
+
+      expect(res[1].ustadzId).toBe('UST-B');
+      expect(res[1].ustadzNama).toBe('Ust. Badrus');
+      expect(res[1].jenis).toBe("Muroja'ah");
+
+      expect(res[2].ustadzId).toBe('UST-C');
+      expect(res[2].ustadzNama).toBe('Ust. Choirul');
+      expect(res[2].jenis).toBe('Binnadhor');
     });
   });
 });

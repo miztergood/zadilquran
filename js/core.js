@@ -1149,6 +1149,226 @@ function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
     }
 }
 
+// ==================== DATABASE QURAN TERPUSAT & PARSER REKAP TAHFIZH ====================
+const RAW_QURAN = [
+    [1,"Al-Fatihah",7,[1]],[2,"Al-Baqarah",286,[1,2,3]],[3,"Ali 'Imran",200,[3,4]],[4,"An-Nisa'",176,[4,5,6]],[5,"Al-Ma'idah",120,[6,7]],
+    [6,"Al-An'am",165,[7,8]],[7,"Al-A'raf",206,[8,9]],[8,"Al-Anfal",75,[9,10]],[9,"At-Taubah",129,[10,11]],[10,"Yunus",109,[11]],
+    [11,"Hud",123,[11,12]],[12,"Yusuf",111,[12,13]],[13,"Ar-Ra'd",43,[13]],[14,"Ibrahim",52,[13]],[15,"Al-Hijr",99,[14]],
+    [16,"An-Nahl",128,[14]],[17,"Al-Isra'",111,[15]],[18,"Al-Kahf",110,[15,16]],[19,"Maryam",98,[16]],[20,"Taha",135,[16]],
+    [21,"Al-Anbiya'",112,[17]],[22,"Al-Hajj",78,[17]],[23,"Al-Mu'minun",118,[18]],[24,"An-Nur",64,[18]],[25,"Al-Furqan",77,[18,19]],
+    [26,"Asy-Syu'ara'",227,[19]],[27,"An-Naml",93,[19,20]],[28,"Al-Qasas",88,[20]],[29,"Al-'Ankabut",69,[20,21]],[30,"Ar-Rum",60,[21]],
+    [31,"Luqman",34,[21]],[32,"As-Sajdah",30,[21]],[33,"Al-Ahzab",73,[21,22]],[34,"Saba'",54,[22]],[35,"Fatir",45,[22]],
+    [36,"Yasin",83,[22,23]],[37,"As-Saffat",182,[23]],[38,"Sad",88,[23]],[39,"Az-Zumar",75,[23,24]],[40,"Ghafir",85,[24]],
+    [41,"Fussilat",54,[24,25]],[42,"Asy-Syura",53,[25]],[43,"Az-Zukhruf",89,[25]],[44,"Ad-Dukhan",59,[25]],[45,"Al-Jasiyah",37,[25]],
+    [46,"Al-Ahqaf",35,[26]],[47,"Muhammad",38,[26]],[48,"Al-Fath",29,[26]],[49,"Al-Hujurat",18,[26]],[50,"Qaf",45,[26]],
+    [51,"Az-Zariyat",60,[26,27]],[52,"At-Tur",49,[27]],[53,"An-Najm",62,[27]],[54,"Al-Qamar",55,[27]],[55,"Ar-Rahman",78,[27]],
+    [56,"Al-Waqi'ah",96,[27]],[57,"Al-Hadid",29,[27]],[58,"Al-Mujadilah",22,[28]],[59,"Al-Hasyr",24,[28]],[60,"Al-Mumtahanah",13,[28]],
+    [61,"As-Saff",14,[28]],[62,"Al-Jumu'ah",11,[28]],[63,"Al-Munafiqun",11,[28]],[64,"At-Tagabun",18,[28]],[65,"At-Talaq",12,[28]],
+    [66,"At-Tahrim",12,[28]],[67,"Al-Mulk",30,[29]],[68,"Al-Qalam",52,[29]],[69,"Al-Haqqah",52,[29]],[70,"Al-Ma'arij",44,[29]],
+    [71,"Nuh",28,[29]],[72,"Al-Jinn",28,[29]],[73,"Al-Muzzammil",20,[29]],[74,"Al-Muddassir",56,[29]],[75,"Al-Qiyamah",40,[29]],
+    [76,"Al-Insan",31,[29]],[77,"Al-Mursalat",50,[29]],[78,"An-Naba'",40,[30]],[79,"An-Nazi'at",46,[30]],[80,"'Abasa",42,[30]],
+    [81,"At-Takwir",29,[30]],[82,"Al-Infitar",19,[30]],[83,"Al-Mutaffifin",36,[30]],[84,"Al-Insyiqaq",25,[30]],[85,"Al-Buruj",22,[30]],
+    [86,"At-Tariq",17,[30]],[87,"Al-A'la",19,[30]],[88,"Al-Gasyiyah",26,[30]],[89,"Al-Fajr",30,[30]],[90,"Al-Balad",20,[30]],
+    [91,"Asy-Syams",15,[30]],[92,"Al-Lail",21,[30]],[93,"Ad-Duha",11,[30]],[94,"Asy-Syarh",8,[30]],[95,"At-Tin",8,[30]],
+    [96,"Al-'Alaq",19,[30]],[97,"Al-Qadr",5,[30]],[98,"Al-Bayyinah",8,[30]],[99,"Az-Zalzalah",8,[30]],[100,"Al-'Adiyat",11,[30]],
+    [101,"Al-Qari'ah",11,[30]],[102,"At-Takasur",8,[30]],[103,"Al-'Asr",3,[30]],[104,"Al-Humazah",9,[30]],[105,"Al-Fil",5,[30]],
+    [106,"Quraisy",4,[30]],[107,"Al-Ma'un",7,[30]],[108,"Al-Kausar",3,[30]],[109,"Al-Kafirun",6,[30]],[110,"An-Nasr",3,[30]],
+    [111,"Al-Lahab",5,[30]],[112,"Al-Ikhlas",4,[30]],[113,"Al-Falaq",5,[30]],[114,"An-Nas",6,[30]]
+];
+
+const QURAN_DB = RAW_QURAN.map(q => ({
+    no: q[0],
+    nama: q[1],
+    ayat: q[2],
+    juz: Array.isArray(q[3]) ? q[3] : [q[3]],
+    juzPrimary: Array.isArray(q[3]) ? q[3][0] : q[3]
+}));
+
+function convertArabicNumerals(str) {
+    return String(str || '')
+        .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+        .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0));
+}
+
+function cleanSuratName(raw) {
+    let clean = String(raw || '').replace(/\([^)]*[\u0600-\u06FF]+[^)]*\)/g, '').trim();
+    clean = clean.replace(/^(QS\.?|Surat|Surah)\s*/i, '').trim();
+    return clean;
+}
+
+/**
+ * Parser Tabel Markdown Lembar Catatan Perkembangan Setoran Al-Qur'an (Kode B, M, Z, T)
+ * Mampu membaca dokumen markdown tunggal maupun kumpulan dokumen yang dipisahkan '---'
+ */
+function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
+    if (!mdText || typeof mdText !== 'string') return [];
+
+    const cleanCell = (c) => String(c || '').replace(/\*\*/g, '').trim();
+
+    // Pisahkan dokumen menjadi segmen-segmen santri (bisa berpemisah '---' atau '# Lembar')
+    const sections = mdText.split(/\n\s*---\s*\n|\n(?=#\s*Lembar)/i).filter(s => s.trim().length > 0);
+    const results = [];
+
+    sections.forEach(sec => {
+        // Ambil Nama Santri dari header
+        const namaSantriMatch = sec.match(/\*\*Nama\s+Santri\s*:\*\*\s*([^\n\r]+)/i);
+        let headerSantriName = namaSantriMatch ? namaSantriMatch[1].replace(/[\._\-]+/g, '').trim() : '';
+
+        // Ambil Tingkatan
+        const tingkatanMatch = sec.match(/\*\*Tingkatan\s*:\*\*\s*([^\n\r]+)/i);
+        let headerTingkatan = "Al-Qur'an";
+        if (tingkatanMatch) {
+            const rawTingkatan = tingkatanMatch[1].toLowerCase();
+            if (rawTingkatan.includes('jilid') && !rawTingkatan.includes("al qur'an") && !rawTingkatan.includes("al-qur'an")) {
+                headerTingkatan = 'Jilid';
+            }
+        }
+
+        // Cari santri yang cocok di santriList
+        let matchedSantri = null;
+        if (headerSantriName && Array.isArray(santriList) && santriList.length > 0) {
+            const cleanQuery = headerSantriName.toLowerCase().replace(/[^a-z0-9]/g, '');
+            matchedSantri = santriList.find(s => {
+                const sName = String(s.Nama_Santri || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const sPanggilan = String(s.Nama_Panggilan || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                return sName === cleanQuery || (sPanggilan && sPanggilan === cleanQuery) || (cleanQuery.length >= 4 && sName.includes(cleanQuery));
+            }) || null;
+        }
+
+        // Ambil baris tabel
+        const lines = sec.split('\n');
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return;
+
+            // Cek apakah ini header tabel
+            if (/\|\s*TM\s*\|/i.test(trimmed) || /\|\s*:?-+:?\s*\|/.test(trimmed)) return;
+
+            const cols = trimmed.split('|').map(cleanCell);
+            // Format kolom: [empty, TM, Tanggal, SuratJilid, AyatHal, Nilai, Paraf, Kode, empty?]
+            const validCols = cols.slice(1, cols.length - 1);
+            if (validCols.length < 5) return;
+
+            const tmRaw = convertArabicNumerals(validCols[0] || '-');
+            const tglRaw = convertArabicNumerals(validCols[1] || '');
+            const suratRaw = validCols[2] || '';
+            const ayatHalRaw = convertArabicNumerals(validCols[3] || '');
+            const nilaiRaw = validCols[4] || 'B';
+            const parafRaw = validCols[5] || '';
+            const kodeRaw = validCols[6] || '';
+
+            // Tentukan Kategori: Z (Ziyadah), M (Muroja'ah), B (Binnadhor), T (Tasmi')
+            let jenis = 'Ziyadah';
+            const checkKode = (kodeRaw || parafRaw || '').trim().toUpperCase();
+            if (checkKode === 'M' || checkKode.includes('MUROJA')) {
+                jenis = "Muroja'ah";
+            } else if (checkKode === 'B' || checkKode.includes('BINNAD') || checkKode.includes('BIN-NAZHAR')) {
+                jenis = 'Binnadhor';
+            } else if (checkKode === 'T' || checkKode.includes('TASMI')) {
+                jenis = "Tasmi'";
+            } else if (checkKode === 'Z' || checkKode.includes('ZIYADAH')) {
+                jenis = 'Ziyadah';
+            }
+
+            // Normalisasi Tanggal ke YYYY-MM-DD
+            let normalizedDate = tglRaw;
+            const dateParts = tglRaw.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+            if (dateParts) {
+                let d = dateParts[1].padStart(2, '0');
+                let m = dateParts[2].padStart(2, '0');
+                let y = dateParts[3];
+                if (y.length === 2) y = '20' + y;
+                normalizedDate = `${y}-${m}-${d}`;
+            }
+
+            // Deteksi Surat / Jilid & Ayat
+            let surahName = cleanSuratName(suratRaw);
+            let surahNo = '';
+            let juzVal = '1';
+            let ayatVal = ayatHalRaw;
+            let halVal = '-';
+            let tingkatanRow = headerTingkatan;
+
+            if (surahName.toLowerCase().includes('jilid') || suratRaw.includes('ج ¼') || suratRaw.includes('جuz') || suratRaw.includes('jilid')) {
+                tingkatanRow = 'Jilid';
+                juzVal = surahName || 'Jilid 1';
+                if (ayatHalRaw.toLowerCase().includes('halaman') || ayatHalRaw.toLowerCase().includes('hal')) {
+                    halVal = ayatHalRaw.replace(/[^0-9]/g, '') || '-';
+                    ayatVal = '-';
+                }
+            } else {
+                // Cari surat di QURAN_DB
+                const qFound = QURAN_DB.find(q => {
+                    const cleanQ = q.nama.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    const cleanS = surahName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    return cleanQ === cleanS || cleanS.includes(cleanQ) || cleanQ.includes(cleanS);
+                });
+                if (qFound) {
+                    surahName = qFound.nama;
+                    surahNo = String(qFound.no);
+                    juzVal = String(qFound.juzPrimary || (Array.isArray(qFound.juz) ? qFound.juz[0] : qFound.juz));
+                    if (ayatHalRaw.toLowerCase().includes('akhir')) {
+                        const startM = ayatHalRaw.match(/\d+/);
+                        const start = startM ? startM[0] : '1';
+                        ayatVal = `${start} - ${qFound.ayat}`;
+                    } else if (ayatHalRaw.toLowerCase().includes('halaman') || ayatHalRaw.toLowerCase().includes('hal')) {
+                        halVal = ayatHalRaw.replace(/[^0-9]/g, '') || '-';
+                    }
+                }
+            }
+
+            // Normalisasi Nilai / Predikat
+            let predikat = 'Mumtaz';
+            const cleanNilai = nilaiRaw.trim().toUpperCase();
+            if (cleanNilai === 'B' || cleanNilai === 'BAIK' || cleanNilai === 'JAYYID') {
+                predikat = 'Jayyid';
+            } else if (cleanNilai === 'A' || cleanNilai === 'MUMTAZ') {
+                predikat = 'Mumtaz';
+            } else if (cleanNilai === 'C' || cleanNilai === 'MAQBUL') {
+                predikat = 'Maqbul';
+            } else if (nilaiRaw.trim()) {
+                predikat = nilaiRaw.trim();
+            }
+
+            // Cari Ustadz Penyimak dari Paraf / Kode Ustadz
+            let matchedUstadz = null;
+            if (parafRaw && Array.isArray(ustadzList) && ustadzList.length > 0) {
+                const pClean = parafRaw.trim().toLowerCase();
+                matchedUstadz = ustadzList.find(u => {
+                    const uName = String(u.Nama || '').toLowerCase();
+                    const uId = String(u.ID_Ustadz || '').toLowerCase();
+                    const uUser = String(u.Username || '').toLowerCase();
+                    const uKode = String(u.Kode || '').toLowerCase();
+                    return (uKode && uKode === pClean) || uId === pClean || uUser === pClean || uName.includes(pClean) || pClean.includes(uName);
+                }) || null;
+            }
+
+            results.push({
+                tm: tmRaw,
+                tanggal: normalizedDate,
+                rawSantriName: headerSantriName,
+                santriId: matchedSantri ? matchedSantri.ID_Santri : '',
+                santriNama: matchedSantri ? matchedSantri.Nama_Santri : (headerSantriName || 'Belum Dipilih'),
+                isSantriMatched: !!matchedSantri,
+                tingkatan: tingkatanRow,
+                jenis: jenis,
+                surah: surahName,
+                surahNo: surahNo,
+                juz: juzVal,
+                ayat: ayatVal || '-',
+                halaman: halVal,
+                predikat: predikat,
+                paraf: parafRaw,
+                ustadzId: matchedUstadz ? matchedUstadz.ID_Ustadz : '',
+                ustadzNama: matchedUstadz ? matchedUstadz.Nama : (parafRaw !== '✓' ? parafRaw : ''),
+                isUstadzMatched: !!matchedUstadz
+            });
+        });
+    });
+
+    return results;
+}
+
 function formatWaNumber(hp) {
     let clean = String(hp || '').replace(/[^0-9]/g, '');
     if (clean.startsWith('0')) clean = '62' + clean.slice(1);
@@ -1180,6 +1400,11 @@ function closeModal(modalId, contentId) {
 if (typeof window !== 'undefined') {
     window.openModal = openModal;
     window.closeModal = closeModal;
+    window.RAW_QURAN = RAW_QURAN;
+    window.QURAN_DB = QURAN_DB;
+    window.convertArabicNumerals = convertArabicNumerals;
+    window.cleanSuratName = cleanSuratName;
+    window.parseTahfizhMarkdownTable = parseTahfizhMarkdownTable;
 }
 
 // ==================== DARK MODE ====================
@@ -1466,6 +1691,11 @@ if (typeof module !== 'undefined' && module.exports) {
         getDashboardUrlByRole,
         openModal,
         closeModal,
+        RAW_QURAN,
+        QURAN_DB,
+        convertArabicNumerals,
+        cleanSuratName,
+        parseTahfizhMarkdownTable,
         TASMI_PASSING_SCORE,
         TASMI_VALID_SCORES,
         TASMI_VALID_GRADES,
