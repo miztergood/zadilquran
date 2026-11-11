@@ -315,7 +315,181 @@ function initSmartForm() {
     for (let i = 1; i <= 30; i++) selJuz.innerHTML += `<option value="${i}">Juz ${i}</option>`;
     populateSurat();
 
+    initTasmiPanel();
     renderQuickSantriChips();
+}
+
+// ==================== LOGIKA PANEL PENILAIAN KHUSUS TASMI' (IKHTIBAR 1 JUZ) ====================
+let tasmiScores = {};
+let tasmiTajwid = {};
+
+function initTasmiPanel() {
+    const selTasmiJuz = document.getElementById('tasmiJuz');
+    if (selTasmiJuz) {
+        selTasmiJuz.innerHTML = '';
+        for (let i = 1; i <= 30; i++) {
+            selTasmiJuz.innerHTML += `<option value="${i}" ${i === 30 ? 'selected' : ''}>Juz ${i} (20 Halaman)</option>`;
+        }
+    }
+    renderTasmiPagesGrid();
+    renderTasmiTajwidGrid();
+    updateTasmiLiveSummary();
+}
+
+function renderTasmiPagesGrid() {
+    const grid = document.getElementById('tasmiPagesGrid');
+    if (!grid) return;
+
+    const blocks = [
+        { title: 'Halaman 1 – 5', start: 1, end: 5 },
+        { title: 'Halaman 6 – 10', start: 6, end: 10 },
+        { title: 'Halaman 11 – 15', start: 11, end: 15 },
+        { title: 'Halaman 16 – 20', start: 16, end: 20 }
+    ];
+
+    grid.innerHTML = blocks.map(blk => {
+        let rowsHtml = '';
+        for (let p = blk.start; p <= blk.end; p++) {
+            const curScore = tasmiScores[p];
+            const btnsHtml = TASMI_VALID_SCORES.map(sc => {
+                const isActive = Number(curScore) === sc;
+                const activeCls = sc === 5 ? 'bg-[#1c6b45] text-white border-[#1c6b45]'
+                    : sc === 4 ? 'bg-blue-600 text-white border-blue-600'
+                    : sc === 3 ? 'bg-amber-500 text-white border-amber-500'
+                    : 'bg-red-600 text-white border-red-600';
+                const baseCls = 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-darkborder hover:border-indigo-400';
+                return `<button type="button" onclick="setTasmiPageScore(${p}, ${sc})" id="btnTasmiP${p}S${sc}" class="w-7 h-7 rounded-lg text-[11px] font-bold border transition ${isActive ? activeCls : baseCls}">${sc}</button>`;
+            }).join('');
+
+            rowsHtml += `
+                <div class="flex items-center justify-between py-1 px-2 border-b border-gray-100 dark:border-darkborder last:border-none">
+                    <span class="text-xs font-bold text-gray-700 dark:text-gray-200 w-12">Hal ${p}</span>
+                    <div class="flex items-center gap-1">${btnsHtml}</div>
+                </div>
+            `;
+        }
+        return `
+            <div class="bg-white dark:bg-darkcard border border-gray-200 dark:border-darkborder rounded-xl overflow-hidden">
+                <div class="bg-gray-100 dark:bg-slate-800 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-darkborder">
+                    ${blk.title}
+                </div>
+                <div>${rowsHtml}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function setTasmiPageScore(pageNum, score) {
+    tasmiScores[pageNum] = score;
+    TASMI_VALID_SCORES.forEach(sc => {
+        const btn = document.getElementById(`btnTasmiP${pageNum}S${sc}`);
+        if (!btn) return;
+        const isActive = sc === score;
+        const activeCls = sc === 5 ? 'bg-[#1c6b45] text-white border-[#1c6b45] shadow-xs'
+            : sc === 4 ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+            : sc === 3 ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+            : 'bg-red-600 text-white border-red-600 shadow-xs';
+        const baseCls = 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-darkborder hover:border-indigo-400';
+        btn.className = `w-7 h-7 rounded-lg text-[11px] font-bold border transition ${isActive ? activeCls : baseCls}`;
+    });
+    updateTasmiLiveSummary();
+}
+
+function fillAllTasmiScore(score) {
+    for (let p = 1; p <= 20; p++) {
+        tasmiScores[p] = score;
+    }
+    renderTasmiPagesGrid();
+    updateTasmiLiveSummary();
+    AppNotify.toast('info', `Seluruh 20 halaman diisi skor ${score}`);
+}
+
+function resetTasmiScores() {
+    tasmiScores = {};
+    renderTasmiPagesGrid();
+    updateTasmiLiveSummary();
+}
+
+function renderTasmiTajwidGrid() {
+    const container = document.getElementById('tasmiTajwidGrid');
+    if (!container || typeof TASMI_TAJWID_ASPEK === 'undefined') return;
+
+    container.innerHTML = TASMI_TAJWID_ASPEK.map((asp, idx) => {
+        const curGrade = tasmiTajwid[asp.key];
+        const btnsHtml = TASMI_VALID_GRADES.map(gr => {
+            const isActive = curGrade === gr;
+            const activeCls = gr === 'A' ? 'bg-[#1c6b45] text-white border-[#1c6b45]'
+                : gr === 'B' ? 'bg-blue-600 text-white border-blue-600'
+                : gr === 'C' ? 'bg-amber-500 text-white border-amber-500'
+                : 'bg-red-600 text-white border-red-600';
+            const baseCls = 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-darkborder hover:border-indigo-400';
+            return `<button type="button" onclick="setTasmiTajwidGrade('${asp.key}', '${gr}')" id="btnTajwid_${asp.key}_${gr}" class="w-7 h-7 rounded-lg text-[11px] font-bold border transition ${isActive ? activeCls : baseCls}">${gr}</button>`;
+        }).join('');
+
+        return `
+            <div class="flex items-center justify-between gap-2 bg-white dark:bg-darkcard px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-darkborder">
+                <span class="text-xs font-semibold text-gray-700 dark:text-gray-200 truncate">${idx + 1}. ${asp.label}</span>
+                <div class="flex items-center gap-1 shrink-0">${btnsHtml}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function setTasmiTajwidGrade(key, grade) {
+    tasmiTajwid[key] = grade;
+    TASMI_VALID_GRADES.forEach(gr => {
+        const btn = document.getElementById(`btnTajwid_${key}_${gr}`);
+        if (!btn) return;
+        const isActive = gr === grade;
+        const activeCls = gr === 'A' ? 'bg-[#1c6b45] text-white border-[#1c6b45] shadow-xs'
+            : gr === 'B' ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+            : gr === 'C' ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+            : 'bg-red-600 text-white border-red-600 shadow-xs';
+        const baseCls = 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-darkborder hover:border-indigo-400';
+        btn.className = `w-7 h-7 rounded-lg text-[11px] font-bold border transition ${isActive ? activeCls : baseCls}`;
+    });
+}
+
+function fillAllTasmiTajwid(grade) {
+    TASMI_TAJWID_ASPEK.forEach(asp => { tasmiTajwid[asp.key] = grade; });
+    renderTasmiTajwidGrid();
+    AppNotify.toast('info', `Seluruh aspek Tajwid diatur ke nilai ${grade}`);
+}
+
+function resetTasmiTajwid() {
+    tasmiTajwid = {};
+    renderTasmiTajwidGrid();
+}
+
+function updateTasmiLiveSummary() {
+    if (typeof hitungHasilTasmi !== 'function') return;
+    const hasil = hitungHasilTasmi(tasmiScores);
+
+    const elCount = document.getElementById('tasmiFilledCountText');
+    const elTotal = document.getElementById('tasmiTotalSkorDisplay');
+    const elBadge = document.getElementById('tasmiStatusBadgeDisplay');
+
+    if (elCount) elCount.textContent = `Terisi: ${hasil.filledCount} / 20 halaman`;
+    if (elTotal) {
+        elTotal.textContent = `${hasil.totalSkor} / 100`;
+        elTotal.className = `text-xl font-black ${
+            !hasil.isComplete ? 'text-gray-900 dark:text-white'
+            : hasil.lulus ? 'text-[#1c6b45] dark:text-[#83c9a6]'
+            : 'text-red-600 dark:text-red-400'
+        }`;
+    }
+    if (elBadge) {
+        if (!hasil.isComplete) {
+            elBadge.textContent = `Kurang ${20 - hasil.filledCount} Halaman`;
+            elBadge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200';
+        } else if (hasil.lulus) {
+            elBadge.textContent = '✅ LULUS IKHTIBAR (≥ 80)';
+            elBadge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8]';
+        } else {
+            elBadge.textContent = '🔁 TIDAK LULUS — Wajib Mengulang (< 80)';
+            elBadge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-red-50 text-red-700 border border-red-200';
+        }
+    }
 }
 
 function switchTingkatan(tingkat) {
@@ -332,6 +506,14 @@ function switchTingkatan(tingkat) {
 
     if (btnQuran) btnQuran.className = isQuran ? activeClass : inactiveClass;
     if (btnJilid) btnJilid.className = !isQuran ? activeClass : inactiveClass;
+
+    // Jika sedang mode Tasmi', jangan tampilkan panel Quran/Jilid standar
+    const currentType = document.getElementById('smartType') ? document.getElementById('smartType').value : 'Ziyadah';
+    if (currentType === 'Tasmi') {
+        if (panelQuran) panelQuran.classList.add('hidden');
+        if (panelJilid) panelJilid.classList.add('hidden');
+        return;
+    }
 
     if (panelQuran) panelQuran.classList.toggle('hidden', !isQuran);
     if (panelJilid) panelJilid.classList.toggle('hidden', isQuran);
@@ -376,6 +558,27 @@ function switchSmartTab(type) {
         btnTasmi.className = (type === 'Tasmi')
             ? "py-2 px-1 rounded-lg text-xs font-bold transition bg-indigo-600 text-white shadow-xs text-center"
             : inactive;
+    }
+
+    // Toggle Panel Khusus Tasmi' vs Form Mutaba'ah Harian Standar
+    const isTasmiMode = type === 'Tasmi';
+    const secTingkatan = document.getElementById('sectionTingkatanBacaan');
+    const panelQuran = document.getElementById('panelInputQuran');
+    const panelJilid = document.getElementById('panelInputJilid');
+    const panelStandar = document.getElementById('panelStandarHalPredikat');
+    const panelTasmi = document.getElementById('panelInputTasmi');
+
+    if (isTasmiMode) {
+        if (secTingkatan) secTingkatan.classList.add('hidden');
+        if (panelQuran) panelQuran.classList.add('hidden');
+        if (panelJilid) panelJilid.classList.add('hidden');
+        if (panelStandar) panelStandar.classList.add('hidden');
+        if (panelTasmi) panelTasmi.classList.remove('hidden');
+    } else {
+        if (secTingkatan) secTingkatan.classList.remove('hidden');
+        if (panelStandar) panelStandar.classList.remove('hidden');
+        if (panelTasmi) panelTasmi.classList.add('hidden');
+        switchTingkatan(document.getElementById('smartTingkatan').value || "Al-Qur'an");
     }
 }
 
@@ -455,10 +658,14 @@ function checkSmartPin(santriId) {
     const nextTmNumber = history.length + 1;
     if (tmInput) tmInput.value = `TM-${nextTmNumber}`;
 
-    if (history.length > 0) {
-        lastPinData = history[history.length - 1]; // Setoran paling baru
+    const dailyHistory = history.filter(s => !(s.Jenis || '').toLowerCase().includes('tasmi'));
+    const pinCandidate = dailyHistory.length > 0 ? dailyHistory[dailyHistory.length - 1] : (history.length > 0 ? history[history.length - 1] : null);
+
+    if (pinCandidate) {
+        lastPinData = pinCandidate;
         const jenisLabel = lastPinData.Jenis || 'Ziyadah';
-        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz}), Hal ${lastPinData.Halaman} [${jenisLabel}]`;
+        const halLabel = String(lastPinData.Halaman || '').startsWith('Skor:') ? lastPinData.Halaman : `Hal ${lastPinData.Halaman}`;
+        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz}), ${halLabel} [${jenisLabel}]`;
         if (pinContainer) pinContainer.classList.remove('hidden');
     } else {
         if (pinContainer) pinContainer.classList.add('hidden');
@@ -468,6 +675,17 @@ function checkSmartPin(santriId) {
 
 function applySmartPin() {
     if (!lastPinData) return;
+    if ((lastPinData.Jenis || '').toLowerCase().includes('tasmi')) {
+        switchSmartTab('Tasmi');
+        const selTasmiJuz = document.getElementById('tasmiJuz');
+        if (selTasmiJuz && lastPinData.Juz) selTasmiJuz.value = lastPinData.Juz;
+        AppNotify.toast('info', 'Mode Tasmi\' diterapkan!');
+        return;
+    }
+
+    const curType = document.getElementById('smartType') ? document.getElementById('smartType').value : 'Ziyadah';
+    if (curType === 'Tasmi') switchSmartTab('Ziyadah');
+
     const tingkat = lastPinData.Tingkatan || "Al-Qur'an";
     switchTingkatan(tingkat);
 
@@ -491,64 +709,122 @@ function saveSetoran(e) {
     const santriId = tsSantri ? tsSantri.getValue() : activeSelectedSantriId;
     if (!santriId) return AppNotify.warning('Pilih Santri', 'Silakan pilih santri binaan terlebih dahulu.');
 
-    const tingkatan = document.getElementById('smartTingkatan').value || "Al-Qur'an";
     const tmVal = document.getElementById('smartTM').value || "TM-1";
     const typeVal = document.getElementById('smartType').value || "Ziyadah";
-    let juzVal = '', surahVal = '', surahNoVal = '', ayatVal = '';
-
-    if (tingkatan === "Al-Qur'an") {
-        const suratNo = tsSurat ? tsSurat.getValue() : '';
-        if (!suratNo) return AppNotify.warning('Pilih Surat', 'Silakan pilih surat Al-Qur\'an terlebih dahulu.');
-        const suratData = quranDB.find(q => q.no == suratNo);
-        const startAyat = document.getElementById('smartAyatStart').value || '1';
-        const endAyat = document.getElementById('smartAyatEnd').value || (suratData ? suratData.ayat : '1');
-
-        juzVal = document.getElementById('smartJuz').value === 'all' 
-            ? String(suratData ? suratData.juz : '1') 
-            : String(document.getElementById('smartJuz').value);
-        surahVal = suratData ? suratData.nama : 'Al-Baqarah';
-        surahNoVal = suratData ? suratData.no : '2';
-        ayatVal = `${startAyat} - ${endAyat}`;
-    } else {
-        juzVal = document.getElementById('smartJilidLevel').value || 'Jilid 1';
-        surahVal = document.getElementById('smartJilidNama').value || juzVal;
-        surahNoVal = juzVal;
-        ayatVal = document.getElementById('smartJilidBaris').value || '-';
-    }
-
     const rawDate = document.getElementById('smartDate').value;
     const displayDate = new Date(rawDate).toLocaleDateString('id-ID', {
         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
 
-    const payload = {
-        santriId: santriId,
-        tingkatan: tingkatan,
-        tm: tmVal,
-        type: typeVal,
-        juz: juzVal,
-        surah: surahVal,
-        surahNo: surahNoVal,
-        ayat: ayatVal,
-        halaman: document.getElementById('smartHal').value || '-',
-        predikat: document.querySelector('input[name="smartPredikat"]:checked').value,
-        catatan: document.getElementById('smartCatatan').value,
-        date: displayDate,
-        parafUstadz: sessionData ? sessionData.name : 'Ustadz Pembimbing'
-    };
+    let payload;
 
-    AppNotify.loading('Menyimpan Mutaba\'ah Harian...');
+    // MODE KHUSUS TASMI' (IKHTIBAR 1 JUZ)
+    if (typeVal === 'Tasmi') {
+        const hasil = hitungHasilTasmi(tasmiScores);
+        if (!hasil.isComplete) {
+            return AppNotify.warning(
+                'Skor Halaman Belum Lengkap',
+                `Penilaian Tasmi' 1 Juz mewajibkan 20 halaman diisi. Halaman yang belum dinilai: <strong>${hasil.missingPages.join(', ')}</strong>`
+            );
+        }
+
+        const tajwidRes = validasiTajwidTasmi(tasmiTajwid);
+        if (!tajwidRes.isValid) {
+            return AppNotify.warning(
+                'Nilai Praktik Tajwid Belum Lengkap',
+                'Silakan lengkapi nilai huruf (A, B, C, atau D) untuk seluruh 9 aspek Praktik Tajwid terlebih dahulu.'
+            );
+        }
+
+        const tasmiJuz = document.getElementById('tasmiJuz') ? document.getElementById('tasmiJuz').value : '30';
+        payload = {
+            santriId: santriId,
+            tingkatan: "Al-Qur'an",
+            tm: tmVal,
+            type: "Tasmi'",
+            juz: tasmiJuz,
+            surah: `Ikhtibar Tasmi' Juz ${tasmiJuz}`,
+            surahNo: '',
+            ayat: '20 Halaman',
+            halaman: `Skor: ${hasil.totalSkor}/100`,
+            predikat: `${hasil.status} (${hasil.totalSkor})`,
+            catatan: document.getElementById('smartCatatan').value,
+            date: displayDate,
+            parafUstadz: sessionData ? sessionData.name : 'Ustadz Pembimbing',
+            detailTasmi: {
+                juz: tasmiJuz,
+                skorPerHalaman: hasil.skorPerHalaman,
+                totalSkor: hasil.totalSkor,
+                passingScore: TASMI_PASSING_SCORE,
+                statusKelulusan: hasil.status,
+                tajwid: tajwidRes.tajwid
+            }
+        };
+    } else {
+        // MODE HARIAN STANDAR (Ziyadah, Muroja'ah, Binnadhor)
+        const tingkatan = document.getElementById('smartTingkatan').value || "Al-Qur'an";
+        let juzVal = '', surahVal = '', surahNoVal = '', ayatVal = '';
+
+        if (tingkatan === "Al-Qur'an") {
+            const suratNo = tsSurat ? tsSurat.getValue() : '';
+            if (!suratNo) return AppNotify.warning('Pilih Surat', 'Silakan pilih surat Al-Qur\'an terlebih dahulu.');
+            const suratData = quranDB.find(q => q.no == suratNo);
+            const startAyat = document.getElementById('smartAyatStart').value || '1';
+            const endAyat = document.getElementById('smartAyatEnd').value || (suratData ? suratData.ayat : '1');
+
+            juzVal = document.getElementById('smartJuz').value === 'all' 
+                ? String(suratData ? suratData.juz : '1') 
+                : String(document.getElementById('smartJuz').value);
+            surahVal = suratData ? suratData.nama : 'Al-Baqarah';
+            surahNoVal = suratData ? suratData.no : '2';
+            ayatVal = `${startAyat} - ${endAyat}`;
+        } else {
+            juzVal = document.getElementById('smartJilidLevel').value || 'Jilid 1';
+            surahVal = document.getElementById('smartJilidNama').value || juzVal;
+            surahNoVal = juzVal;
+            ayatVal = document.getElementById('smartJilidBaris').value || '-';
+        }
+
+        payload = {
+            santriId: santriId,
+            tingkatan: tingkatan,
+            tm: tmVal,
+            type: typeVal,
+            juz: juzVal,
+            surah: surahVal,
+            surahNo: surahNoVal,
+            ayat: ayatVal,
+            halaman: document.getElementById('smartHal').value || '-',
+            predikat: document.querySelector('input[name="smartPredikat"]:checked').value,
+            catatan: document.getElementById('smartCatatan').value,
+            date: displayDate,
+            parafUstadz: sessionData ? sessionData.name : 'Ustadz Pembimbing'
+        };
+    }
+
+    AppNotify.loading(typeVal === 'Tasmi' ? 'Menyimpan Penilaian Tasmi\'...' : 'Menyimpan Mutaba\'ah Harian...');
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
     apiCall('saveSetoran', token, payload).then(res => {
         if (res.status === 'success') {
-            AppNotify.toast('success', 'Setoran mutaba\'ah harian santri berhasil disimpan!');
+            AppNotify.toast('success', typeVal === 'Tasmi' ? 'Penilaian Ikhtibar Tasmi\' berhasil disimpan!' : 'Setoran mutaba\'ah harian santri berhasil disimpan!');
             document.getElementById('smartHal').value = '';
             document.getElementById('smartCatatan').value = '';
+            if (typeVal === 'Tasmi') {
+                resetTasmiScores();
+                resetTasmiTajwid();
+            }
             loadUstadzData();
         } else {
             AppNotify.error('Gagal Menyimpan Setoran', res.message);
         }
     });
+}
+
+function openUstadzTasmiDetail(setId) {
+    const set = state.setoran.find(x => x.ID_Setoran === setId);
+    if (!set) return;
+    const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+    tampilkanDetailTasmiModal(set, s, set.ParafUstadz || (sessionData ? sessionData.name : 'Ustadz Penguji'));
 }
 
 function renderUstadzRiwayat() {
@@ -569,6 +845,7 @@ function renderUstadzRiwayat() {
         const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
         const isBinnadhor = jenis === 'Binnadhor';
         const isTasmi = (jenis || '').toLowerCase().includes('tasmi');
+        const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
 
         const borderLeft = isZiyadah
             ? 'border-l-4 border-[#1c6b45]'
@@ -587,9 +864,11 @@ function renderUstadzRiwayat() {
             : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
 
         const nilai = set.Predikat || set.Nilai || 'Mumtaz';
-        const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar';
+        const isLulusTasmi = detailTasmi ? detailTasmi.statusKelulusan === 'LULUS' : String(nilai).toUpperCase().startsWith('LULUS');
+        const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar' || isLulusTasmi;
         const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
-        const predIcon = isMumtaz ? '🌟' : isJayyid ? '👍' : '🔁';
+        const predIcon = isTasmi && detailTasmi ? (isLulusTasmi ? '✅' : '🔁') : (isMumtaz ? '🌟' : isJayyid ? '👍' : '🔁');
+        const predColor = isMumtaz ? 'text-[#1c6b45] dark:text-[#83c9a6]' : isJayyid ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
 
         const tmText = set.TM || 'TM';
 
@@ -607,11 +886,15 @@ function renderUstadzRiwayat() {
                 </div>
                 <div class="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-darkcard p-2 rounded-xl border border-gray-100 dark:border-darkborder mb-1.5 flex justify-between items-center">
                     <span class="font-bold truncate">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</span>
-                    <span class="text-gray-500 font-medium shrink-0 ml-2">${set.Ayat} &bull; Hal ${set.Halaman}</span>
+                    <span class="text-gray-500 font-medium shrink-0 ml-2">${isTasmi && detailTasmi ? `Skor: ${detailTasmi.totalSkor}/100` : `${set.Ayat} &bull; Hal ${set.Halaman}`}</span>
                 </div>
-                <div class="flex items-center justify-between text-[11px]">
-                    <span class="font-bold">${predIcon} Nilai: ${nilai}</span>
-                    ${set.Catatan ? `<span class="text-gray-400 truncate max-w-[150px] italic">"${set.Catatan}"</span>` : ''}
+                <div class="flex items-center justify-between gap-2 text-[11px]">
+                    <span class="font-bold ${predColor}">${predIcon} Nilai: ${nilai}</span>
+                    ${detailTasmi ? `
+                        <button type="button" onclick="openUstadzTasmiDetail('${set.ID_Setoran}')" class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-2xs shrink-0">
+                            <i class="fa-solid fa-table-list mr-1"></i>Lihat Kartu Tasmi'
+                        </button>
+                    ` : (set.Catatan ? `<span class="text-gray-400 truncate max-w-[150px] italic">"${set.Catatan}"</span>` : '')}
                 </div>
             </div>
         `;
@@ -713,8 +996,10 @@ function renderUstadzRekapanTable() {
             ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
             : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
 
+        const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
         const nilai = set.Predikat || set.Nilai || 'Mumtaz';
-        const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar';
+        const isLulusTasmi = detailTasmi ? detailTasmi.statusKelulusan === 'LULUS' : String(nilai).toUpperCase().startsWith('LULUS');
+        const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar' || isLulusTasmi;
         const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
         const nilaiColor = isMumtaz ? 'text-[#1c6b45]' : isJayyid ? 'text-amber-600' : 'text-red-500';
 
@@ -735,7 +1020,7 @@ function renderUstadzRekapanTable() {
                     ${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})
                 </td>
                 <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
-                    ${set.Ayat} <br><span class="text-[10px] text-gray-400">Hal ${set.Halaman}</span>
+                    ${isTasmi && detailTasmi ? `20 Halaman <br><span class="text-[10px] font-bold text-indigo-600">Skor: ${detailTasmi.totalSkor}/100</span>` : `${set.Ayat} <br><span class="text-[10px] text-gray-400">Hal ${set.Halaman}</span>`}
                 </td>
                 <td class="py-3 px-4 font-bold ${nilaiColor}">
                     ${nilai}
@@ -743,7 +1028,12 @@ function renderUstadzRekapanTable() {
                 <td class="py-3 px-4 text-gray-500 italic text-xs max-w-xs truncate">
                     ${set.Catatan ? `"${set.Catatan}"` : '-'}
                 </td>
-                <td class="py-3 px-4 text-center">
+                <td class="py-3 px-4 text-center whitespace-nowrap space-x-1">
+                    ${detailTasmi ? `
+                        <button onclick="openUstadzTasmiDetail('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 transition text-xs" title="Lihat & Cetak Kartu Tasmi'">
+                            <i class="fa-solid fa-table-list"></i>
+                        </button>
+                    ` : ''}
                     <button onclick="cetakRekapanUstadz('${set.ID_Santri}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 text-[#9a2024] dark:text-[#f29fa3] transition text-xs" title="Cetak Rapor Santri Ini">
                         <i class="fa-solid fa-file-pdf"></i>
                     </button>
@@ -831,7 +1121,7 @@ function renderUstadzSantriList() {
                     <div class="text-xs text-gray-600 dark:text-gray-300 mb-4 p-2.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30">
                         <span class="text-[10px] text-amber-800 dark:text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Posisi Terakhir:</span>
                         ${lastSet 
-                            ? `<span class="font-bold text-gray-900 dark:text-white">${lastSet.Surah} (${lastSet.Tingkatan === 'Jilid' ? lastSet.Juz : 'Juz ' + lastSet.Juz})</span>, Hal ${lastSet.Halaman} &bull; <strong class="text-[#1c6b45]">${lastSet.Predikat || 'Mumtaz'}</strong>`
+                            ? `<span class="font-bold text-gray-900 dark:text-white">${lastSet.Surah} (${lastSet.Tingkatan === 'Jilid' ? lastSet.Juz : 'Juz ' + lastSet.Juz})</span>, ${String(lastSet.Halaman || '').startsWith('Skor:') ? lastSet.Halaman : 'Hal ' + lastSet.Halaman} &bull; <strong class="text-[#1c6b45]">${lastSet.Predikat || 'Mumtaz'}</strong>`
                             : '<span class="text-gray-400 italic">Belum pernah setoran</span>'
                         }
                     </div>
@@ -928,7 +1218,7 @@ function cetakRekapanUstadz(santriId) {
                         <td class="p-2 border-r border-gray-300"><strong>${set.TM || 'TM'}</strong><br>${set.Tanggal}</td>
                         <td class="p-2 border-r border-gray-300 font-bold">${set.Jenis}</td>
                         <td class="p-2 border-r border-gray-300">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</td>
-                        <td class="p-2 border-r border-gray-300">${set.Ayat}<br>Hal ${set.Halaman}</td>
+                        <td class="p-2 border-r border-gray-300">${set.Ayat}<br>${String(set.Halaman || '').startsWith('Skor:') ? set.Halaman : 'Hal ' + set.Halaman}</td>
                         <td class="p-2 border-r border-gray-300 font-bold">${set.Predikat || set.Nilai || 'Mumtaz'}</td>
                         <td class="p-2 border-r border-gray-300 italic">${set.Catatan || '-'}</td>
                         <td class="p-2 text-center text-[11px]">${set.ParafUstadz || 'Ttd'}</td>

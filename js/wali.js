@@ -51,11 +51,17 @@ function shareProgressWa() {
     if (last) {
         const nilaiText = last.Nilai || last.Predikat || 'Mumtaz';
         const isJilid = last.Tingkatan === 'Jilid';
+        const detailLast = (last.Jenis || '').toLowerCase().includes('tasmi') ? parseDetailTasmi(last.Detail_Tasmi) : null;
         text += `\n*Setoran Terakhir (${last.TM || 'TM'}):*\n`;
         text += `• Tingkatan: ${last.Tingkatan || "Al-Qur'an"}\n`;
-        text += `• Materi: ${last.Surah} (${isJilid ? last.Juz : 'Juz ' + last.Juz}), ${isJilid ? 'Baris/Materi ' : 'Ayat '}${last.Ayat}, Hal ${last.Halaman}\n`;
+        text += `• Materi: ${last.Surah} (${isJilid ? last.Juz : 'Juz ' + last.Juz}), ${isJilid ? 'Baris/Materi ' : 'Ayat '}${last.Ayat}, ${detailLast ? last.Halaman : 'Hal ' + last.Halaman}\n`;
         text += `• Kategori: ${last.Jenis}\n`;
-        text += `• Nilai: ${nilaiText}\n`;
+        if (detailLast) {
+            text += `• Total Skor Tasmi': *${detailLast.totalSkor} / 100* (Min. Lulus 80)\n`;
+            text += `• Status Ikhtibar: *${detailLast.statusKelulusan}*\n`;
+        } else {
+            text += `• Nilai: ${nilaiText}\n`;
+        }
         text += `• Tanggal: ${last.Tanggal}\n`;
         text += `• Paraf Pengampu: ${last.ParafUstadz || (u ? u.Nama : 'Ustadz Pembimbing')}\n`;
         if (last.Catatan) text += `• Catatan Ustadz: "${last.Catatan}"\n`;
@@ -63,6 +69,18 @@ function shareProgressWa() {
     text += `\n_"Bacalah Al-Qur'an karena dia akan datang pada hari kiamat sebagai penolong bagi pembacanya." (HR. Muslim)_`;
 
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
+function openWaliTasmiDetail(setId) {
+    const set = (state.setoran || []).find(x => x.ID_Setoran === setId);
+    if (!set) return;
+    tampilkanDetailTasmiModal(set, state.santri, set.ParafUstadz || (state.ustadz ? state.ustadz.Nama : 'Ustadz Penguji'));
+}
+
+function cetakWaliTasmiCard(setId) {
+    const set = (state.setoran || []).find(x => x.ID_Setoran === setId);
+    if (!set) return;
+    cetakKartuTasmiResmi(set, state.santri, set.ParafUstadz || (state.ustadz ? state.ustadz.Nama : 'Ustadz Penguji'));
 }
 
 function cetakMutabaahWali() {
@@ -78,10 +96,14 @@ function cetakMutabaahWali() {
             const nilai = item.Nilai || item.Predikat || 'Mumtaz';
             const tm = item.TM || `TM-${mySetoran.length - idx}`;
             const tingkatan = item.Tingkatan || "Al-Qur'an";
+            const isTasmi = (item.Jenis || '').toLowerCase().includes('tasmi');
+            const detailTasmi = isTasmi ? parseDetailTasmi(item.Detail_Tasmi) : null;
             const suratJilid = tingkatan === 'Jilid'
                 ? `${item.Surah || '-'} (${item.Juz || '-'})`
                 : `QS. ${item.Surah || '-'} (Juz ${item.Juz || '-'})`;
-            const ayatHal = `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${item.Ayat || '-'} / Hal ${item.Halaman || '-'}`;
+            const ayatHal = detailTasmi
+                ? `20 Halaman &bull; Skor ${detailTasmi.totalSkor}/100`
+                : `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${item.Ayat || '-'} / Hal ${item.Halaman || '-'}`;
             const paraf = item.ParafUstadz || (u ? u.Nama : 'Disahkan');
             return `
                 <tr>
@@ -334,14 +356,17 @@ function renderWaliList() {
         if (emptyState) emptyState.classList.add('hidden');
         filtered.forEach(set => {
             const nilaiText = set.Nilai || set.Predikat || 'Mumtaz';
-            const isMumtaz = nilaiText === 'Mumtaz' || nilaiText === 'Lancar';
+            const isZiyadah = set.Jenis === 'Ziyadah' || set.Jenis === 'Hafalan Baru';
+            const isBinnadhor = set.Jenis === 'Binnadhor';
+            const isTasmi = (set.Jenis || '').toLowerCase().includes('tasmi');
+            const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
+
+            const isLulusTasmi = detailTasmi ? detailTasmi.statusKelulusan === 'LULUS' : String(nilaiText).toUpperCase().startsWith('LULUS');
+            const isMumtaz = nilaiText === 'Mumtaz' || nilaiText === 'Lancar' || isLulusTasmi;
             const isJayyid = nilaiText === 'Jayyid' || nilaiText === 'Kurang Lancar';
             const bgLeft = isMumtaz ? 'bg-[#1c6b45]' : isJayyid ? 'bg-amber-500' : 'bg-red-500';
             const predIcon = isMumtaz ? 'fa-circle-check text-[#1c6b45]' : isJayyid ? 'fa-circle-exclamation text-amber-500' : 'fa-circle-xmark text-red-500';
 
-            const isZiyadah = set.Jenis === 'Ziyadah' || set.Jenis === 'Hafalan Baru';
-            const isBinnadhor = set.Jenis === 'Binnadhor';
-            const isTasmi = (set.Jenis || '').toLowerCase().includes('tasmi');
             const badgeClass = isZiyadah
                 ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
                 : isBinnadhor
@@ -355,28 +380,38 @@ function renderWaliList() {
             const tmLabel = set.TM || 'TM';
             const parafText = set.ParafUstadz || (state.ustadz ? state.ustadz.Nama : 'Ustadz Pembimbing');
 
-            listContainer.innerHTML += `
-                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-4 overflow-hidden relative transition hover:shadow-sm">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${bgLeft}"></div>
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center text-gray-700 dark:text-gray-300">
-                                ${isJilid ? 'JLD' : (set.SurahNo || 'QS')}
-                            </span>
-                            <div>
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">${tmLabel}</span>
-                                    <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">&bull; ${tingkatanLabel}</span>
-                                </div>
-                                <h4 class="font-bold text-gray-900 dark:text-white text-base leading-tight mt-0.5">${set.Surah}</h4>
-                                <p class="text-[11px] text-gray-500 dark:text-gray-400">${isJilid ? set.Juz : 'Juz ' + set.Juz} &bull; Hal ${set.Halaman}</p>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${badgeClass}">
-                            ${set.Jenis}
-                        </span>
-                    </div>
+            // Ringkasan 9 Aspek Tajwid bila ini adalah catatan Tasmi' lengkap
+            let tasmiSectionHtml = '';
+            if (isTasmi && detailTasmi) {
+                const totalSkor = detailTasmi.totalSkor || 0;
+                const statusBadge = isLulusTasmi
+                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8]">✅ LULUS IKHTIBAR</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-50 text-red-700 border border-red-200">🔁 TIDAK LULUS (Mengulang)</span>';
 
+                tasmiSectionHtml = `
+                    <div class="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 rounded-xl p-3 my-2.5 space-y-2">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 block">Total Skor Kelancaran (20 Hal)</span>
+                                <span class="text-base font-black ${isLulusTasmi ? 'text-[#1c6b45] dark:text-[#83c9a6]' : 'text-red-600 dark:text-red-400'}">${totalSkor} / 100</span>
+                                <span class="text-[10px] text-gray-500 dark:text-gray-400 ml-1">(Min. Lulus 80)</span>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 pt-1.5 border-t border-indigo-200/60 dark:border-indigo-900/40">
+                            <button type="button" onclick="openWaliTasmiDetail('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-white dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-table-list"></i>
+                                <span>Rincian 20 Hal &amp; Tajwid</span>
+                            </button>
+                            <button type="button" onclick="cetakWaliTasmiCard('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Unduh Kartu Tasmi'</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                tasmiSectionHtml = `
                     <div class="bg-gray-50 dark:bg-slate-800/60 rounded-xl p-2.5 my-2.5 flex items-center justify-between text-xs">
                         <span class="text-gray-600 dark:text-gray-300 font-medium">
                             <i class="fa-solid fa-lines-leaning mr-1 text-gray-400"></i> ${isJilid ? 'Baris / Materi:' : 'Ayat'} ${set.Ayat}
@@ -385,6 +420,32 @@ function renderWaliList() {
                             <i class="fa-solid ${predIcon}"></i> Nilai: ${nilaiText}
                         </span>
                     </div>
+                `;
+            }
+
+            listContainer.innerHTML += `
+                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-4 overflow-hidden relative transition hover:shadow-sm">
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${bgLeft}"></div>
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center text-gray-700 dark:text-gray-300">
+                                ${isJilid ? 'JLD' : (isTasmi ? 'TSM' : (set.SurahNo || 'QS'))}
+                            </span>
+                            <div>
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">${tmLabel}</span>
+                                    <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">&bull; ${tingkatanLabel}</span>
+                                </div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-base leading-tight mt-0.5">${set.Surah}</h4>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400">${isJilid ? set.Juz : 'Juz ' + set.Juz} &bull; ${detailTasmi ? set.Halaman : 'Hal ' + set.Halaman}</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${badgeClass}">
+                            ${set.Jenis}
+                        </span>
+                    </div>
+
+                    ${tasmiSectionHtml}
 
                     ${set.Catatan ? `
                     <div class="bg-[#edf7f2] dark:bg-[#12452c]/20 border border-[#b2dfc8]/50 dark:border-[#12452c]/50 rounded-xl p-2.5 mb-2 text-xs text-[#1c6b45] dark:text-[#83c9a6] flex items-start gap-2">

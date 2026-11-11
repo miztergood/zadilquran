@@ -635,6 +635,492 @@ function cetakKwitansiResmi(tagihan, santri) {
     }
 }
 
+// ==================== RUBRIK & GENERATOR KARTU TASMI' (IKHTIBAR 1 JUZ) ====================
+const TASMI_PASSING_SCORE = 80;
+const TASMI_VALID_SCORES = [5, 4, 3, 2];
+const TASMI_VALID_GRADES = ['A', 'B', 'C', 'D'];
+
+const TASMI_SCORE_LEGEND = {
+    5: 'Hafalan lancar tidak mengingatkan sama sekali',
+    4: 'Hafalan diingatkan 1 sampai 5 kali',
+    3: 'Hafalan diingatkan 6 sampai 10 kali',
+    2: 'Diingatkan 11 kali lebih sampai menuntun'
+};
+
+const TASMI_TAJWID_ASPEK = [
+    { key: 'makharijul_huruf', label: 'Praktik Makharijul Huruf' },
+    { key: 'sifatul_huruf', label: 'Praktik Sifatul Huruf' },
+    { key: 'nun_sukun_tanwin', label: 'Praktik Hukum Nun Sukun dan Tanwin' },
+    { key: 'mim_mati', label: 'Praktik Mim Mati' },
+    { key: 'hukum_mad', label: 'Praktik Hukum Mad' },
+    { key: 'qalqalah', label: 'Praktik Qalqalah' },
+    { key: 'ghunnah', label: 'Praktik Ghunnah' },
+    { key: 'tafkhim_tarqiq', label: 'Praktik Tafkhim dan Tarqiq' },
+    { key: 'waqaf_ibtida', label: "Praktik Waqaf dan Ibtida'" }
+];
+
+/**
+ * Menghitung total skor dan status kelulusan Ikhtibar Tasmi' 1 Juz (20 halaman).
+ * Kelulusan murni ditentukan dari Total Skor Kelancaran >= 80.
+ */
+function hitungHasilTasmi(skorHalaman) {
+    const map = skorHalaman || {};
+    let totalSkor = 0;
+    let filledCount = 0;
+    const missingPages = [];
+    const invalidPages = [];
+    const sanitizedScores = {};
+
+    for (let p = 1; p <= 20; p++) {
+        const rawVal = map[p] !== undefined ? map[p] : map[String(p)];
+        if (rawVal === undefined || rawVal === null || rawVal === '') {
+            missingPages.push(p);
+            continue;
+        }
+        const num = Number(rawVal);
+        if (!TASMI_VALID_SCORES.includes(num)) {
+            invalidPages.push(p);
+            continue;
+        }
+        sanitizedScores[p] = num;
+        totalSkor += num;
+        filledCount++;
+    }
+
+    const isComplete = filledCount === 20 && invalidPages.length === 0;
+    const lulus = isComplete && totalSkor >= TASMI_PASSING_SCORE;
+
+    return {
+        skorPerHalaman: sanitizedScores,
+        totalSkor,
+        maksimalSkor: 100,
+        passingScore: TASMI_PASSING_SCORE,
+        filledCount,
+        isComplete,
+        lulus,
+        status: isComplete ? (lulus ? 'LULUS' : 'TIDAK LULUS') : 'BELUM LENGKAP',
+        missingPages,
+        invalidPages
+    };
+}
+
+/**
+ * Memvalidasi kelengkapan nilai huruf (A/B/C/D) pada 9 aspek Praktik Tajwid.
+ */
+function validasiTajwidTasmi(tajwidObj) {
+    const input = tajwidObj || {};
+    const sanitized = {};
+    const missingKeys = [];
+
+    TASMI_TAJWID_ASPEK.forEach(item => {
+        const val = String(input[item.key] || '').trim().toUpperCase();
+        if (TASMI_VALID_GRADES.includes(val)) {
+            sanitized[item.key] = val;
+        } else {
+            missingKeys.push(item.key);
+        }
+    });
+
+    return {
+        isValid: missingKeys.length === 0,
+        tajwid: sanitized,
+        missingKeys
+    };
+}
+
+/**
+ * Mem-parse kolom Detail_Tasmi (string JSON atau object) secara aman.
+ */
+function parseDetailTasmi(raw) {
+    if (!raw) return null;
+    if (typeof raw === 'object') return raw;
+    try {
+        const parsed = JSON.parse(String(raw));
+        return (parsed && typeof parsed === 'object') ? parsed : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * Menampilkan popup rincian skor 20 halaman & 9 aspek Tajwid untuk catatan Tasmi'.
+ */
+function tampilkanDetailTasmiModal(setoran, santri, pengujiName) {
+    if (!setoran) return;
+    const detail = parseDetailTasmi(setoran.Detail_Tasmi);
+    if (!detail) {
+        AppNotify.info('Rincian Tasmi\'', 'Catatan Tasmi\' ini belum memiliki rincian tabel skor 20 halaman.');
+        return;
+    }
+
+    const s = santri || {};
+    const hasil = hitungHasilTasmi(detail.skorPerHalaman || {});
+    const total = detail.totalSkor !== undefined ? Number(detail.totalSkor) : hasil.totalSkor;
+    const isLulus = detail.statusKelulusan ? detail.statusKelulusan === 'LULUS' : total >= TASMI_PASSING_SCORE;
+    const tajwid = detail.tajwid || {};
+    const penguji = pengujiName || setoran.ParafUstadz || 'Ustadz Penguji';
+
+    const colBlocks = [
+        { start: 1, end: 5 },
+        { start: 6, end: 10 },
+        { start: 11, end: 15 },
+        { start: 16, end: 20 }
+    ];
+
+    const tableColsHtml = colBlocks.map(blk => {
+        let rows = '';
+        let sub = 0;
+        for (let p = blk.start; p <= blk.end; p++) {
+            const sc = detail.skorPerHalaman ? (detail.skorPerHalaman[p] ?? detail.skorPerHalaman[String(p)] ?? '-') : '-';
+            if (typeof sc === 'number' || (!isNaN(Number(sc)) && sc !== '-')) sub += Number(sc);
+            const badgeColor = Number(sc) === 5 ? 'text-[#1c6b45] bg-[#edf7f2]'
+                : Number(sc) === 4 ? 'text-blue-700 bg-blue-50'
+                : Number(sc) === 3 ? 'text-amber-700 bg-amber-50'
+                : Number(sc) === 2 ? 'text-red-700 bg-red-50'
+                : 'text-gray-500 bg-gray-100';
+            rows += `
+                <tr class="border-b border-gray-100">
+                    <td class="py-1 px-2 text-center font-semibold text-gray-600">${p}</td>
+                    <td class="py-1 px-2 text-center"><span class="inline-block min-w-[24px] py-0.5 px-1.5 rounded font-bold ${badgeColor}">${escapeHtml(sc)}</span></td>
+                </tr>
+            `;
+        }
+        return `
+            <div class="border border-gray-200 rounded-xl overflow-hidden bg-white">
+                <table class="w-full text-xs">
+                    <thead class="bg-gray-100 text-gray-600 font-bold border-b border-gray-200">
+                        <tr><th class="py-1.5 px-2">HAL</th><th class="py-1.5 px-2">SKOR</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot class="bg-gray-50 border-t border-gray-200 font-bold text-gray-700">
+                        <tr><td class="py-1 px-2 text-center">Sub</td><td class="py-1 px-2 text-center">${sub}</td></tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+    }).join('');
+
+    const tajwidRowsHtml = TASMI_TAJWID_ASPEK.map((asp, i) => {
+        const grade = String(tajwid[asp.key] || '-').toUpperCase();
+        const gradeBadge = grade === 'A' ? 'bg-[#1c6b45] text-white'
+            : grade === 'B' ? 'bg-blue-600 text-white'
+            : grade === 'C' ? 'bg-amber-500 text-white'
+            : grade === 'D' ? 'bg-red-600 text-white'
+            : 'bg-gray-200 text-gray-600';
+        return `
+            <div class="flex items-center justify-between py-1.5 px-2.5 border-b border-gray-100 last:border-none text-xs">
+                <span class="text-gray-700 font-medium">${i + 1}. ${escapeHtml(asp.label)}</span>
+                <span class="px-2 py-0.5 rounded font-bold text-[11px] ${gradeBadge}">${escapeHtml(grade)}</span>
+            </div>
+        `;
+    }).join('');
+
+    const statusBadge = isLulus
+        ? '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8] font-extrabold text-xs">✅ LULUS IKHTIBAR</span>'
+        : '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200 font-extrabold text-xs">🔁 TIDAK LULUS (Wajib Mengulang)</span>';
+
+    const htmlBody = `
+        <div class="text-left space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-3">
+                <div>
+                    <div class="text-[11px] text-gray-500 font-semibold">Santri: <strong class="text-gray-900">${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</strong> &bull; Juz ${escapeHtml(detail.juz || setoran.Juz)}</div>
+                    <div class="text-[11px] text-gray-500 mt-0.5">Penguji: <strong class="text-gray-800">${escapeHtml(penguji)}</strong> &bull; ${escapeHtml(setoran.Tanggal || '-')}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-lg font-black ${isLulus ? 'text-[#1c6b45]' : 'text-red-600'}">Total Skor: ${total} / 100</div>
+                    <div class="mt-0.5">${statusBadge}</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">1. Tabel Penilaian Kelancaran (Minimal Lulus: 80)</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">${tableColsHtml}</div>
+                <div class="text-[10px] text-gray-500 mt-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-100">
+                    <strong>Ketentuan:</strong> 5 = Lancar &bull; 4 = Diingatkan 1–5x &bull; 3 = Diingatkan 6–10x &bull; 2 = Diingatkan &gt;11x
+                </div>
+            </div>
+
+            <div>
+                <div class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1.5">2. Penilaian Praktik Tajwid (A / B / C / D)</div>
+                <div class="border border-gray-200 rounded-xl bg-white overflow-hidden">${tajwidRowsHtml}</div>
+            </div>
+
+            ${setoran.Catatan ? `
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-xs text-amber-900">
+                <strong>Catatan Penguji:</strong> <em>"${escapeHtml(setoran.Catatan)}"</em>
+            </div>` : ''}
+        </div>
+    `;
+
+    Swal.fire({
+        title: `Hasil Ikhtibar Tasmi' Juz ${escapeHtml(detail.juz || setoran.Juz)}`,
+        html: htmlBody,
+        width: '720px',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-print mr-1.5"></i> Cetak / Unduh Kartu Tasmi\' (PDF)',
+        cancelButtonText: 'Tutup',
+        customClass: {
+            popup: 'zq-swal-popup',
+            title: 'zq-swal-title',
+            htmlContainer: 'zq-swal-html',
+            confirmButton: 'zq-swal-btn-primary',
+            cancelButton: 'zq-swal-btn-secondary'
+        },
+        buttonsStyling: false
+    }).then(res => {
+        if (res.isConfirmed) {
+            cetakKartuTasmiResmi(setoran, santri, pengujiName);
+        }
+    });
+}
+
+/**
+ * Generator Kartu Hasil Penilaian Tasmi' / Ikhtibar Resmi PPTQ Zadil Qur'an Tuban (PDF / Print)
+ * Menyesuaikan 100% tata letak & ketentuan resmi pondok dengan batas kelulusan skor >= 80.
+ */
+function cetakKartuTasmiResmi(setoran, santri, pengujiName) {
+    if (!setoran) {
+        AppNotify.toast('Data setoran Tasmi\' tidak ditemukan', 'warning');
+        return;
+    }
+
+    const detail = parseDetailTasmi(setoran.Detail_Tasmi);
+    if (!detail) {
+        AppNotify.toast('Catatan Tasmi\' ini belum memiliki rincian kartu penilaian.', 'warning');
+        return;
+    }
+
+    const s = santri || {};
+    const hasil = hitungHasilTasmi(detail.skorPerHalaman || {});
+    const totalSkor = detail.totalSkor !== undefined ? Number(detail.totalSkor) : hasil.totalSkor;
+    const isLulus = detail.statusKelulusan ? detail.statusKelulusan === 'LULUS' : totalSkor >= TASMI_PASSING_SCORE;
+    const tajwid = detail.tajwid || {};
+    const penguji = pengujiName || setoran.ParafUstadz || 'Ustadz Penguji';
+    const logoUrl = (typeof window !== 'undefined' && window.location && window.location.origin !== 'null')
+        ? `${window.location.origin}/logo.jpg`
+        : 'logo.jpg';
+
+    let halRowsHtml = '';
+    const subTotals = [0, 0, 0, 0];
+    for (let r = 1; r <= 5; r++) {
+        const p1 = r;
+        const p2 = r + 5;
+        const p3 = r + 10;
+        const p4 = r + 15;
+        const s1 = detail.skorPerHalaman ? (detail.skorPerHalaman[p1] ?? detail.skorPerHalaman[String(p1)] ?? '-') : '-';
+        const s2 = detail.skorPerHalaman ? (detail.skorPerHalaman[p2] ?? detail.skorPerHalaman[String(p2)] ?? '-') : '-';
+        const s3 = detail.skorPerHalaman ? (detail.skorPerHalaman[p3] ?? detail.skorPerHalaman[String(p3)] ?? '-') : '-';
+        const s4 = detail.skorPerHalaman ? (detail.skorPerHalaman[p4] ?? detail.skorPerHalaman[String(p4)] ?? '-') : '-';
+        if (!isNaN(Number(s1))) subTotals[0] += Number(s1);
+        if (!isNaN(Number(s2))) subTotals[1] += Number(s2);
+        if (!isNaN(Number(s3))) subTotals[2] += Number(s3);
+        if (!isNaN(Number(s4))) subTotals[3] += Number(s4);
+
+        halRowsHtml += `
+            <tr>
+                <td class="center bold">${p1}</td><td class="center bold">${escapeHtml(s1)}</td>
+                <td class="center bold">${p2}</td><td class="center bold">${escapeHtml(s2)}</td>
+                <td class="center bold">${p3}</td><td class="center bold">${escapeHtml(s3)}</td>
+                <td class="center bold">${p4}</td><td class="center bold">${escapeHtml(s4)}</td>
+            </tr>
+        `;
+    }
+
+    const tajwidRowsHtml = TASMI_TAJWID_ASPEK.map((asp, idx) => {
+        const grade = String(tajwid[asp.key] || '-').toUpperCase();
+        return `
+            <tr>
+                <td class="center">${idx + 1}</td>
+                <td>${escapeHtml(asp.label)}</td>
+                <td class="center bold" style="font-size:12px;">${escapeHtml(grade)}</td>
+            </tr>
+        `;
+    }).join('');
+
+    const statusLabel = isLulus
+        ? '<span style="color:#1c6b45;">LULUS</span> <span style="text-decoration:line-through;color:#aaa;font-weight:400;">/ TIDAK LULUS</span>'
+        : '<span style="text-decoration:line-through;color:#aaa;font-weight:400;">LULUS /</span> <span style="color:#9a2024;">TIDAK LULUS</span>';
+
+    const printHtml = `<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kartu Penilaian Tasmi' Juz ${escapeHtml(detail.juz || setoran.Juz)} - ${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</title>
+    <style>
+        @page { size: A4 portrait; margin: 10mm 12mm; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Arial, sans-serif; color: #111; }
+        body { background: #fff; margin: 0; padding: 10px; font-size: 11px; line-height: 1.35; }
+        .card-container { max-width: 780px; margin: 0 auto; border: 1.5px solid #222; padding: 16px 20px; background: #fff; }
+        .kop { display: flex; align-items: center; gap: 14px; border-bottom: 2.5px double #111; padding-bottom: 8px; margin-bottom: 12px; }
+        .kop img { width: 58px; height: 58px; object-fit: contain; }
+        .kop-text { flex: 1; text-align: center; padding-right: 40px; }
+        .kop-text h2 { margin: 0; font-size: 14px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; }
+        .kop-text p { margin: 2px 0 0; font-size: 9.5px; color: #333; }
+        .sec-title { text-align: center; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 10px; }
+        .meta-grid { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 11px; font-weight: 600; background: #f9fafb; border: 1px solid #d1d5db; padding: 6px 10px; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th, td { border: 1px solid #222; padding: 4px 6px; font-size: 10.5px; }
+        th { background: #f3f4f6; font-weight: 800; text-transform: uppercase; }
+        .center { text-align: center; }
+        .bold { font-weight: 700; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px; align-items: start; }
+        .sub-head { font-size: 11px; font-weight: 800; text-transform: uppercase; text-align: center; margin: 0 0 6px; }
+        .total-box { border: 1.5px solid #111; margin-top: 8px; }
+        .total-row { display: grid; grid-template-columns: 1.2fr 1fr; border-bottom: 1px solid #111; }
+        .total-lbl { padding: 8px 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; border-right: 1px solid #111; background: #f9fafb; }
+        .total-val { padding: 8px 10px; font-size: 18px; font-weight: 900; text-align: center; color: ${isLulus ? '#1c6b45' : '#9a2024'}; }
+        .lulus-row { padding: 7px 10px; text-align: center; font-weight: 800; font-size: 12px; letter-spacing: 0.5px; }
+        .catatan-box { border: 1px solid #222; padding: 8px 10px; min-height: 54px; margin-top: 8px; }
+        .catatan-box .lbl { font-weight: 800; font-size: 10.5px; margin-bottom: 3px; }
+        .ttd-area { display: flex; justify-content: space-between; margin-top: 16px; padding: 0 12px; font-size: 10.5px; }
+        .ttd-col { text-align: center; min-width: 170px; }
+        .ttd-space { height: 42px; }
+        .action-bar { text-align: center; margin-top: 14px; }
+        .btn-print { background: #9a2024; color: #fff; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+        @media print {
+            body { padding: 0; }
+            .card-container { border: none; padding: 0; }
+            .action-bar { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card-container">
+        <div class="kop">
+            <img src="${logoUrl}" alt="Logo" onerror="this.style.display='none'">
+            <div class="kop-text">
+                <h2>Pondok Pesantren Tahfizh Zadil Qur'an Tuban</h2>
+                <p>AKTA NOTARIS MUNTAFIAH, S.H. M.Kn &bull; Nomor AHU-0023909.AH.01.12 Tahun 2020</p>
+                <p>Alamat: Jl. Raya Penambangan, Ds. Penambangan, Kec. Semanding, Kab. Tuban, Prov. Jawa Timur. Kode Pos: 62381</p>
+            </div>
+        </div>
+
+        <div class="sec-title">Tabel Penilaian Kelancaran Ikhtibar Tasmi'</div>
+
+        <div class="meta-grid">
+            <div>Santri: <strong>${escapeHtml(s.Nama_Santri || setoran.ID_Santri)}</strong> (${escapeHtml(setoran.ID_Santri)})</div>
+            <div>JUZ: <strong>${escapeHtml(detail.juz || setoran.Juz)}</strong></div>
+            <div>Tanggal: <strong>${escapeHtml(setoran.Tanggal || '-')}</strong></div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:10%;">HAL</th><th style="width:15%;">SKOR</th>
+                    <th style="width:10%;">HAL</th><th style="width:15%;">SKOR</th>
+                    <th style="width:10%;">HAL</th><th style="width:15%;">SKOR</th>
+                    <th style="width:10%;">HAL</th><th style="width:15%;">SKOR</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${halRowsHtml}
+                <tr style="background:#f9fafb;font-weight:700;">
+                    <td class="center">Sub</td><td class="center">${subTotals[0]}</td>
+                    <td class="center">Sub</td><td class="center">${subTotals[1]}</td>
+                    <td class="center">Sub</td><td class="center">${subTotals[2]}</td>
+                    <td class="center">Sub</td><td class="center">${subTotals[3]}</td>
+                </tr>
+                <tr style="background:#eef2ff;">
+                    <td colspan="6" class="center bold" style="font-size:11.5px;padding:6px;">JUMLAH KESELURUHAN SKOR</td>
+                    <td colspan="2" class="center bold" style="font-size:14px;color:${isLulus ? '#1c6b45' : '#9a2024'};">${totalSkor} / 100</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="two-col">
+            <!-- KIRI: Ketentuan Skor & Kelulusan -->
+            <div>
+                <div class="sub-head">Ketentuan Skor Kelancaran Hafalan</div>
+                <table>
+                    <thead>
+                        <tr><th style="width:30px;">No.</th><th style="width:48px;">SKOR</th><th>KETERANGAN</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="center">1</td><td class="center bold">5</td><td>Hafalan lancar tidak mengingatkan sama sekali</td></tr>
+                        <tr><td class="center">2</td><td class="center bold">4</td><td>Hafalan diingatkan 1 sampai 5 kali</td></tr>
+                        <tr><td class="center">3</td><td class="center bold">3</td><td>Hafalan diingatkan 6 sampai 10 kali</td></tr>
+                        <tr><td class="center">4</td><td class="center bold">2</td><td>Diingatkan 11 kali lebih sampai menuntun</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="sub-head" style="margin-top:10px;">Ketentuan Penilaian &amp; Kelulusan Ikhtibar</div>
+                <table>
+                    <tbody>
+                        <tr><td class="center" style="width:28px;">1</td><td>Ketentuan skor berlaku perhalaman/pojok pada setiap juz nya</td></tr>
+                        <tr><td class="center">2</td><td>Skor kelulusan adalah jumlah keseluruhan skor dalam 1 juz</td></tr>
+                        <tr><td class="center">3</td><td>Santri yang dinyatakan lulus ikhtibar adalah santri yang mampu mencapai minimal skor kelulusan</td></tr>
+                        <tr><td class="center">4</td><td><strong>Skor minimal kelulusan adalah 80</strong></td></tr>
+                        <tr><td class="center">5</td><td>Santri yang memperoleh skor di bawah 80 wajib mengulang ikhtibar</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- KANAN: Penilaian Praktik Tajwid + Total & TTD -->
+            <div>
+                <div class="sub-head">Penilaian Praktik Tajwid</div>
+                <table>
+                    <thead>
+                        <tr><th style="width:30px;">NO</th><th>Aspek Tajwid yang Dinilai</th><th style="width:52px;">NILAI</th></tr>
+                    </thead>
+                    <tbody>${tajwidRowsHtml}</tbody>
+                </table>
+                <div style="font-size:9.5px;color:#444;margin-top:-6px;margin-bottom:8px;">
+                    <strong>Keterangan:</strong> Kolom Nilai diisi Huruf A, B, C atau D
+                </div>
+
+                <div class="total-box">
+                    <div class="total-row">
+                        <div class="total-lbl">TOTAL NILAI</div>
+                        <div class="total-val">${totalSkor}</div>
+                    </div>
+                    <div class="lulus-row">${statusLabel}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="catatan-box">
+            <div class="lbl">CATATAN PENGUJI :</div>
+            <div style="font-style:italic;color:#222;">${setoran.Catatan ? escapeHtml(setoran.Catatan) : '-'}</div>
+        </div>
+
+        <div class="ttd-area">
+            <div class="ttd-col">
+                <div style="visibility:hidden;">Penambangan,</div>
+                <div>Mengetahui,<br><strong>Pengasuh PPT ZAQU</strong></div>
+                <div class="ttd-space"></div>
+                <div class="bold" style="text-decoration:underline;">Ust. Fariz Mas'udin S.Pd.</div>
+            </div>
+            <div class="ttd-col">
+                <div>Penambangan, ${escapeHtml(setoran.Tanggal ? String(setoran.Tanggal).split(',')[0] : new Date().toLocaleDateString('id-ID'))}</div>
+                <div><strong>Penguji</strong></div>
+                <div class="ttd-space"></div>
+                <div class="bold" style="text-decoration:underline;">${escapeHtml(penguji)}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button onclick="window.print()" class="btn-print">&#128438; Cetak / Unduh PDF Kartu Tasmi'</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() { window.print(); }, 400);
+        };
+    </script>
+</body>
+</html>`;
+
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+        printWin.document.open();
+        printWin.document.write(printHtml);
+        printWin.document.close();
+    } else {
+        AppNotify.toast('Pop-up terblokir. Izinkan pop-up peramban untuk mencetak Kartu Tasmi\'.', 'warning');
+    }
+}
+
 function formatWaNumber(hp) {
     let clean = String(hp || '').replace(/[^0-9]/g, '');
     if (clean.startsWith('0')) clean = '62' + clean.slice(1);
@@ -931,7 +1417,14 @@ if (typeof module !== 'undefined' && module.exports) {
         formatRupiah,
         angkaKeTerbilang,
         formatWaNumber,
-        getDashboardUrlByRole
+        getDashboardUrlByRole,
+        TASMI_PASSING_SCORE,
+        TASMI_VALID_SCORES,
+        TASMI_VALID_GRADES,
+        TASMI_TAJWID_ASPEK,
+        hitungHasilTasmi,
+        validasiTajwidTasmi,
+        parseDetailTasmi
     };
 }
 

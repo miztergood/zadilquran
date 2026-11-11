@@ -363,7 +363,7 @@ const SHEET_CONFIG = {
     "Nama_Ibu", "Pekerjaan_Ibu", "Pendidikan_Ibu",
     "Nama_Wali", "No_HP_Wali", "ID_Ustadz", "Status", "Timestamp"
   ],
-  "Data_Setoran": ["ID_Setoran", "ID_Santri", "ID_Ustadz", "Tingkatan", "TM", "Jenis", "Juz", "Surah", "SurahNo", "Ayat", "Halaman", "Predikat", "Catatan", "Tanggal", "ParafUstadz"],
+  "Data_Setoran": ["ID_Setoran", "ID_Santri", "ID_Ustadz", "Tingkatan", "TM", "Jenis", "Juz", "Surah", "SurahNo", "Ayat", "Halaman", "Predikat", "Catatan", "Tanggal", "ParafUstadz", "Detail_Tasmi"],
   "Data_Tagihan": ["ID_Tagihan", "ID_Santri", "Kategori", "Judul_Tagihan", "Nominal", "Jatuh_Tempo", "Status", "Tgl_Bayar", "Metode_Bayar", "Catatan", "Timestamp", "Periode"]
 };
 
@@ -1109,23 +1109,95 @@ function saveSetoran(token, dataSetoran) {
       }
     });
 
+    let juzVal = dataSetoran.juz || "-";
+    let surahVal = dataSetoran.surah || "-";
+    let surahNoVal = dataSetoran.surahNo || "";
+    let ayatVal = dataSetoran.ayat || "-";
+    let halVal = dataSetoran.halaman || "-";
+    let predikatVal = dataSetoran.predikat || "Mumtaz";
+    let detailTasmiJson = "";
+
+    // Validasi & Kalkulasi Ulang Penilaian Khusus Tasmi' (Ikhtibar 1 Juz, Batas Lulus >= 80)
+    const isTasmi = String(dataSetoran.type || "").toLowerCase().indexOf("tasmi") !== -1;
+    if (isTasmi && dataSetoran.detailTasmi) {
+      let rawDetail = dataSetoran.detailTasmi;
+      if (typeof rawDetail === "string") {
+        try { rawDetail = JSON.parse(rawDetail); } catch (err) { rawDetail = null; }
+      }
+      if (!rawDetail || typeof rawDetail !== "object") {
+        return createResponse(false, null, "Format data penilaian Tasmi' tidak valid.");
+      }
+
+      const validScores = [5, 4, 3, 2];
+      const skorMap = rawDetail.skorPerHalaman || {};
+      const cleanSkorMap = {};
+      let serverTotalSkor = 0;
+
+      for (let p = 1; p <= 20; p++) {
+        const sc = Number(skorMap[p] !== undefined ? skorMap[p] : skorMap[String(p)]);
+        if (validScores.indexOf(sc) === -1) {
+          return createResponse(false, null, "Skor Halaman " + p + " wajib diisi dengan nilai 5, 4, 3, atau 2.");
+        }
+        cleanSkorMap[p] = sc;
+        serverTotalSkor += sc;
+      }
+
+      const validGrades = ["A", "B", "C", "D"];
+      const tajwidAspekKeys = [
+        "makharijul_huruf", "sifatul_huruf", "nun_sukun_tanwin",
+        "mim_mati", "hukum_mad", "qalqalah", "ghunnah",
+        "tafkhim_tarqiq", "waqaf_ibtida"
+      ];
+      const rawTajwid = rawDetail.tajwid || {};
+      const cleanTajwid = {};
+      for (let i = 0; i < tajwidAspekKeys.length; i++) {
+        const k = tajwidAspekKeys[i];
+        const g = String(rawTajwid[k] || "").trim().toUpperCase();
+        if (validGrades.indexOf(g) === -1) {
+          return createResponse(false, null, "Seluruh 9 aspek Praktik Tajwid wajib diisi nilai huruf A, B, C, atau D.");
+        }
+        cleanTajwid[k] = g;
+      }
+
+      const tasmiJuz = String(rawDetail.juz || juzVal || "30").trim();
+      const statusKelulusan = serverTotalSkor >= 80 ? "LULUS" : "TIDAK LULUS";
+
+      const sanitizedDetail = {
+        juz: tasmiJuz,
+        skorPerHalaman: cleanSkorMap,
+        totalSkor: serverTotalSkor,
+        passingScore: 80,
+        statusKelulusan: statusKelulusan,
+        tajwid: cleanTajwid
+      };
+
+      juzVal = tasmiJuz;
+      surahVal = "Ikhtibar Tasmi' Juz " + tasmiJuz;
+      surahNoVal = "";
+      ayatVal = "20 Halaman";
+      halVal = "Skor: " + serverTotalSkor + "/100";
+      predikatVal = statusKelulusan + " (" + serverTotalSkor + ")";
+      detailTasmiJson = JSON.stringify(sanitizedDetail);
+    }
+
     const idSetoran = "SET-" + new Date().getTime();
     const rowObj = {
       "ID_Setoran": idSetoran,
       "ID_Santri": dataSetoran.santriId,
       "ID_Ustadz": auth.data.id,
-      "Tingkatan": dataSetoran.tingkatan || "Al-Qur'an",
+      "Tingkatan": isTasmi ? "Al-Qur'an" : (dataSetoran.tingkatan || "Al-Qur'an"),
       "TM": dataSetoran.tm || "-",
-      "Jenis": dataSetoran.type || "Ziyadah",
-      "Juz": dataSetoran.juz || "-",
-      "Surah": dataSetoran.surah || "-",
-      "SurahNo": dataSetoran.surahNo || "",
-      "Ayat": dataSetoran.ayat || "-",
-      "Halaman": dataSetoran.halaman || "-",
-      "Predikat": dataSetoran.predikat || "Mumtaz",
+      "Jenis": isTasmi ? "Tasmi'" : (dataSetoran.type || "Ziyadah"),
+      "Juz": juzVal,
+      "Surah": surahVal,
+      "SurahNo": surahNoVal,
+      "Ayat": ayatVal,
+      "Halaman": halVal,
+      "Predikat": predikatVal,
       "Catatan": dataSetoran.catatan || "",
       "Tanggal": dataSetoran.date || Utilities.formatDate(new Date(), "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
-      "ParafUstadz": dataSetoran.parafUstadz || auth.data.name || "Ustadz Pembimbing"
+      "ParafUstadz": dataSetoran.parafUstadz || auth.data.name || "Ustadz Pembimbing",
+      "Detail_Tasmi": detailTasmiJson
     };
 
     const newRow = headers.map(function(h) {
