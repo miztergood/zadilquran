@@ -110,7 +110,7 @@ function cetakMutabaahWali() {
                     <td style="text-align:center;font-weight:700;">${tm}</td>
                     <td>${item.Tanggal || '-'}</td>
                     <td style="text-align:center;font-weight:700;">${item.Jenis || '-'}</td>
-                    <td><strong>${suratJilid}</strong><br><span style="font-size:10px;color:#475569;">${ item.Catatan ? 'Catatan: ' + item.Catatan : '' }</span></td>
+                    <td><strong>${suratJilid}</strong><br><span style="font-size:10px;color:#475569;">${item.Catatan ? 'Catatan: ' + item.Catatan : ''}</span></td>
                     <td style="text-align:center;">${ayatHal}</td>
                     <td style="text-align:center;font-weight:700;">${nilai}</td>
                     <td style="text-align:center;color:#1c6b45;font-weight:700;">&#10003; ${paraf}</td>
@@ -486,24 +486,24 @@ function parseTempoWali(tempoStr) {
     try {
         const d = new Date(str);
         if (!isNaN(d.getTime())) return d;
-    } catch (e) {}
+    } catch (e) { }
     return null;
 }
 
 function hitungStatusTempoWali(t) {
     if (!t) return { status: 'normal', text: '-' };
     if (t.Status === 'Lunas') return { status: 'lunas', text: 'Lunas' };
-    
+
     const dueDate = parseTempoWali(t.Jatuh_Tempo);
     if (!dueDate) return { status: 'normal', text: t.Jatuh_Tempo || '-' };
-    
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
-    
+
     const diffTime = today.getTime() - dueDate.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays > 0) {
         return { status: 'overdue', days: diffDays, text: `Terlambat ${diffDays} hari` };
     } else if (diffDays >= -7) {
@@ -613,15 +613,15 @@ function renderWaliKeuangan() {
                     <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
                         <span><i class="fa-regular fa-calendar mr-1"></i>Jatuh Tempo: <b>${t.Jatuh_Tempo || '-'}</b></span>
                         ${isLunas
-                            ? `<button onclick="unduhKwitansiWali('${t.ID_Tagihan}')" class="px-2.5 py-1 rounded-lg bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:hover:bg-[#12452c] dark:text-[#83c9a6] font-bold text-xs flex items-center gap-1.5 transition shadow-xs" title="Unduh Kwitansi PDF">
+                    ? `<button onclick="unduhKwitansiWali('${t.ID_Tagihan}')" class="px-2.5 py-1 rounded-lg bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:hover:bg-[#12452c] dark:text-[#83c9a6] font-bold text-xs flex items-center gap-1.5 transition shadow-xs" title="Unduh Kwitansi PDF">
                                 <i class="fa-solid fa-file-invoice text-xs"></i>
                                 <span>Unduh Kwitansi</span>
                                </button>`
-                            : `<button onclick="konfirmasiBayarWaliWa('${t.ID_Tagihan}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition active:scale-95" title="Konfirmasi Bayar via WhatsApp">
+                    : `<button onclick="konfirmasiBayarWaliWa('${t.ID_Tagihan}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition active:scale-95" title="Konfirmasi Bayar via WhatsApp">
                                 <i class="fa-brands fa-whatsapp text-sm"></i>
                                 <span>Konfirmasi Bayar</span>
                                </button>`
-                        }
+                }
                     </div>
                 </div>
             `;
@@ -640,7 +640,7 @@ function konfirmasiBayarWaliWa(idTagihan = null) {
         const unpaid = myTagihan.filter(x => x.Status !== 'Lunas');
         if (unpaid.length > 0) t = unpaid[0];
     }
-    
+
     let pesan = `Assalamu'alaikum Wr. Wb. Admin Bendahara *PPTQ Zadil Qur'an*.\n\nSaya Orang Tua/Wali dari:\n• *Nama Santri:* ${s.Nama_Santri}\n• *ID Santri:* ${s.ID_Santri}\n\n`;
     if (t) {
         pesan += `Ingin mengonfirmasi pembayaran tagihan:\n• *Tagihan:* ${t.Judul_Tagihan}\n• *Nominal:* ${formatRupiah(t.Nominal)}\n• *Jatuh Tempo:* ${t.Jatuh_Tempo || '-'}\n\n`;
