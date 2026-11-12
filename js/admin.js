@@ -1445,7 +1445,8 @@ function renderTabSemuaTagihan() {
                                     <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#1c6b45] hover:bg-[#155436] text-white rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Tandai Lunas"><i class="fa-solid fa-check"></i> Lunas</button>
                                     <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-lg transition shadow-xs" title="Kirim Pengingat WA"><i class="fa-brands fa-whatsapp"></i></button>
                                 ` : `
-                                    <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6] rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Cetak Kwitansi PDF"><i class="fa-solid fa-file-invoice"></i> Kwitansi</button>
+                                    <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}', 'pdf')" class="px-2 py-1.5 bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6] rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Cetak Kwitansi PDF"><i class="fa-solid fa-file-invoice"></i> Kwitansi</button>
+                                    <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}', 'image')" class="p-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 rounded-lg text-xs font-bold transition shadow-xs flex items-center gap-1" title="Unduh Kwitansi Gambar (PNG)"><i class="fa-solid fa-image"></i></button>
                                     <button onclick="batalLunasTagihan('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-slate-800 dark:text-gray-300 rounded-lg text-xs font-semibold transition" title="Batalkan Status Lunas"><i class="fa-solid fa-rotate-left"></i> Batal</button>
                                 `}
                                 <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 rounded-lg transition shadow-xs" title="Hapus Tagihan"><i class="fa-solid fa-trash"></i></button>
@@ -1492,7 +1493,8 @@ function renderTabSemuaTagihan() {
                                 <button onclick="openModalBayar('${t.ID_Tagihan}')" class="px-3 py-1.5 bg-[#1c6b45] text-white rounded-lg font-bold text-xs"><i class="fa-solid fa-check mr-1"></i> Lunas</button>
                                 <button onclick="kirimWaTagihan('${t.ID_Tagihan}')" class="p-2 bg-green-50 text-green-700 rounded-lg"><i class="fa-brands fa-whatsapp"></i></button>
                             ` : `
-                                <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}')" class="px-3 py-1.5 bg-[#edf7f2] text-[#1c6b45] rounded-lg font-bold text-xs"><i class="fa-solid fa-file-invoice mr-1"></i> Kwitansi</button>
+                                <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}', 'pdf')" class="px-2.5 py-1.5 bg-[#edf7f2] text-[#1c6b45] rounded-lg font-bold text-xs"><i class="fa-solid fa-file-invoice mr-1"></i> Kwitansi</button>
+                                <button onclick="cetakKwitansiAdmin('${t.ID_Tagihan}', 'image')" class="p-1.5 bg-sky-50 text-sky-700 rounded-lg font-bold text-xs" title="Unduh Kwitansi Gambar"><i class="fa-solid fa-image"></i></button>
                                 <button onclick="batalLunasTagihan('${t.ID_Tagihan}')" class="px-2.5 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium text-xs"><i class="fa-solid fa-rotate-left"></i></button>
                             `}
                             <button onclick="deleteTagihanAction('${t.ID_Tagihan}', '${t.Judul_Tagihan}')" class="p-2 bg-red-50 text-red-600 rounded-lg"><i class="fa-solid fa-trash"></i></button>
@@ -1768,11 +1770,15 @@ async function deleteTagihanAction(idTagihan, judul) {
     }
 }
 
-function cetakKwitansiAdmin(idTagihan) {
+function cetakKwitansiAdmin(idTagihan, format = 'pdf') {
     const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
     if (!t) return;
     const s = (state.santri || []).find(x => x.ID_Santri === t.ID_Santri);
-    cetakKwitansiResmi(t, s);
+    if (format === 'image') {
+        unduhKwitansiGambar(t, s);
+    } else {
+        cetakKwitansiResmi(t, s);
+    }
 }
 
 function kirimWaTagihan(idTagihan) {

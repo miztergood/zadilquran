@@ -270,63 +270,255 @@ function angkaKeTerbilang(nilai) {
 }
 
 /**
- * Generator Kwitansi Pembayaran Resmi (PDF / Printable View)
+ * Generator Kwitansi Pembayaran Resmi (PDF & Gambar PNG)
  * Menampilkan dokumen kwitansi standar profesional lengkap dengan Kop Lembaga,
- * Nomor Kwitansi, Terbilang, Rincian, dan Stempel/Paraf Bendahara.
+ * Nomor Kwitansi, Terbilang, Rincian, serta Stempel Lunas dan Tanda Tangan resmi Bendahara.
  */
-function cetakKwitansiResmi(tagihan, santri) {
-    if (!tagihan) {
-        AppNotify.toast('Data tagihan tidak ditemukan', 'warning');
-        return;
-    }
+const DEFAULT_KWITANSI_CONFIG = {
+    namaBendahara: 'Siti Mei Alvita',
+    jabatanBendahara: 'Bendahara Pesantren',
+    kotaPenerbit: 'Tuban',
+    logoUrl: 'logo.jpg',
+    ttdUrl: 'assets/tanda-tangan.png',
+    stempelUrl: 'assets/stempel.png'
+};
 
+function getKwitansiAssets() {
+    if (typeof window !== 'undefined' && window.KWITANSI_ASSETS) {
+        return {
+            namaBendahara: window.KWITANSI_ASSETS.namaBendahara || DEFAULT_KWITANSI_CONFIG.namaBendahara,
+            jabatanBendahara: window.KWITANSI_ASSETS.jabatanBendahara || DEFAULT_KWITANSI_CONFIG.jabatanBendahara,
+            kotaPenerbit: window.KWITANSI_ASSETS.kotaPenerbit || DEFAULT_KWITANSI_CONFIG.kotaPenerbit,
+            logo: window.KWITANSI_ASSETS.logoBase64 || window.KWITANSI_ASSETS.logoUrl || DEFAULT_KWITANSI_CONFIG.logoUrl,
+            ttd: window.KWITANSI_ASSETS.ttdBase64 || window.KWITANSI_ASSETS.ttdUrl || DEFAULT_KWITANSI_CONFIG.ttdUrl,
+            stempel: window.KWITANSI_ASSETS.stempelBase64 || window.KWITANSI_ASSETS.stempelUrl || DEFAULT_KWITANSI_CONFIG.stempelUrl
+        };
+    }
+    return {
+        namaBendahara: DEFAULT_KWITANSI_CONFIG.namaBendahara,
+        jabatanBendahara: DEFAULT_KWITANSI_CONFIG.jabatanBendahara,
+        kotaPenerbit: DEFAULT_KWITANSI_CONFIG.kotaPenerbit,
+        logo: DEFAULT_KWITANSI_CONFIG.logoUrl,
+        ttd: DEFAULT_KWITANSI_CONFIG.ttdUrl,
+        stempel: DEFAULT_KWITANSI_CONFIG.stempelUrl
+    };
+}
+
+/**
+ * Menghasilkan markup kartu kwitansi (.kwitansi-wrapper)
+ */
+function generateKwitansiCardHtml(tagihan, santri) {
     const s = santri || {};
     const noKwitansi = `KW-${tagihan.ID_Tagihan || Date.now()}`;
     const tglCetak = tagihan.Tgl_Bayar || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const nominal = Number(tagihan.Nominal) || 0;
     const terbilangStr = angkaKeTerbilang(nominal);
+    const assets = getKwitansiAssets();
 
-    const printHtml = `
-<!DOCTYPE html>
+    const pembayar = escapeHtml(s.Nama_Wali || s.Nama_Ayah || s.Nama_Ibu || 'Orang Tua / Wali Santri');
+    const namaSantri = escapeHtml(s.Nama_Santri || tagihan.Nama_Santri || '-');
+    const idSantri = escapeHtml(tagihan.ID_Santri || s.ID_Santri || '-');
+    const judulTagihan = escapeHtml(tagihan.Judul_Tagihan || 'Pembayaran Syahriyah / Pondok');
+    const kategori = escapeHtml(tagihan.Kategori || 'Syahriyah');
+    const metode = escapeHtml(tagihan.Metode_Bayar || 'Tunai / Kas Pondok');
+    const catatan = tagihan.Catatan ? ` &bull; <em>(${escapeHtml(tagihan.Catatan)})</em>` : '';
+
+    return `
+    <div class="kwitansi-wrapper" id="kwitansiWrapperCard">
+        <div class="watermark">LUNAS</div>
+
+        <!-- Kop Lembaga -->
+        <div class="header-kop">
+            <div class="kop-left">
+                <img src="${assets.logo}" alt="Logo Zadil Quran" class="kop-logo" onerror="this.style.display='none'">
+                <div class="kop-text">
+                    <h2>Pondok Pesantren Tahfizh Zadil Qur'an</h2>
+                    <p>
+                        Akta Notaris Muntafiah, S.H., M.Kn &bull; AHU-0023909.AH.01.12. Tahun 2020<br>
+                        Jl. Raya Penambangan, Ds. Penambangan, Kec. Semanding, Kab. Tuban, Jatim (62381)
+                    </p>
+                </div>
+            </div>
+            <div class="kop-right">
+                <span class="kop-badge">Bukti Pembayaran Sah</span>
+                <div class="kop-no">${escapeHtml(noKwitansi)}</div>
+            </div>
+        </div>
+
+        <div class="title-bar">
+            <h1>Kwitansi Pembayaran</h1>
+        </div>
+
+        <!-- Rincian Kwitansi -->
+        <table class="content-table">
+            <tr>
+                <td class="col-label">Telah Terima Dari</td>
+                <td class="col-colon">:</td>
+                <td class="col-val"><strong>${pembayar}</strong></td>
+            </tr>
+            <tr>
+                <td class="col-label">Nama Santri (ID)</td>
+                <td class="col-colon">:</td>
+                <td class="col-val">${namaSantri} <strong>(${idSantri})</strong></td>
+            </tr>
+            <tr>
+                <td class="col-label">Uang Sejumlah</td>
+                <td class="col-colon">:</td>
+                <td class="col-val">
+                    <div class="terbilang-box"># ${terbilangStr} #</div>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-label">Untuk Pembayaran</td>
+                <td class="col-colon">:</td>
+                <td class="col-val"><strong>${judulTagihan}</strong> [${kategori}]</td>
+            </tr>
+            <tr>
+                <td class="col-label">Metode Pembayaran</td>
+                <td class="col-colon">:</td>
+                <td class="col-val">${metode}${catatan}</td>
+            </tr>
+        </table>
+
+        <!-- Footer Nominal & Tanda Tangan Resmi -->
+        <div class="footer-row">
+            <div class="nominal-badge">
+                <div class="lbl">Jumlah Pembayaran</div>
+                <div class="val">${formatRupiah(nominal)}</div>
+            </div>
+
+            <div class="ttd-box">
+                <div class="tgl">${escapeHtml(assets.kotaPenerbit)}, ${escapeHtml(tglCetak)}</div>
+                <div class="role">${escapeHtml(assets.jabatanBendahara)}</div>
+                <div class="ttd-space">
+                    <img src="${assets.stempel}" alt="Stempel Resmi" class="stempel-img" onerror="this.style.display='none'">
+                    <img src="${assets.ttd}" alt="Tanda Tangan" class="ttd-img" onerror="this.style.display='none'">
+                </div>
+                <div class="ttd-name">${escapeHtml(assets.namaBendahara)}</div>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+/**
+ * Menghasilkan dokumen HTML lengkap untuk jendela Cetak / Simpan PDF / Gambar
+ */
+function generateKwitansiHtml(tagihan, santri) {
+    const noKwitansi = `KW-${tagihan.ID_Tagihan || Date.now()}`;
+    const cardHtml = generateKwitansiCardHtml(tagihan, santri);
+
+    return `<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Kwitansi Pembayaran - ${noKwitansi}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kwitansi Pembayaran - ${escapeHtml(noKwitansi)}</title>
     <style>
         @page {
             size: A5 landscape;
-            margin: 12mm 15mm;
+            margin: 8mm 10mm;
         }
         * {
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
             color: #222;
         }
         body {
-            background-color: #fff;
+            background-color: #f3f4f6;
             margin: 0;
-            padding: 10px;
+            padding: 20px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+        }
+        .action-bar {
+            width: 100%;
+            max-width: 820px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #ffffff;
+            padding: 12px 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e5e7eb;
+        }
+        .action-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #731417;
+        }
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+        .btn-pdf {
+            background: #9a2024;
+            color: #ffffff;
+        }
+        .btn-pdf:hover {
+            background: #731417;
+        }
+        .btn-img {
+            background: #1c6b45;
+            color: #ffffff;
+        }
+        .btn-img:hover {
+            background: #12452c;
+        }
+        .btn-close {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+        .btn-close:hover {
+            background: #e5e7eb;
         }
         .kwitansi-wrapper {
             border: 2px solid #731417;
-            padding: 20px 24px;
+            padding: 22px 26px;
             position: relative;
-            background: #fff;
+            background: #ffffff;
+            width: 100%;
             max-width: 820px;
-            margin: 0 auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-radius: 4px;
         }
         .watermark {
             position: absolute;
-            top: 50%;
+            top: 52%;
             left: 50%;
             transform: translate(-50%, -50%) rotate(-25deg);
-            font-size: 72px;
+            font-size: 78px;
             font-weight: 900;
             color: rgba(28, 107, 69, 0.08);
-            letter-spacing: 6px;
+            letter-spacing: 8px;
             pointer-events: none;
             user-select: none;
             text-transform: uppercase;
+            z-index: 0;
         }
         .header-kop {
             display: flex;
@@ -335,6 +527,8 @@ function cetakKwitansiResmi(tagihan, santri) {
             border-bottom: 2px solid #9a2024;
             padding-bottom: 12px;
             margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
         }
         .kop-left {
             display: flex;
@@ -387,11 +581,13 @@ function cetakKwitansiResmi(tagihan, santri) {
         .title-bar {
             text-align: center;
             margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
         }
         .title-bar h1 {
             display: inline-block;
             margin: 0;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: 800;
             color: #111;
             text-transform: uppercase;
@@ -404,13 +600,15 @@ function cetakKwitansiResmi(tagihan, santri) {
             border-collapse: collapse;
             font-size: 12px;
             margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
         }
         .content-table td {
             padding: 5px 4px;
             vertical-align: top;
         }
         .content-table td.col-label {
-            width: 26%;
+            width: 25%;
             color: #444;
             font-weight: 600;
         }
@@ -420,7 +618,7 @@ function cetakKwitansiResmi(tagihan, santri) {
             font-weight: bold;
         }
         .content-table td.col-val {
-            width: 71%;
+            width: 72%;
             color: #111;
             font-weight: 500;
         }
@@ -440,6 +638,8 @@ function cetakKwitansiResmi(tagihan, santri) {
             align-items: flex-end;
             margin-top: 10px;
             padding-top: 10px;
+            position: relative;
+            z-index: 1;
         }
         .nominal-badge {
             border: 2px dashed #1c6b45;
@@ -464,174 +664,488 @@ function cetakKwitansiResmi(tagihan, santri) {
         }
         .ttd-box {
             text-align: center;
-            width: 220px;
+            width: 230px;
+            position: relative;
         }
         .ttd-box .tgl {
             font-size: 11px;
             color: #444;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .ttd-box .role {
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             color: #333;
         }
         .ttd-space {
-            height: 48px;
+            height: 76px;
             position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 2px 0;
         }
-        .stempel-lunas {
-            display: inline-block;
-            border: 2px solid #1c6b45;
-            color: #1c6b45;
-            font-size: 12px;
-            font-weight: 800;
-            padding: 3px 12px;
-            border-radius: 4px;
-            transform: rotate(-7deg);
-            letter-spacing: 1px;
-            text-transform: uppercase;
+        .stempel-img {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-6deg);
+            width: 82px;
+            height: 86px;
+            object-fit: contain;
+            opacity: 0.88;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .ttd-img {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 88px;
+            height: 70px;
+            object-fit: contain;
+            z-index: 2;
         }
         .ttd-name {
-            font-size: 11.5px;
-            font-weight: 700;
-            border-bottom: 1px solid #333;
+            font-size: 12px;
+            font-weight: 800;
+            border-bottom: 1.5px solid #222;
             display: inline-block;
             padding-bottom: 2px;
             color: #111;
-        }
-        .action-bar {
-            text-align: center;
-            margin-top: 18px;
-        }
-        .btn-print {
-            background: #9a2024;
-            color: #fff;
-            border: none;
-            padding: 9px 20px;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        }
-        .btn-print:hover {
-            background: #731417;
+            letter-spacing: 0.3px;
         }
         @media print {
             body {
+                background: #fff;
                 padding: 0;
-            }
-            .kwitansi-wrapper {
-                border-width: 1.5px;
             }
             .action-bar {
                 display: none !important;
+            }
+            .kwitansi-wrapper {
+                border-width: 1.5px;
+                box-shadow: none;
+                margin: 0;
+                max-width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="kwitansi-wrapper">
-        <div class="watermark">LUNAS</div>
-
-        <!-- Kop Lembaga -->
-        <div class="header-kop">
-            <div class="kop-left">
-                <img src="${window.location.origin}/logo.jpg" alt="Logo" class="kop-logo" onerror="this.style.display='none'">
-                <div class="kop-text">
-                    <h2>Pondok Pesantren Tahfizh Zadil Qur'an</h2>
-                    <p>
-                        Akta Notaris Muntafiah, S.H., M.Kn &bull; AHU-0023909.AH.01.12. Tahun 2020<br>
-                        Jl. Raya Penambangan, Ds. Penambangan, Kec. Semanding, Kab. Tuban, Jatim (62381)
-                    </p>
-                </div>
-            </div>
-            <div class="kop-right">
-                <span class="kop-badge">Bukti Pembayaran Sah</span>
-                <div class="kop-no">${noKwitansi}</div>
-            </div>
-        </div>
-
-        <div class="title-bar">
-            <h1>Kwitansi Pembayaran</h1>
-        </div>
-
-        <!-- Rincian Kwitansi -->
-        <table class="content-table">
-            <tr>
-                <td class="col-label">Telah Terima Dari</td>
-                <td class="col-colon">:</td>
-                <td class="col-val"><strong>${s.Nama_Wali || s.Nama_Ayah || 'Orang Tua / Wali Santri'}</strong></td>
-            </tr>
-            <tr>
-                <td class="col-label">Nama Santri (ID)</td>
-                <td class="col-colon">:</td>
-                <td class="col-val">${s.Nama_Santri || '-'} <strong>(${tagihan.ID_Santri || '-'})</strong></td>
-            </tr>
-            <tr>
-                <td class="col-label">Uang Sejumlah</td>
-                <td class="col-colon">:</td>
-                <td class="col-val">
-                    <div class="terbilang-box"># ${terbilangStr} #</div>
-                </td>
-            </tr>
-            <tr>
-                <td class="col-label">Untuk Pembayaran</td>
-                <td class="col-colon">:</td>
-                <td class="col-val"><strong>${tagihan.Judul_Tagihan}</strong> [${tagihan.Kategori || 'Syahriyah'}]</td>
-            </tr>
-            <tr>
-                <td class="col-label">Metode Pembayaran</td>
-                <td class="col-colon">:</td>
-                <td class="col-val">${tagihan.Metode_Bayar || 'Tunai / Kas Pondok'} ${tagihan.Catatan ? '&bull; <em>(' + tagihan.Catatan + ')</em>' : ''}</td>
-            </tr>
-        </table>
-
-        <!-- Footer Nominal & Tanda Tangan -->
-        <div class="footer-row">
-            <div class="nominal-badge">
-                <div class="lbl">Jumlah Pembayaran</div>
-                <div class="val">${formatRupiah(nominal)}</div>
-            </div>
-
-            <div class="ttd-box">
-                <div class="tgl">Tuban, ${tglCetak}</div>
-                <div class="role">Bendahara Pesantren</div>
-                <div class="ttd-space">
-                    <span class="stempel-lunas">&bull; LUNAS &bull;</span>
-                </div>
-                <div class="ttd-name">Admin Keuangan PPTQ</div>
-            </div>
-        </div>
-    </div>
-
     <div class="action-bar">
-        <button onclick="window.print()" class="btn-print">&#128438; Cetak / Simpan sebagai PDF</button>
+        <div class="action-bar-left">
+            <span>Kwitansi Resmi PPTQ Zadil Qur'an</span>
+        </div>
+        <div class="action-buttons">
+            <button onclick="window.print()" class="btn-action btn-pdf" title="Cetak atau Simpan sebagai PDF">
+                &#128438; Cetak / Simpan PDF
+            </button>
+            <button onclick="unduhGambarKwitansiWindow()" class="btn-action btn-img" id="btnUnduhGambar" title="Unduh Kwitansi format Foto/Gambar PNG">
+                &#128247; Unduh Gambar (PNG)
+            </button>
+            <button onclick="window.close()" class="btn-action btn-close" title="Tutup">
+                &#10005; Tutup
+            </button>
+        </div>
     </div>
 
+    ${cardHtml}
+
+    <script src="js/html2canvas.min.js"></script>
     <script>
-        // Otomatis memicu dialog print/PDF setelah dokumen siap
+        function unduhGambarKwitansiWindow() {
+            var btn = document.getElementById('btnUnduhGambar');
+            var originalText = btn ? btn.innerHTML : '';
+            if (btn) btn.innerHTML = '&#9203; Memproses...';
+
+            function capture() {
+                var elem = document.querySelector('.kwitansi-wrapper');
+                if (!elem) {
+                    alert('Elemen kwitansi tidak ditemukan');
+                    if (btn) btn.innerHTML = originalText;
+                    return;
+                }
+                html2canvas(elem, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    useCORS: true,
+                    logging: false
+                }).then(function(canvas) {
+                    var link = document.createElement('a');
+                    link.download = 'Kwitansi-${escapeHtml(noKwitansi)}.png';
+                    link.href = canvas.toDataURL('image/png');
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    if (btn) btn.innerHTML = '&#10003; Berhasil Diunduh';
+                    setTimeout(function() {
+                        if (btn) btn.innerHTML = originalText;
+                    }, 2500);
+                }).catch(function(err) {
+                    alert('Gagal membuat gambar: ' + err.message);
+                    if (btn) btn.innerHTML = originalText;
+                });
+            }
+
+            if (typeof html2canvas === 'undefined') {
+                var s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                s.onload = capture;
+                s.onerror = function() {
+                    alert('Gagal memuat modul render gambar. Silakan gunakan tombol Cetak / Simpan PDF.');
+                    if (btn) btn.innerHTML = originalText;
+                };
+                document.head.appendChild(s);
+            } else {
+                capture();
+            }
+        }
+
         window.onload = function() {
+            // Berikan jeda sejenak agar seluruh font & gambar tampil sempurna
             setTimeout(function() {
-                window.print();
-            }, 400);
+                // Jangan paksa print jika URL memiliki parameter mode=view
+                if (!window.location.search.includes('mode=view')) {
+                    window.print();
+                }
+            }, 500);
         };
     </script>
 </body>
-</html>
-    `;
+</html>`;
+}
 
+/**
+ * Mencetak kwitansi resmi via dialog printer / preview PDF
+ */
+function cetakKwitansiResmi(tagihan, santri) {
+    if (!tagihan) {
+        if (typeof AppNotify !== 'undefined') AppNotify.toast('Data tagihan tidak ditemukan', 'warning');
+        return;
+    }
+
+    const printHtml = generateKwitansiHtml(tagihan, santri);
     const printWin = window.open('', '_blank');
     if (printWin) {
         printWin.document.open();
         printWin.document.write(printHtml);
         printWin.document.close();
     } else {
-        AppNotify.toast('Pop-up terblokir. Izinkan pop-up peramban untuk mengunduh kwitansi PDF.', 'warning');
+        if (typeof AppNotify !== 'undefined') {
+            AppNotify.toast('Pop-up terblokir. Mengalihkan ke unduhan langsung...', 'warning');
+        }
+        unduhKwitansiGambar(tagihan, santri);
+    }
+}
+
+/**
+ * Mengunduh kwitansi pembayaran langsung dalam format gambar (PNG)
+ */
+async function unduhKwitansiGambar(tagihan, santri) {
+    if (!tagihan) {
+        if (typeof AppNotify !== 'undefined') AppNotify.toast('Data tagihan tidak ditemukan', 'warning');
+        return;
+    }
+
+    if (typeof AppNotify !== 'undefined') {
+        AppNotify.toast('Menyiapkan gambar kwitansi...', 'info');
+    }
+
+    // Pastikan pustaka html2canvas tersedia
+    if (typeof html2canvas === 'undefined') {
+        try {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'js/html2canvas.min.js';
+                s.onload = resolve;
+                s.onerror = () => {
+                    const sCdn = document.createElement('script');
+                    sCdn.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+                    sCdn.onload = resolve;
+                    sCdn.onerror = reject;
+                    document.head.appendChild(sCdn);
+                };
+                document.head.appendChild(s);
+            });
+        } catch (e) {
+            console.error('Gagal memuat html2canvas:', e);
+            if (typeof AppNotify !== 'undefined') {
+                AppNotify.toast('Gagal memuat modul render gambar', 'error');
+            }
+            return;
+        }
+    }
+
+    const noKwitansi = `KW-${tagihan.ID_Tagihan || Date.now()}`;
+    const cardHtml = generateKwitansiCardHtml(tagihan, santri);
+
+    // Wadah tersembunyi untuk perenderan DOM yang akurat
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '820px';
+    container.style.zIndex = '-9999';
+    container.style.backgroundColor = '#ffffff';
+
+    // Tambahkan style penting agar render gambar identik
+    container.innerHTML = `
+        <style>
+            .kwitansi-wrapper {
+                border: 2px solid #731417;
+                padding: 22px 26px;
+                position: relative;
+                background: #ffffff;
+                width: 820px;
+                box-sizing: border-box;
+                font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            }
+            .watermark {
+                position: absolute;
+                top: 52%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-25deg);
+                font-size: 78px;
+                font-weight: 900;
+                color: rgba(28, 107, 69, 0.08);
+                letter-spacing: 8px;
+                pointer-events: none;
+                user-select: none;
+                text-transform: uppercase;
+                z-index: 0;
+            }
+            .header-kop {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                border-bottom: 2px solid #9a2024;
+                padding-bottom: 12px;
+                margin-bottom: 14px;
+                position: relative;
+                z-index: 1;
+            }
+            .kop-left {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .kop-logo {
+                width: 58px;
+                height: 58px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                object-fit: cover;
+            }
+            .kop-text h2 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 800;
+                color: #731417;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+            .kop-text p {
+                margin: 2px 0 0;
+                font-size: 10.5px;
+                color: #555;
+                line-height: 1.35;
+            }
+            .kop-right {
+                text-align: right;
+            }
+            .kop-badge {
+                display: inline-block;
+                background: #edf7f2;
+                color: #1c6b45;
+                border: 1px solid #b2dfc8;
+                font-size: 10px;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 6px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .kop-no {
+                font-size: 11px;
+                font-family: monospace;
+                color: #444;
+                margin-top: 4px;
+                font-weight: bold;
+            }
+            .title-bar {
+                text-align: center;
+                margin-bottom: 14px;
+                position: relative;
+                z-index: 1;
+            }
+            .title-bar h1 {
+                display: inline-block;
+                margin: 0;
+                font-size: 16px;
+                font-weight: 800;
+                color: #111;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                border-bottom: 1.5px solid #111;
+                padding-bottom: 2px;
+            }
+            .content-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+                margin-bottom: 14px;
+                position: relative;
+                z-index: 1;
+            }
+            .content-table td {
+                padding: 5px 4px;
+                vertical-align: top;
+            }
+            .content-table td.col-label {
+                width: 25%;
+                color: #444;
+                font-weight: 600;
+            }
+            .content-table td.col-colon {
+                width: 3%;
+                text-align: center;
+                font-weight: bold;
+            }
+            .content-table td.col-val {
+                width: 72%;
+                color: #111;
+                font-weight: 500;
+            }
+            .terbilang-box {
+                background-color: #faf5f5;
+                border-left: 3px solid #9a2024;
+                padding: 6px 10px;
+                font-style: italic;
+                font-weight: 600;
+                color: #731417;
+                font-size: 11.5px;
+                border-radius: 0 4px 4px 0;
+            }
+            .footer-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                margin-top: 10px;
+                padding-top: 10px;
+                position: relative;
+                z-index: 1;
+            }
+            .nominal-badge {
+                border: 2px dashed #1c6b45;
+                background: #edf7f2;
+                padding: 8px 16px;
+                border-radius: 8px;
+                display: inline-block;
+            }
+            .nominal-badge .lbl {
+                font-size: 9.5px;
+                text-transform: uppercase;
+                font-weight: 700;
+                color: #1c6b45;
+                letter-spacing: 0.5px;
+            }
+            .nominal-badge .val {
+                font-size: 19px;
+                font-weight: 900;
+                color: #12452c;
+                font-family: monospace;
+                margin-top: 2px;
+            }
+            .ttd-box {
+                text-align: center;
+                width: 230px;
+                position: relative;
+            }
+            .ttd-box .tgl {
+                font-size: 11px;
+                color: #444;
+                margin-bottom: 4px;
+            }
+            .ttd-box .role {
+                font-size: 11px;
+                font-weight: 700;
+                color: #333;
+            }
+            .ttd-space {
+                height: 76px;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 2px 0;
+            }
+            .stempel-img {
+                position: absolute;
+                left: 10px;
+                top: 50%;
+                transform: translateY(-50%) rotate(-6deg);
+                width: 82px;
+                height: 86px;
+                object-fit: contain;
+                opacity: 0.88;
+                pointer-events: none;
+                z-index: 1;
+            }
+            .ttd-img {
+                position: absolute;
+                right: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 88px;
+                height: 70px;
+                object-fit: contain;
+                z-index: 2;
+            }
+            .ttd-name {
+                font-size: 12px;
+                font-weight: 800;
+                border-bottom: 1.5px solid #222;
+                display: inline-block;
+                padding-bottom: 2px;
+                color: #111;
+                letter-spacing: 0.3px;
+            }
+        </style>
+        ${cardHtml}
+    `;
+
+    document.body.appendChild(container);
+
+    try {
+        const targetEl = container.querySelector('.kwitansi-wrapper');
+        const canvas = await html2canvas(targetEl, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            useCORS: true,
+            logging: false
+        });
+
+        const link = document.createElement('a');
+        link.download = `Kwitansi-${noKwitansi}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        if (typeof AppNotify !== 'undefined') {
+            AppNotify.toast('Kwitansi berhasil diunduh sebagai gambar PNG', 'success');
+        }
+    } catch (err) {
+        console.error('Error html2canvas unduhKwitansiGambar:', err);
+        if (typeof AppNotify !== 'undefined') {
+            AppNotify.toast('Gagal mengunduh gambar kwitansi: ' + err.message, 'error');
+        }
+    } finally {
+        if (container.parentNode) {
+            container.parentNode.removeChild(container);
+        }
     }
 }
 
@@ -1703,7 +2217,13 @@ if (typeof module !== 'undefined' && module.exports) {
         getTasmiConfigByJuz,
         hitungHasilTasmi,
         validasiTajwidTasmi,
-        parseDetailTasmi
+        parseDetailTasmi,
+        DEFAULT_KWITANSI_CONFIG,
+        getKwitansiAssets,
+        generateKwitansiCardHtml,
+        generateKwitansiHtml,
+        cetakKwitansiResmi,
+        unduhKwitansiGambar
     };
 }
 

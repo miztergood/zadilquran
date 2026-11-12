@@ -616,10 +616,16 @@ function renderWaliKeuangan() {
                     <div class="flex items-center justify-between text-[11px] text-gray-500 pt-1">
                         <span><i class="fa-regular fa-calendar mr-1"></i>Jatuh Tempo: <b>${t.Jatuh_Tempo || '-'}</b></span>
                         ${isLunas
-                    ? `<button onclick="unduhKwitansiWali('${t.ID_Tagihan}')" class="px-2.5 py-1 rounded-lg bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:hover:bg-[#12452c] dark:text-[#83c9a6] font-bold text-xs flex items-center gap-1.5 transition shadow-xs" title="Unduh Kwitansi PDF">
-                                <i class="fa-solid fa-file-invoice text-xs"></i>
-                                <span>Unduh Kwitansi</span>
-                               </button>`
+                    ? `<div class="flex items-center gap-1.5">
+                            <button onclick="unduhKwitansiWali('${t.ID_Tagihan}', 'pdf')" class="px-2.5 py-1 rounded-lg bg-[#edf7f2] hover:bg-[#d8eedf] text-[#1c6b45] dark:bg-[#12452c]/50 dark:hover:bg-[#12452c] dark:text-[#83c9a6] font-bold text-xs flex items-center gap-1 transition shadow-xs active:scale-95" title="Cetak / Simpan PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>PDF</span>
+                            </button>
+                            <button onclick="unduhKwitansiWali('${t.ID_Tagihan}', 'image')" class="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:hover:bg-sky-900/60 dark:text-sky-300 font-bold text-xs flex items-center gap-1 transition shadow-xs active:scale-95" title="Unduh Kwitansi Gambar (PNG)">
+                                <i class="fa-solid fa-image"></i>
+                                <span>Gambar</span>
+                            </button>
+                        </div>`
                     : `<button onclick="konfirmasiBayarWaliWa('${t.ID_Tagihan}')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition active:scale-95" title="Konfirmasi Bayar via WhatsApp">
                                 <i class="fa-brands fa-whatsapp text-sm"></i>
                                 <span>Konfirmasi Bayar</span>
@@ -654,13 +660,17 @@ function konfirmasiBayarWaliWa(idTagihan = null) {
     window.open(`https://wa.me/6285731804663?text=${encodeURIComponent(pesan)}`, '_blank');
 }
 
-function unduhKwitansiWali(idTagihan) {
+function unduhKwitansiWali(idTagihan, format = 'pdf') {
     const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
     if (!t) {
         AppNotify.toast('Data tagihan tidak ditemukan', 'warning');
         return;
     }
-    cetakKwitansiResmi(t, state.santri);
+    if (format === 'image') {
+        unduhKwitansiGambar(t, state.santri);
+    } else {
+        cetakKwitansiResmi(t, state.santri);
+    }
 }
 
 function renderWaliProfil() {

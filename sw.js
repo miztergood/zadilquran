@@ -3,7 +3,7 @@
  * Mendukung instalasi PWA lintas platform (Android, iOS/iPadOS, Windows, Mac) & akses offline
  */
 
-const CACHE_NAME = 'zadil-quran-pwa-v9';
+const CACHE_NAME = 'zadil-quran-pwa-v10';
 
 // Aset inti lokal yang wajib tersedia saat offline
 const CORE_ASSETS = [
@@ -19,6 +19,8 @@ const CORE_ASSETS = [
   './css/style.css',
   './js/tailwind-config.js',
   './js/core.js',
+  './js/kwitansi-assets.js',
+  './js/html2canvas.min.js',
   './js/landing.js',
   './js/login.js',
   './js/admin.js',
@@ -26,6 +28,8 @@ const CORE_ASSETS = [
   './js/wali.js',
   './manifest.json',
   './logo.jpg',
+  './assets/tanda-tangan.png',
+  './assets/stempel.png',
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/icon-maskable-512.png',
