@@ -1076,17 +1076,364 @@ function renderUstadzRekapanTable() {
                     ${set.Catatan ? `"${set.Catatan}"` : '-'}
                 </td>
                 <td class="py-3 px-4 text-center whitespace-nowrap space-x-1">
+                    <button onclick="openViewSetoran('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition text-xs shadow-2xs" title="Lihat Detail Setoran">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                    <button onclick="openEditSetoran('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 transition text-xs shadow-2xs" title="Edit Catatan Setoran">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button onclick="deleteSetoranUstadz('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 transition text-xs shadow-2xs" title="Hapus Catatan Setoran">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
                     ${detailTasmi ? `
-                        <button onclick="openUstadzTasmiDetail('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 transition text-xs" title="Lihat & Cetak Kartu Tasmi'">
+                        <button onclick="openUstadzTasmiDetail('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 transition text-xs shadow-2xs" title="Lihat & Cetak Kartu Tasmi'">
                             <i class="fa-solid fa-table-list"></i>
                         </button>
                     ` : ''}
-                    <button onclick="cetakRekapanUstadz('${set.ID_Santri}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 text-[#9a2024] dark:text-[#f29fa3] transition text-xs" title="Cetak Rapor Santri Ini">
+                    <button onclick="cetakRekapanUstadz('${set.ID_Santri}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 text-[#9a2024] dark:text-[#f29fa3] transition text-xs shadow-2xs" title="Cetak Rapor Santri Ini">
                         <i class="fa-solid fa-file-pdf"></i>
                     </button>
                 </td>
             </tr>
         `;
+    });
+}
+
+// ==================== VIEW, EDIT, & DELETE SETORAN ====================
+function openViewSetoran(idSetoran) {
+    const set = (state.setoran || []).find(x => String(x.ID_Setoran).trim() === String(idSetoran).trim());
+    if (!set) return AppNotify.warning('Data Tidak Ditemukan', 'Catatan setoran tidak ditemukan di riwayat.');
+    const s = (state.santri || []).find(san => san.ID_Santri === set.ID_Santri) || {};
+
+    const jenis = set.Jenis || 'Ziyadah';
+    const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
+    const isBinnadhor = jenis === 'Binnadhor';
+    const isTasmi = (jenis || '').toLowerCase().includes('tasmi');
+    const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
+
+    const typeBadge = isZiyadah
+        ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6] border border-[#b2dfc8]'
+        : isBinnadhor
+        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200'
+        : isTasmi
+        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200'
+        : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3] border border-[#f9c5c7]';
+
+    const nilai = set.Predikat || set.Nilai || 'Mumtaz';
+    const isLulusTasmi = detailTasmi ? detailTasmi.statusKelulusan === 'LULUS' : String(nilai).toUpperCase().startsWith('LULUS');
+    const isMumtaz = nilai === 'Mumtaz' || nilai === 'Lancar' || isLulusTasmi;
+    const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
+    const nilaiColor = isMumtaz ? 'text-[#1c6b45]' : isJayyid ? 'text-amber-600' : 'text-red-500';
+
+    const subTitleEl = document.getElementById('viewSetoranSubtitle');
+    if (subTitleEl) subTitleEl.textContent = `ID: ${set.ID_Setoran || '-'} • Waktu: ${set.Tanggal || '-'}`;
+
+    const bodyEl = document.getElementById('viewSetoranBody');
+    if (bodyEl) {
+        bodyEl.innerHTML = `
+            <!-- Kartu Santri -->
+            <div class="bg-gray-50 dark:bg-slate-800/70 p-4 rounded-2xl border border-gray-100 dark:border-darkborder flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-[#9a2024] text-white flex items-center justify-center font-black text-sm uppercase shadow-xs">
+                        ${(s.Nama_Santri || set.ID_Santri || 'S').charAt(0)}
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">${escapeHtml(s.Nama_Santri || set.ID_Santri)}</h4>
+                        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            <span>ID: <strong>${escapeHtml(set.ID_Santri)}</strong></span>
+                            <span>&bull;</span>
+                            <span>Tingkatan: <strong>${escapeHtml(set.Tingkatan || "Al-Qur'an")}</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${typeBadge}">${escapeHtml(jenis)}</span>
+                </div>
+            </div>
+
+            <!-- Rincian Setoran -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white dark:bg-darkcard p-3.5 rounded-2xl border border-gray-200 dark:border-darkborder">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Materi / Surah</span>
+                    <span class="font-bold text-gray-900 dark:text-white text-sm block">${escapeHtml(set.Surah || '-')}</span>
+                    <span class="text-xs text-gray-500">${set.Tingkatan === 'Jilid' ? escapeHtml(set.Juz || '-') : 'Juz ' + escapeHtml(set.Juz || '-')}</span>
+                </div>
+                <div class="bg-white dark:bg-darkcard p-3.5 rounded-2xl border border-gray-200 dark:border-darkborder">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Ayat & Halaman</span>
+                    <span class="font-bold text-gray-900 dark:text-white text-sm block">${escapeHtml(set.Ayat || '-')}</span>
+                    <span class="text-xs text-gray-500">${isTasmi && detailTasmi ? `Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || 100}` : 'Hal ' + escapeHtml(set.Halaman || '-')}</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white dark:bg-darkcard p-3.5 rounded-2xl border border-gray-200 dark:border-darkborder">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Sesi Tatap Muka (TM)</span>
+                    <span class="font-bold text-gray-900 dark:text-white text-sm block">${escapeHtml(set.TM || '-')}</span>
+                    <span class="text-xs text-gray-500">${escapeHtml(set.Tanggal || '-')}</span>
+                </div>
+                <div class="bg-white dark:bg-darkcard p-3.5 rounded-2xl border border-gray-200 dark:border-darkborder">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Nilai Evaluasi</span>
+                    <span class="font-extrabold text-base block ${nilaiColor}">${escapeHtml(nilai)}</span>
+                    <span class="text-[10px] text-gray-400">Pengampu: ${escapeHtml(set.ParafUstadz || 'Ustadz')}</span>
+                </div>
+            </div>
+
+            <!-- Catatan Evaluasi -->
+            <div class="bg-white dark:bg-darkcard p-4 rounded-2xl border border-gray-200 dark:border-darkborder">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1.5 flex items-center gap-1.5">
+                    <i class="fa-solid fa-comment-dots text-gray-400"></i>
+                    Catatan Evaluasi Ustadz
+                </span>
+                <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 italic leading-relaxed">
+                    ${set.Catatan ? `"${escapeHtml(set.Catatan)}"` : '<span class="text-gray-400 not-italic">(Tidak ada catatan tambahan untuk setoran ini)</span>'}
+                </p>
+            </div>
+
+            ${detailTasmi ? `
+            <!-- Kartu Ringkasan Tasmi' -->
+            <div class="p-3.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold text-indigo-900 dark:text-indigo-200 block">Ujian Tasmi' Juz ${escapeHtml(detailTasmi.juz || set.Juz)}</span>
+                    <span class="text-[11px] text-indigo-700 dark:text-indigo-300">Total Skor: <strong>${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || 100}</strong> &bull; Status: <strong>${detailTasmi.statusKelulusan || 'LULUS'}</strong></span>
+                </div>
+                <button type="button" onclick="closeModalViewSetoran(); openUstadzTasmiDetail('${set.ID_Setoran}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-table-list"></i>
+                    <span>Buka Kartu Tasmi'</span>
+                </button>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    const footerEl = document.getElementById('viewSetoranFooter');
+    if (footerEl) {
+        footerEl.innerHTML = `
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeModalViewSetoran(); cetakRekapanUstadz('${set.ID_Santri}')" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-pdf text-[#9a2024]"></i>
+                    <span>Cetak Rapor Santri</span>
+                </button>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeModalViewSetoran(); openEditSetoran('${set.ID_Setoran}')" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Edit Catatan</span>
+                </button>
+                <button type="button" onclick="closeModalViewSetoran()" class="px-3.5 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-800 dark:text-gray-200 text-xs font-semibold rounded-xl transition">
+                    Tutup
+                </button>
+            </div>
+        `;
+    }
+
+    const modal = document.getElementById('modalViewSetoran');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeModalViewSetoran() {
+    const modal = document.getElementById('modalViewSetoran');
+    if (modal) modal.classList.add('hidden');
+}
+
+function openEditSetoran(idSetoran) {
+    const set = (state.setoran || []).find(x => String(x.ID_Setoran).trim() === String(idSetoran).trim());
+    if (!set) return AppNotify.warning('Data Tidak Ditemukan', 'Catatan setoran tidak ditemukan.');
+
+    const selSantri = document.getElementById('editSetoranSantri');
+    if (selSantri) {
+        selSantri.innerHTML = '';
+        const mySantri = (state.santri || []).filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+        const santriList = mySantri.length > 0 ? mySantri : (state.santri || []);
+        santriList.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.ID_Santri;
+            opt.textContent = `${s.Nama_Santri} (${s.ID_Santri})`;
+            if (s.ID_Santri === set.ID_Santri) opt.selected = true;
+            selSantri.appendChild(opt);
+        });
+        if (!Array.from(selSantri.options).some(o => o.value === set.ID_Santri)) {
+            const opt = document.createElement('option');
+            opt.value = set.ID_Santri;
+            opt.textContent = set.ID_Santri;
+            opt.selected = true;
+            selSantri.appendChild(opt);
+        }
+    }
+
+    document.getElementById('editSetoranId').value = set.ID_Setoran || '';
+    document.getElementById('editSetoranTanggal').value = set.Tanggal || '';
+    document.getElementById('editSetoranTM').value = set.TM || '';
+
+    const jenis = set.Jenis || 'Ziyadah';
+    const selJenis = document.getElementById('editSetoranJenis');
+    if (selJenis) {
+        const found = Array.from(selJenis.options).some(o => o.value.toLowerCase() === jenis.toLowerCase());
+        if (found) {
+            selJenis.value = jenis;
+        } else {
+            selJenis.value = 'Ziyadah';
+        }
+    }
+
+    const tingkatan = set.Tingkatan || "Al-Qur'an";
+    document.getElementById('editSetoranTingkatan').value = tingkatan;
+    document.getElementById('editSetoranJuz').value = set.Juz || '';
+    document.getElementById('editSetoranSurah').value = set.Surah || '';
+    document.getElementById('editSetoranAyat').value = set.Ayat || '';
+    document.getElementById('editSetoranHalaman').value = set.Halaman || '';
+
+    const nilai = set.Predikat || set.Nilai || 'Mumtaz';
+    const selPredikat = document.getElementById('editSetoranPredikat');
+    if (selPredikat) {
+        let matched = false;
+        Array.from(selPredikat.options).forEach(opt => {
+            if (opt.value.toLowerCase() === nilai.toLowerCase()) {
+                opt.selected = true;
+                matched = true;
+            }
+        });
+        if (!matched) {
+            const newOpt = document.createElement('option');
+            newOpt.value = nilai;
+            newOpt.textContent = nilai;
+            newOpt.selected = true;
+            selPredikat.appendChild(newOpt);
+        }
+    }
+
+    document.getElementById('editSetoranCatatan').value = set.Catatan || '';
+    toggleEditTingkatanFields();
+
+    const subTitleEl = document.getElementById('editSetoranSubtitle');
+    if (subTitleEl) subTitleEl.textContent = `ID Setoran: ${set.ID_Setoran}`;
+
+    const modal = document.getElementById('modalEditSetoran');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeModalEditSetoran() {
+    const modal = document.getElementById('modalEditSetoran');
+    if (modal) modal.classList.add('hidden');
+}
+
+function toggleEditTingkatanFields() {
+    const tingkatan = document.getElementById('editSetoranTingkatan').value;
+    const lblJuz = document.getElementById('editSetoranJuz') ? document.getElementById('editSetoranJuz').previousElementSibling : null;
+    if (lblJuz) {
+        lblJuz.textContent = tingkatan === 'Jilid' ? 'JILID / LEVEL JILID' : 'JUZ';
+    }
+}
+
+async function saveEditedSetoran(event) {
+    event.preventDefault();
+    const idSetoran = document.getElementById('editSetoranId').value;
+    const existingIndex = (state.setoran || []).findIndex(x => String(x.ID_Setoran).trim() === String(idSetoran).trim());
+    if (existingIndex === -1) {
+        return AppNotify.error('Error', 'Catatan setoran tidak ditemukan.');
+    }
+
+    const existingSet = state.setoran[existingIndex];
+    const santriId = document.getElementById('editSetoranSantri').value;
+    const jenis = document.getElementById('editSetoranJenis').value;
+    const tanggal = document.getElementById('editSetoranTanggal').value;
+    const tm = document.getElementById('editSetoranTM').value;
+    const tingkatan = document.getElementById('editSetoranTingkatan').value;
+    const juz = document.getElementById('editSetoranJuz').value;
+    const surah = document.getElementById('editSetoranSurah').value;
+    const ayat = document.getElementById('editSetoranAyat').value;
+    const halaman = document.getElementById('editSetoranHalaman').value;
+    const predikat = document.getElementById('editSetoranPredikat').value;
+    const catatan = document.getElementById('editSetoranCatatan').value;
+
+    const payload = {
+        idSetoran: idSetoran,
+        santriId: santriId,
+        tingkatan: tingkatan,
+        tm: tm,
+        type: jenis,
+        juz: juz,
+        surah: surah,
+        surahNo: existingSet.SurahNo || '',
+        ayat: ayat,
+        halaman: halaman,
+        predikat: predikat,
+        catatan: catatan,
+        date: tanggal,
+        parafUstadz: existingSet.ParafUstadz || (sessionData ? sessionData.name : 'Ustadz Pembimbing'),
+        detailTasmi: existingSet.Detail_Tasmi ? (typeof existingSet.Detail_Tasmi === 'string' ? JSON.parse(existingSet.Detail_Tasmi) : existingSet.Detail_Tasmi) : undefined
+    };
+
+    // Optimistic local update
+    state.setoran[existingIndex] = {
+        ...existingSet,
+        ID_Santri: santriId,
+        Jenis: jenis,
+        Tanggal: tanggal,
+        TM: tm,
+        Tingkatan: tingkatan,
+        Juz: juz,
+        Surah: surah,
+        Ayat: ayat,
+        Halaman: halaman,
+        Predikat: predikat,
+        Nilai: predikat,
+        Catatan: catatan
+    };
+
+    closeModalEditSetoran();
+    renderUstadzRekapanTable();
+    renderUstadzRiwayat();
+    renderUstadzDashboard();
+
+    AppNotify.loading('Menyimpan Perubahan ke Database...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    apiCall('saveSetoran', token, payload).then(res => {
+        AppNotify.close();
+        if (res && res.status === 'success') {
+            AppNotify.toast('success', 'Catatan setoran berhasil diperbarui!');
+        } else {
+            AppNotify.toast('info', 'Perubahan diperbarui di tabel lokal.');
+        }
+    }).catch(err => {
+        AppNotify.close();
+        AppNotify.toast('info', 'Perubahan tersimpan secara lokal.');
+    });
+}
+
+async function deleteSetoranUstadz(idSetoran) {
+    const set = (state.setoran || []).find(x => String(x.ID_Setoran).trim() === String(idSetoran).trim());
+    if (!set) return AppNotify.warning('Data Tidak Ditemukan', 'Catatan setoran tidak ditemukan.');
+    const s = (state.santri || []).find(san => san.ID_Santri === set.ID_Santri);
+    const santriName = s ? s.Nama_Santri : set.ID_Santri;
+
+    const confirmed = await AppNotify.confirm(
+        'Hapus Catatan Setoran?',
+        `Apakah Anda yakin ingin menghapus catatan setoran <strong>${escapeHtml(set.TM || 'TM')}</strong> (${escapeHtml(set.Surah || '')}) untuk santri <strong>${escapeHtml(santriName)}</strong>?<br><br><span class="text-xs text-red-500 font-semibold">Tindakan ini tidak dapat dibatalkan.</span>`,
+        'Ya, Hapus Setoran',
+        'Batal'
+    );
+
+    if (!confirmed) return;
+
+    AppNotify.loading('Menghapus Catatan Setoran...');
+
+    // Optimistically remove from state
+    state.setoran = (state.setoran || []).filter(x => String(x.ID_Setoran).trim() !== String(idSetoran).trim());
+    renderUstadzRekapanTable();
+    renderUstadzRiwayat();
+    renderUstadzDashboard();
+
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    apiCall('deleteDataGlobal', token, 'Data_Setoran', idSetoran).then(res => {
+        AppNotify.close();
+        if (res && res.status === 'success') {
+            AppNotify.toast('success', 'Catatan setoran berhasil dihapus.');
+        } else {
+            AppNotify.toast('info', 'Catatan dihapus dari tampilan.');
+        }
+    }).catch(err => {
+        AppNotify.close();
+        AppNotify.toast('info', 'Catatan dihapus secara lokal.');
     });
 }
 
@@ -1315,6 +1662,17 @@ function loadUstadzData() {
             AppNotify.error('Gagal Memuat Data', res.message);
         }
     }).catch(() => AppNotify.close());
+}
+
+// Explicit window exposures for inline onclick handlers
+if (typeof window !== 'undefined') {
+    window.openViewSetoran = openViewSetoran;
+    window.closeModalViewSetoran = closeModalViewSetoran;
+    window.openEditSetoran = openEditSetoran;
+    window.closeModalEditSetoran = closeModalEditSetoran;
+    window.toggleEditTingkatanFields = toggleEditTingkatanFields;
+    window.saveEditedSetoran = saveEditedSetoran;
+    window.deleteSetoranUstadz = deleteSetoranUstadz;
 }
 
 window.addEventListener('DOMContentLoaded', () => {

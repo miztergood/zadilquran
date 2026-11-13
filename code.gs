@@ -1101,7 +1101,8 @@ function editSantri(token, id, namaSantri, namaWali, idUstadz, tempatLahir, tang
 
 // --- DELETE GLOBAL ---
 function deleteDataGlobal(token, sheetName, id) {
-  const auth = checkRole(token, ["superadmin"]);
+  const allowedRoles = sheetName === "Data_Setoran" ? ["ustadz", "superadmin"] : ["superadmin"];
+  const auth = checkRole(token, allowedRoles);
   if (auth.status === "error") return auth;
   
   return safeExecute(function() {
@@ -1216,7 +1217,7 @@ function saveSetoran(token, dataSetoran) {
       detailTasmiJson = JSON.stringify(sanitizedDetail);
     }
 
-    const idSetoran = "SET-" + new Date().getTime();
+    const idSetoran = dataSetoran.idSetoran || ("SET-" + new Date().getTime());
     const rowObj = {
       "ID_Setoran": idSetoran,
       "ID_Santri": dataSetoran.santriId,
@@ -1239,9 +1240,27 @@ function saveSetoran(token, dataSetoran) {
     const newRow = headers.map(function(h) {
       return sanitizeSpreadsheetCell_(rowObj.hasOwnProperty(h) ? rowObj[h] : "");
     });
-    sheet.appendRow(newRow);
+
+    let isUpdated = false;
+    if (dataSetoran.idSetoran) {
+      const idIdx = headers.indexOf("ID_Setoran");
+      if (idIdx !== -1) {
+        const data = sheet.getDataRange().getValues();
+        for (let i = 1; i < data.length; i++) {
+          if (String(data[i][idIdx]).trim() === String(dataSetoran.idSetoran).trim()) {
+            sheet.getRange(i + 1, 1, 1, newRow.length).setValues([newRow]);
+            isUpdated = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!isUpdated) {
+      sheet.appendRow(newRow);
+    }
     SpreadsheetApp.flush();
-    return createResponse(true, { idSetoran: idSetoran }, "Setoran dan penilaian harian berhasil disimpan!");
+    return createResponse(true, { idSetoran: idSetoran }, isUpdated ? "Catatan setoran berhasil diperbarui!" : "Setoran dan penilaian harian berhasil disimpan!");
   });
 }
 
