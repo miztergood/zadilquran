@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Sistem Informasi Manajemen & Portals Pesantren Zadil Qur'an",
   "scripts": {
+    "build": "echo 'Static assets ready'",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

@@ -57,3 +57,4 @@ describe('Ustadz Rekap Actions (View, Edit, Delete)', () => {
     expect(jsContent).toContain('window.deleteSetoranUstadz = deleteSetoranUstadz;');
   });
 });
+
