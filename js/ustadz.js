@@ -917,14 +917,33 @@ function renderUstadzRiwayat() {
         const predIcon = isTasmi && detailTasmi ? (isLulusTasmi ? '✅' : '🔁') : (isMumtaz ? '🌟' : isJayyid ? '👍' : '🔁');
         const predColor = isMumtaz ? 'text-[#1c6b45] dark:text-[#83c9a6]' : isJayyid ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400';
 
-        const tmText = set.TM || 'TM';
+        let tmText = set.TM;
+        if (!tmText || tmText === '-') {
+            const m = String(set.Catatan || '').match(/TM:\s*([^\s|]+)/i);
+            tmText = m ? `TM-${m[1]}` : (set.TM || 'TM');
+        }
+
+        let displaySurat = set.Surah && set.Surah !== '-' ? set.Surah : '';
+        const juzLabel = set.Tingkatan === 'Jilid' ? (set.Juz || '') : (set.Juz ? `Juz ${set.Juz}` : '');
+        const materiText = displaySurat ? `${displaySurat} (${juzLabel})` : (juzLabel ? `(${juzLabel})` : '-');
+
+        let ayatHalText = '-';
+        if (isTasmi && detailTasmi) {
+            ayatHalText = `Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || set.Juz) === '30' ? 115 : 100)}`;
+        } else {
+            const aVal = set.Ayat && set.Ayat !== '-' ? set.Ayat : '';
+            const hVal = set.Halaman && set.Halaman !== '-' ? `Hal ${set.Halaman}` : '';
+            if (aVal && hVal) ayatHalText = `${aVal} &bull; ${hVal}`;
+            else if (aVal) ayatHalText = aVal;
+            else if (hVal) ayatHalText = hVal;
+        }
 
         container.innerHTML += `
             <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-3 sm:p-3.5 border border-gray-100 dark:border-darkborder ${borderLeft}">
                 <div class="flex justify-between items-start gap-2 mb-1.5">
                     <div>
                         <div class="flex items-center gap-1.5">
-                            <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${tmText}</span>
+                            <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${escapeHtml(tmText)}</span>
                             <h4 class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">${s ? s.Nama_Santri : set.ID_Santri}</h4>
                         </div>
                         <p class="text-[10px] text-gray-400 mt-0.5">${set.Tanggal}</p>
@@ -932,8 +951,8 @@ function renderUstadzRiwayat() {
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
                 </div>
                 <div class="text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-darkcard p-2 rounded-xl border border-gray-100 dark:border-darkborder mb-1.5 flex justify-between items-center">
-                    <span class="font-bold truncate">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</span>
-                    <span class="text-gray-500 font-medium shrink-0 ml-2">${isTasmi && detailTasmi ? `Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || set.Juz) === '30' ? 115 : 100)}` : `${set.Ayat} &bull; Hal ${set.Halaman}`}</span>
+                    <span class="font-bold truncate">${escapeHtml(materiText)}</span>
+                    <span class="text-gray-500 font-medium shrink-0 ml-2">${escapeHtml(ayatHalText)}</span>
                 </div>
                 <div class="flex items-center justify-between gap-2 text-[11px]">
                     <span class="font-bold ${predColor}">${predIcon} Nilai: ${nilai}</span>
@@ -1050,10 +1069,33 @@ function renderUstadzRekapanTable() {
         const isJayyid = nilai === 'Jayyid' || nilai === 'Kurang Lancar';
         const nilaiColor = isMumtaz ? 'text-[#1c6b45]' : isJayyid ? 'text-amber-600' : 'text-red-500';
 
+        let tmRekap = set.TM;
+        if (!tmRekap || tmRekap === '-') {
+            const m = String(set.Catatan || '').match(/TM:\s*([^\s|]+)/i);
+            tmRekap = m ? `TM-${m[1]}` : (set.TM || 'TM');
+        }
+
+        let displaySuratRekap = set.Surah && set.Surah !== '-' ? set.Surah : '';
+        const juzLabelRekap = set.Tingkatan === 'Jilid' ? (set.Juz || '') : (set.Juz ? `Juz ${set.Juz}` : '');
+        const materiRekapText = displaySuratRekap 
+            ? `${displaySuratRekap} (${juzLabelRekap})` 
+            : (juzLabelRekap ? `(${juzLabelRekap})` : '-');
+
+        let ayatHalRekapHtml = '-';
+        if (isTasmi && detailTasmi) {
+            ayatHalRekapHtml = `${detailTasmi.totalPages || (String(detailTasmi.juz || set.Juz) === '30' ? 23 : 20)} Halaman <br><span class="text-[10px] font-bold text-indigo-600">Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || set.Juz) === '30' ? 115 : 100)}</span>`;
+        } else {
+            const aVal = set.Ayat && set.Ayat !== '-' ? set.Ayat : '';
+            const hVal = set.Halaman && set.Halaman !== '-' ? `<span class="text-[10px] text-gray-400">Hal ${set.Halaman}</span>` : '';
+            if (aVal && hVal) ayatHalRekapHtml = `${escapeHtml(aVal)} <br>${hVal}`;
+            else if (aVal) ayatHalRekapHtml = escapeHtml(aVal);
+            else if (hVal) ayatHalRekapHtml = hVal;
+        }
+
         tbody.innerHTML += `
             <tr class="hover:bg-gray-50/80 dark:hover:bg-slate-800/50 transition">
                 <td class="py-3 px-4">
-                    <span class="font-bold text-gray-900 dark:text-white block">${set.TM || 'TM'}</span>
+                    <span class="font-bold text-gray-900 dark:text-white block">${escapeHtml(tmRekap)}</span>
                     <span class="text-[10px] text-gray-400 block">${set.Tanggal}</span>
                 </td>
                 <td class="py-3 px-4">
@@ -1064,10 +1106,10 @@ function renderUstadzRekapanTable() {
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
                 </td>
                 <td class="py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">
-                    ${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})
+                    ${escapeHtml(materiRekapText)}
                 </td>
                 <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
-                    ${isTasmi && detailTasmi ? `${detailTasmi.totalPages || (String(detailTasmi.juz || set.Juz) === '30' ? 23 : 20)} Halaman <br><span class="text-[10px] font-bold text-indigo-600">Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || set.Juz) === '30' ? 115 : 100)}</span>` : `${set.Ayat} <br><span class="text-[10px] text-gray-400">Hal ${set.Halaman}</span>`}
+                    ${ayatHalRekapHtml}
                 </td>
                 <td class="py-3 px-4 font-bold ${nilaiColor}">
                     ${nilai}
@@ -1262,7 +1304,14 @@ function openEditSetoran(idSetoran) {
 
     document.getElementById('editSetoranId').value = set.ID_Setoran || '';
     document.getElementById('editSetoranTanggal').value = set.Tanggal || '';
-    document.getElementById('editSetoranTM').value = set.TM || '';
+
+    // Deteksi TM cerdas jika bernilai '-' tapi ada di Catatan
+    let editTm = set.TM || '';
+    if (!editTm || editTm === '-') {
+        const m = String(set.Catatan || '').match(/TM:\s*([^\s|]+)/i);
+        if (m) editTm = m[1];
+    }
+    document.getElementById('editSetoranTM').value = editTm;
 
     const jenis = set.Jenis || 'Ziyadah';
     const selJenis = document.getElementById('editSetoranJenis');
@@ -1278,9 +1327,9 @@ function openEditSetoran(idSetoran) {
     const tingkatan = set.Tingkatan || "Al-Qur'an";
     document.getElementById('editSetoranTingkatan').value = tingkatan;
     document.getElementById('editSetoranJuz').value = set.Juz || '';
-    document.getElementById('editSetoranSurah').value = set.Surah || '';
-    document.getElementById('editSetoranAyat').value = set.Ayat || '';
-    document.getElementById('editSetoranHalaman').value = set.Halaman || '';
+    document.getElementById('editSetoranSurah').value = (set.Surah && set.Surah !== '-') ? set.Surah : '';
+    document.getElementById('editSetoranAyat').value = (set.Ayat && set.Ayat !== '-') ? set.Ayat : '';
+    document.getElementById('editSetoranHalaman').value = (set.Halaman && set.Halaman !== '-') ? set.Halaman : '';
 
     const nilai = set.Predikat || set.Nilai || 'Mumtaz';
     const selPredikat = document.getElementById('editSetoranPredikat');
@@ -1607,17 +1656,66 @@ function cetakRekapanUstadz(santriId) {
             </thead>
             <tbody>
                 ${santriSetoran.length === 0 ? '<tr><td colspan="7" class="p-4 text-center text-gray-500">Belum ada riwayat setoran.</td></tr>' : ''}
-                ${santriSetoran.map(set => `
+                ${santriSetoran.map(set => {
+                    // Ekstraksi TM cerdas jika kosong atau '-'
+                    let displayTM = set.TM;
+                    if (!displayTM || displayTM === '-') {
+                        const m = String(set.Catatan || '').match(/TM:\s*([^\s|]+)/i);
+                        displayTM = m ? m[1] : (set.TM || 'TM');
+                    }
+                    if (displayTM && !displayTM.toUpperCase().startsWith('TM') && /^\d+$/.test(displayTM)) {
+                        displayTM = 'TM ' + displayTM;
+                    }
+
+                    // Ekstraksi Paraf cerdas jika masih default/ttd
+                    let displayParaf = set.ParafUstadz;
+                    if (!displayParaf || displayParaf === 'Ttd' || displayParaf === 'Ustadz Pembimbing') {
+                        const pm = String(set.Catatan || '').match(/Paraf:\s*([^\s|]+)/i);
+                        if (pm) displayParaf = pm[1];
+                    }
+
+                    // Surat & Juz
+                    let displaySurat = set.Surah || set.Surat || '';
+                    if (displaySurat === '-') displaySurat = '';
+                    const juzLabel = set.Tingkatan === 'Jilid' ? (set.Juz || '') : (set.Juz ? `Juz ${set.Juz}` : '');
+                    const suratJuzCombined = displaySurat 
+                        ? `${displaySurat} ${juzLabel ? `(${juzLabel})` : ''}`
+                        : (juzLabel || '-');
+
+                    // Ayat & Halaman
+                    let displayAyat = set.Ayat && set.Ayat !== '-' ? set.Ayat : '';
+                    let displayHal = set.Halaman && set.Halaman !== '-' ? set.Halaman : '';
+                    let ayatHalCombined = '-';
+                    if (displayAyat && displayHal) {
+                        const halText = String(displayHal).startsWith('Skor:') ? displayHal : `Hal ${displayHal}`;
+                        ayatHalCombined = `${escapeHtml(displayAyat)}<br><span class="text-gray-500">${escapeHtml(halText)}</span>`;
+                    } else if (displayAyat) {
+                        ayatHalCombined = escapeHtml(displayAyat);
+                    } else if (displayHal) {
+                        const halText = String(displayHal).startsWith('Skor:') ? displayHal : `Hal ${displayHal}`;
+                        ayatHalCombined = escapeHtml(halText);
+                    }
+
+                    // Catatan tajwid & adab yang bersih
+                    let displayCatatan = (set.Catatan || '').trim();
+                    if (/^TM:\s*[^\s|]+\s*\|\s*Paraf:\s*[^\s|]+(\s*\|\s*Kode:\s*[^\s|]+)?$/i.test(displayCatatan)) {
+                        displayCatatan = '-';
+                    } else if (displayCatatan.includes('| Catatan:')) {
+                        displayCatatan = displayCatatan.split('| Catatan:')[1].trim();
+                    }
+
+                    return `
                     <tr class="border-b border-gray-300">
-                        <td class="p-2 border-r border-gray-300"><strong>${set.TM || 'TM'}</strong><br>${set.Tanggal}</td>
-                        <td class="p-2 border-r border-gray-300 font-bold">${set.Jenis}</td>
-                        <td class="p-2 border-r border-gray-300">${set.Surah} (${set.Tingkatan === 'Jilid' ? set.Juz : 'Juz ' + set.Juz})</td>
-                        <td class="p-2 border-r border-gray-300">${set.Ayat}<br>${String(set.Halaman || '').startsWith('Skor:') ? set.Halaman : 'Hal ' + set.Halaman}</td>
-                        <td class="p-2 border-r border-gray-300 font-bold">${set.Predikat || set.Nilai || 'Mumtaz'}</td>
-                        <td class="p-2 border-r border-gray-300 italic">${set.Catatan || '-'}</td>
-                        <td class="p-2 text-center text-[11px]">${set.ParafUstadz || 'Ttd'}</td>
+                        <td class="p-2 border-r border-gray-300"><strong>${escapeHtml(displayTM)}</strong><br>${escapeHtml(set.Tanggal || '-')}</td>
+                        <td class="p-2 border-r border-gray-300 font-bold">${escapeHtml(set.Jenis || '-')}</td>
+                        <td class="p-2 border-r border-gray-300">${escapeHtml(suratJuzCombined)}</td>
+                        <td class="p-2 border-r border-gray-300">${ayatHalCombined}</td>
+                        <td class="p-2 border-r border-gray-300 font-bold">${escapeHtml(set.Predikat || set.Nilai || 'Mumtaz')}</td>
+                        <td class="p-2 border-r border-gray-300 italic">${escapeHtml(displayCatatan || '-')}</td>
+                        <td class="p-2 text-center text-[11px] font-mono">${escapeHtml(displayParaf || 'Ttd')}</td>
                     </tr>
-                `).join('')}
+                    `;
+                }).join('')}
             </tbody>
         </table>
 

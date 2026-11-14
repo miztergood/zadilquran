@@ -198,6 +198,30 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
       expect(res[2].ustadzNama).toBe('Ust. Choirul');
       expect(res[2].jenis).toBe('Binnadhor');
     });
+
+    it('mengekstrak nomor ayat dan halaman secara akurat bila ditulis bersamaan (Ayat 1-20 Hal 582) atau terpisah', () => {
+      const mdContent = `
+| TM | Tanggal | Surat / Jilid | Ayat / Hal | Nilai | Paraf | Kode |
+| :---: | :---: | :--- | :--- | :---: | :---: | :---: |
+| 201 | 2026-11-10 | Al-Baqarah | Ayat 1-20 Hal 582 | A | U01 | Z |
+| 202 | 2026-11-11 | Al-Baqarah | Hal 583 | B | U01 | M |
+| 203 | 2026-11-12 | Al-Baqarah | Ayat 21 - 30 | A | U01 | Z |
+`;
+      const res = parseTahfizhMarkdownTable(mdContent, [], []);
+      expect(res).toHaveLength(3);
+
+      // Baris 1: Ayat 1-20 Hal 582 -> Ayat dan Halaman harus keduanya terisi, ayat TIDAK boleh menjadi '-'
+      expect(res[0].ayat).toBe('1-20');
+      expect(res[0].halaman).toBe('582');
+
+      // Baris 2: Hal 583 -> Halaman 583, Ayat '-'
+      expect(res[1].ayat).toBe('-');
+      expect(res[1].halaman).toBe('583');
+
+      // Baris 3: Ayat 21 - 30 -> Ayat 21 - 30, Halaman '-'
+      expect(res[2].ayat).toBe('21 - 30');
+      expect(res[2].halaman).toBe('-');
+    });
   });
 });
 

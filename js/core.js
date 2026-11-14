@@ -1802,6 +1802,7 @@ function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
             let ayatVal = ayatHalRaw;
             let halVal = '-';
             let tingkatanRow = headerTingkatan;
+            let qFound = null;
 
             if (surahName.toLowerCase().includes('jilid') || suratRaw.includes('ج ¼') || suratRaw.includes('جuz') || suratRaw.includes('jilid')) {
                 tingkatanRow = 'Jilid';
@@ -1812,7 +1813,7 @@ function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
                 }
             } else {
                 // Cari surat di QURAN_DB
-                const qFound = QURAN_DB.find(q => {
+                qFound = QURAN_DB.find(q => {
                     const cleanQ = q.nama.toLowerCase().replace(/[^a-z0-9]/g, '');
                     const cleanS = surahName.toLowerCase().replace(/[^a-z0-9]/g, '');
                     return cleanQ === cleanS || cleanS.includes(cleanQ) || cleanQ.includes(cleanS);
@@ -1821,13 +1822,36 @@ function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
                     surahName = qFound.nama;
                     surahNo = String(qFound.no);
                     juzVal = String(qFound.juzPrimary || (Array.isArray(qFound.juz) ? qFound.juz[0] : qFound.juz));
-                    if (ayatHalRaw.toLowerCase().includes('akhir')) {
-                        const startM = ayatHalRaw.match(/\d+/);
-                        const start = startM ? startM[0] : '1';
-                        ayatVal = `${start} - ${qFound.ayat}`;
-                    } else if (ayatHalRaw.toLowerCase().includes('halaman') || ayatHalRaw.toLowerCase().includes('hal')) {
-                        halVal = ayatHalRaw.replace(/[^0-9]/g, '') || '-';
+                }
+
+                if (ayatHalRaw.toLowerCase().includes('akhir')) {
+                    const startM = ayatHalRaw.match(/\d+/);
+                    const start = startM ? startM[0] : '1';
+                    ayatVal = qFound ? `${start} - ${qFound.ayat}` : `${start} - akhir`;
+                } else {
+                    const halMatch = ayatHalRaw.match(/(?:halaman|hal)\.?\s*[:\-]?\s*(\d+)/i);
+                    const ayatMatch = ayatHalRaw.match(/(?:ayat\s*)?(\d+\s*[-–—s\.d\s]+\d+)/i);
+                    if (halMatch) halVal = halMatch[1];
+                    if (ayatMatch) {
+                        ayatVal = ayatMatch[1];
+                    } else if (halMatch && !/ayat/i.test(ayatHalRaw)) {
+                        ayatVal = '-';
                     }
+                }
+            }
+
+            // Ekstraksi angka rentang ayat (ayatAwal & ayatAkhir) jika ada
+            let ayatAwal = '';
+            let ayatAkhir = '';
+            const ayatRangeMatch = String(ayatVal || '').match(/(\d+)\s*[-–—s\.d]+\s*(\d+)/);
+            if (ayatRangeMatch) {
+                ayatAwal = ayatRangeMatch[1];
+                ayatAkhir = ayatRangeMatch[2];
+            } else {
+                const singleNum = String(ayatVal || '').match(/\d+/);
+                if (singleNum) {
+                    ayatAwal = singleNum[0];
+                    ayatAkhir = singleNum[0];
                 }
             }
 
@@ -1859,6 +1883,7 @@ function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
 
             results.push({
                 tm: tmRaw,
+                TM: tmRaw,
                 tanggal: normalizedDate,
                 rawSantriName: headerSantriName,
                 santriId: matchedSantri ? matchedSantri.ID_Santri : '',
@@ -1867,12 +1892,22 @@ function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
                 tingkatan: tingkatanRow,
                 jenis: jenis,
                 surah: surahName,
+                surat: surahName,
+                suratNama: surahName,
+                materiNama: surahName,
+                isSuratMatched: !!qFound,
                 surahNo: surahNo,
+                suratNo: surahNo,
                 juz: juzVal,
                 ayat: ayatVal || '-',
+                ayatRentang: ayatVal || '-',
+                ayatAwal: ayatAwal,
+                ayatAkhir: ayatAkhir,
                 halaman: halVal,
                 predikat: predikat,
                 paraf: parafRaw,
+                parafUstadz: matchedUstadz ? matchedUstadz.Nama : (parafRaw !== '✓' ? parafRaw : ''),
+                kategoriRaw: kodeRaw,
                 ustadzId: matchedUstadz ? matchedUstadz.ID_Ustadz : '',
                 ustadzNama: matchedUstadz ? matchedUstadz.Nama : (parafRaw !== '✓' ? parafRaw : ''),
                 isUstadzMatched: !!matchedUstadz

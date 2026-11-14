@@ -2806,8 +2806,8 @@ function prosesParseRekapTahfizh() {
 function updateRekapKpis() {
     const total = parsedRekapSetoranList.length;
     const santriMatched = parsedRekapSetoranList.filter(r => r.santriId && r.isSantriMatched).length;
-    const materiMatched = parsedRekapSetoranList.filter(r => r.isSuratMatched || r.tingkatan === 'Jilid').length;
-    const perluReview = parsedRekapSetoranList.filter(r => !r.santriId || !r.ustadzId || (!r.isSuratMatched && r.tingkatan === "Al Qur'an")).length;
+    const materiMatched = parsedRekapSetoranList.filter(r => r.isSuratMatched || !!r.surah || !!r.suratNama || r.tingkatan === 'Jilid').length;
+    const perluReview = parsedRekapSetoranList.filter(r => !r.santriId || !r.ustadzId || (!r.isSuratMatched && !r.surah && !r.suratNama && r.tingkatan === "Al Qur'an")).length;
 
     const elTotal = document.getElementById('kpiTotalSetoranRekap');
     if (elTotal) elTotal.textContent = total;
@@ -2908,20 +2908,24 @@ function renderRekapPreviewTable() {
 
         let materiHtml = '';
         if (item.tingkatan === "Al Qur'an") {
-            const isMatch = item.isSuratMatched;
+            const isMatch = item.isSuratMatched || !!item.surah || !!item.suratNama;
+            const namaSurah = item.surah || item.suratNama || item.materiNama || '-';
+            const noSurah = item.surahNo || item.suratNo || '-';
             materiHtml = `
-                <div class="font-bold ${isMatch ? 'text-gray-900 dark:text-white' : 'text-amber-600 dark:text-amber-400'}">${item.suratNama || item.materiNama}</div>
-                <div class="text-[10px] text-gray-400">Juz ${item.juz || '-'} &bull; Surat ke-${item.suratNo || '-'}</div>
+                <div class="font-bold ${isMatch ? 'text-gray-900 dark:text-white' : 'text-amber-600 dark:text-amber-400'}">${escapeHtml(namaSurah)}</div>
+                <div class="text-[10px] text-gray-400">Juz ${escapeHtml(String(item.juz || '-'))} &bull; Surat ke-${escapeHtml(String(noSurah))}</div>
             `;
         } else {
+            const namaMateri = item.materiNama || item.surah || item.suratNama || '-';
             materiHtml = `
-                <div class="font-bold text-gray-900 dark:text-white">${item.materiNama}</div>
-                <div class="text-[10px] text-gray-400">${item.tingkatan}</div>
+                <div class="font-bold text-gray-900 dark:text-white">${escapeHtml(namaMateri)}</div>
+                <div class="text-[10px] text-gray-400">${escapeHtml(item.tingkatan || 'Jilid')}</div>
             `;
         }
 
+        const rawAyat = item.ayat || item.ayatRentang || (item.ayatAwal ? `Ayat ${item.ayatAwal}-${item.ayatAkhir}` : (item.halaman ? `Hal ${item.halaman}` : '-'));
         const ayatHtml = `
-            <div class="font-mono text-gray-800 dark:text-gray-200 font-semibold">${item.ayatRentang || (item.ayatAwal ? `Ayat ${item.ayatAwal}-${item.ayatAkhir}` : (item.halaman ? `Hal ${item.halaman}` : '-'))}</div>
+            <div class="font-mono text-gray-800 dark:text-gray-200 font-semibold">${escapeHtml(rawAyat)}</div>
         `;
 
         const nilaiHtml = `
@@ -3056,24 +3060,52 @@ async function executeBatchRekapSave() {
 
     // Susun payload terstandarisasi untuk sheet Data_Setoran
     const setoranPayloadList = validRows.map(r => {
-        const suratVal = r.suratNama || r.materiNama || 'Al-Baqarah';
+        const suratVal = r.surah || r.suratNama || r.materiNama || 'Al-Baqarah';
+        const surahNoVal = r.surahNo || r.suratNo || '';
         const juzVal = r.juz ? String(r.juz) : '1';
-        const ayatVal = r.ayatRentang || (r.ayatAwal ? `${r.ayatAwal} - ${r.ayatAkhir}` : '-');
+        const ayatVal = r.ayat || r.ayatRentang || (r.ayatAwal ? `${r.ayatAwal} - ${r.ayatAkhir}` : '-');
         const halVal = r.halaman || '-';
         const tglVal = r.tanggal || new Date().toISOString().split('T')[0];
-        const catatanVal = `TM: ${r.tm || '-'} | Paraf: ${r.paraf || '-'}${r.kategoriRaw ? ' | Kode: ' + r.kategoriRaw : ''}`;
+        const tmVal = r.tm || r.TM || '-';
+        const parafVal = r.parafUstadz || r.paraf || (state.ustadz.find(u => u.ID_Ustadz === r.ustadzId)?.Nama || 'Ustadz Pembimbing');
+        const catatanVal = r.catatan || `TM: ${tmVal} | Paraf: ${r.paraf || '-'}${r.kategoriRaw ? ' | Kode: ' + r.kategoriRaw : ''}`;
 
         return {
             ID_Santri: r.santriId,
+            santriId: r.santriId,
             ID_Ustadz: r.ustadzId || (state.santri.find(s => s.ID_Santri === r.santriId)?.ID_Ustadz || ''),
+            ustadzId: r.ustadzId || (state.santri.find(s => s.ID_Santri === r.santriId)?.ID_Ustadz || ''),
+            Tingkatan: r.tingkatan || "Al-Qur'an",
+            tingkatan: r.tingkatan || "Al-Qur'an",
+            TM: tmVal,
+            tm: tmVal,
             Jenis: r.jenis || 'Ziyadah',
+            jenis: r.jenis || 'Ziyadah',
+            type: r.jenis || 'Ziyadah',
             Juz: juzVal,
+            juz: juzVal,
+            Surah: suratVal,
+            surah: suratVal,
             Surat: suratVal,
+            surat: suratVal,
+            SurahNo: surahNoVal,
+            surahNo: surahNoVal,
             Ayat: ayatVal,
+            ayat: ayatVal,
             Halaman: halVal,
-            Nilai: r.predikat || 'B',
+            halaman: halVal,
+            Predikat: r.predikat || 'Mumtaz',
+            predikat: r.predikat || 'Mumtaz',
+            Nilai: r.predikat || 'Mumtaz',
             Catatan: catatanVal,
-            Tgl_Setoran: tglVal
+            catatan: catatanVal,
+            Tanggal: tglVal,
+            tanggal: tglVal,
+            date: tglVal,
+            Tgl_Setoran: tglVal,
+            ParafUstadz: parafVal,
+            parafUstadz: parafVal,
+            paraf: r.paraf || '-'
         };
     });
 
@@ -3116,18 +3148,18 @@ async function executeBatchRekapSave() {
             try {
                 const singlePayload = {
                     santriId: item.ID_Santri,
-                    tingkatan: "Al Qur'an",
-                    tm: 'TM-Auto',
-                    type: item.Jenis,
-                    juz: item.Juz,
-                    surah: item.Surat,
-                    surahNo: item.Surat,
-                    ayat: item.Ayat,
-                    halaman: item.Halaman,
-                    predikat: item.Nilai,
-                    catatan: item.Catatan,
-                    date: item.Tgl_Setoran,
-                    parafUstadz: item.ID_Ustadz
+                    tingkatan: item.Tingkatan || "Al-Qur'an",
+                    tm: item.TM || item.tm || 'TM-Auto',
+                    type: item.Jenis || item.type,
+                    juz: item.Juz || item.juz,
+                    surah: item.Surah || item.surah,
+                    surahNo: item.SurahNo || item.surahNo || '',
+                    ayat: item.Ayat || item.ayat,
+                    halaman: item.Halaman || item.halaman,
+                    predikat: item.Predikat || item.predikat || item.Nilai,
+                    catatan: item.Catatan || item.catatan,
+                    date: item.Tanggal || item.tanggal || item.Tgl_Setoran,
+                    parafUstadz: item.ParafUstadz || item.parafUstadz || item.ID_Ustadz
                 };
                 await apiCall('saveSetoran', token, singlePayload);
                 successCount++;

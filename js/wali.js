@@ -99,12 +99,21 @@ function cetakMutabaahWali() {
             const tingkatan = item.Tingkatan || "Al-Qur'an";
             const isTasmi = (item.Jenis || '').toLowerCase().includes('tasmi');
             const detailTasmi = isTasmi ? parseDetailTasmi(item.Detail_Tasmi) : null;
+            const hasSurah = item.Surah && item.Surah !== '-';
             const suratJilid = tingkatan === 'Jilid'
-                ? `${item.Surah || '-'} (${item.Juz || '-'})`
-                : `QS. ${item.Surah || '-'} (Juz ${item.Juz || '-'})`;
-            const ayatHal = detailTasmi
-                ? `${detailTasmi.totalPages || (String(detailTasmi.juz || item.Juz) === '30' ? 23 : 20)} Halaman &bull; Skor ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || item.Juz) === '30' ? 115 : 100)}`
-                : `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${item.Ayat || '-'} / Hal ${item.Halaman || '-'}`;
+                ? (hasSurah ? `${item.Surah} (${item.Juz || '-'})` : (item.Juz || '-'))
+                : (hasSurah ? `QS. ${item.Surah} ${item.Juz ? `(Juz ${item.Juz})` : ''}` : (item.Juz ? `Juz ${item.Juz}` : '-'));
+            
+            let ayatHal = '-';
+            if (detailTasmi) {
+                ayatHal = `${detailTasmi.totalPages || (String(detailTasmi.juz || item.Juz) === '30' ? 23 : 20)} Halaman &bull; Skor ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || item.Juz) === '30' ? 115 : 100)}`;
+            } else {
+                const aVal = item.Ayat && item.Ayat !== '-' ? item.Ayat : '';
+                const hVal = item.Halaman && item.Halaman !== '-' ? `Hal ${item.Halaman}` : '';
+                if (aVal && hVal) ayatHal = `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${aVal} &bull; ${hVal}`;
+                else if (aVal) ayatHal = `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${aVal}`;
+                else if (hVal) ayatHal = hVal;
+            }
             const paraf = item.ParafUstadz || (u ? u.Nama : 'Disahkan');
             return `
                 <tr>

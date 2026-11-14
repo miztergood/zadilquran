@@ -1141,12 +1141,12 @@ function saveSetoran(token, dataSetoran) {
       }
     });
 
-    let juzVal = dataSetoran.juz || "-";
-    let surahVal = dataSetoran.surah || "-";
-    let surahNoVal = dataSetoran.surahNo || "";
-    let ayatVal = dataSetoran.ayat || "-";
-    let halVal = dataSetoran.halaman || "-";
-    let predikatVal = dataSetoran.predikat || "Mumtaz";
+    let juzVal = dataSetoran.juz || dataSetoran.Juz || "-";
+    let surahVal = dataSetoran.surah || dataSetoran.Surah || dataSetoran.surat || dataSetoran.Surat || "-";
+    let surahNoVal = dataSetoran.surahNo || dataSetoran.SurahNo || dataSetoran.suratNo || "";
+    let ayatVal = dataSetoran.ayat || dataSetoran.Ayat || dataSetoran.ayatRentang || "-";
+    let halVal = dataSetoran.halaman || dataSetoran.Halaman || "-";
+    let predikatVal = dataSetoran.predikat || dataSetoran.Predikat || dataSetoran.nilai || dataSetoran.Nilai || "Mumtaz";
     let detailTasmiJson = "";
 
     // Validasi & Kalkulasi Ulang Penilaian Khusus Tasmi' (Juz 30 = 23 Hal, Juz 1-29 = 20 Hal, Batas Lulus >= 80)
@@ -1220,20 +1220,20 @@ function saveSetoran(token, dataSetoran) {
     const idSetoran = dataSetoran.idSetoran || ("SET-" + new Date().getTime());
     const rowObj = {
       "ID_Setoran": idSetoran,
-      "ID_Santri": dataSetoran.santriId,
-      "ID_Ustadz": auth.data.id,
-      "Tingkatan": isTasmi ? "Al-Qur'an" : (dataSetoran.tingkatan || "Al-Qur'an"),
-      "TM": dataSetoran.tm || "-",
-      "Jenis": isTasmi ? "Tasmi'" : (dataSetoran.type || "Ziyadah"),
+      "ID_Santri": dataSetoran.santriId || dataSetoran.idSantri || dataSetoran.ID_Santri || "",
+      "ID_Ustadz": dataSetoran.ustadzId || dataSetoran.idUstadz || dataSetoran.ID_Ustadz || auth.data.id,
+      "Tingkatan": isTasmi ? "Al-Qur'an" : (dataSetoran.tingkatan || dataSetoran.Tingkatan || "Al-Qur'an"),
+      "TM": dataSetoran.tm || dataSetoran.TM || "-",
+      "Jenis": isTasmi ? "Tasmi'" : (dataSetoran.type || dataSetoran.jenis || dataSetoran.Jenis || "Ziyadah"),
       "Juz": juzVal,
       "Surah": surahVal,
       "SurahNo": surahNoVal,
       "Ayat": ayatVal,
       "Halaman": halVal,
       "Predikat": predikatVal,
-      "Catatan": dataSetoran.catatan || "",
-      "Tanggal": dataSetoran.date || Utilities.formatDate(new Date(), "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
-      "ParafUstadz": dataSetoran.parafUstadz || auth.data.name || "Ustadz Pembimbing",
+      "Catatan": dataSetoran.catatan || dataSetoran.Catatan || "",
+      "Tanggal": dataSetoran.date || dataSetoran.tanggal || dataSetoran.Tanggal || dataSetoran.Tgl_Setoran || Utilities.formatDate(new Date(), "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
+      "ParafUstadz": dataSetoran.parafUstadz || dataSetoran.ParafUstadz || dataSetoran.paraf || auth.data.name || "Ustadz Pembimbing",
       "Detail_Tasmi": detailTasmiJson
     };
 
@@ -1306,17 +1306,17 @@ function saveSetoranBatch(token, setoranList) {
           "ID_Setoran": idSetoran,
           "ID_Santri": item.santriId || item.idSantri || item.ID_Santri || "",
           "ID_Ustadz": item.ustadzId || item.idUstadz || item.ID_Ustadz || auth.data.id,
-          "Tingkatan": item.tingkatan || "Al-Qur'an",
+          "Tingkatan": item.tingkatan || item.Tingkatan || "Al-Qur'an",
           "TM": item.tm || item.TM || "-",
           "Jenis": item.type || item.jenis || item.Jenis || "Ziyadah",
           "Juz": item.juz || item.Juz || "-",
-          "Surah": item.surah || item.Surah || "-",
-          "SurahNo": item.surahNo || item.SurahNo || "",
-          "Ayat": item.ayat || item.Ayat || "-",
+          "Surah": item.surah || item.Surah || item.surat || item.Surat || "-",
+          "SurahNo": item.surahNo || item.SurahNo || item.suratNo || "",
+          "Ayat": item.ayat || item.Ayat || item.ayatRentang || "-",
           "Halaman": item.halaman || item.Halaman || "-",
-          "Predikat": item.predikat || item.Predikat || "Mumtaz",
+          "Predikat": item.predikat || item.Predikat || item.nilai || item.Nilai || "Mumtaz",
           "Catatan": item.catatan || item.Catatan || "",
-          "Tanggal": item.date || item.tanggal || item.Tanggal || Utilities.formatDate(now, "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
+          "Tanggal": item.date || item.tanggal || item.Tanggal || item.Tgl_Setoran || Utilities.formatDate(now, "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
           "ParafUstadz": item.parafUstadz || item.ParafUstadz || item.paraf || item.namaUstadz || auth.data.name || "Ustadz Pembimbing",
           "Detail_Tasmi": item.detailTasmi ? (typeof item.detailTasmi === 'string' ? item.detailTasmi : JSON.stringify(item.detailTasmi)) : ""
         };
