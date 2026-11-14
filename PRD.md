@@ -1,14 +1,16 @@
 # Product Requirements Document (PRD)
-# Zadil Quran - One-Stop Pesantren Platform (Tahfizh, Buku Induk & Keuangan)
+# Zadil Quran - One-Stop Pesantren Platform (Tahfizh, Buku Induk, Keuangan & Kwitansi Resmi)
 
 ## 1. Ringkasan Eksekutif & Visi Produk
 
 Zadil Quran adalah **One-Stop Pesantren Platform (Sistem Informasi Manajemen Pesantren Terpadu)** berbasis arsitektur serverless modern yang dirancang khusus untuk memenuhi kebutuhan operasional Pondok Pesantren Tahfizh Zadil Qur'an Tuban. Aplikasi ini menyatukan:
-1. **Modul Buku Induk Santri & PSB Digital 2 Jalur** (sesuai Formulir Pendaftaran Fisik Pondok Pesantren Tahfizh Zadil Qur'an).
-2. **Modul Keuangan, Syahriyah (SPP) & Biaya Pendaftaran** (tagihan otomatis, verifikasi bendahara, dan transparansi rekap keuangan di portal wali santri).
-3. **Modul Manajemen Tahfizh & Pantauan Setoran Hafalan Al-Qur'an** (workspace ustadz & pantauan real-time orang tua).
+1. **Modul Buku Induk Santri & PSB Digital 2 Jalur** (sesuai Formulir Pendaftaran Fisik 27 kolom PPTQ Zadil Qur'an).
+2. **Modul Keuangan, Syahriyah (SPP) & Biaya Pendaftaran** (otomasi penerbitan tanggal 1, sinkronisasi aturan SPP, verifikasi pelunasan bendahara, dan matriks 12 bulan).
+3. **Generator Kwitansi Resmi Digital Berstandar Nasional** (cetak PDF & unduh PNG dengan tata naskah resmi, terbilang otomatis, dan stempel basah saling tumpuk di atas tanda tangan bendahara).
+4. **Modul Mutaba'ah 4 Pilar & Ujian Tasmi' Digital** (Ziyadah, Muroja'ah, Binnadhor, dan Ujian Tasmi' berbasis lembar penilaian 20/23 halaman dan 9 aspek praktik tajwid).
+5. **Portal Terpadu Wali Santri (Mobile-First 3-in-1)** (pemantauan capaian hafalan berpaginasi, status tagihan & kwitansi resmi, dan profil biodata santri).
 
-Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge worker (`_worker.js`) dan menggunakan **Google Sheets** sebagai basis data yang dikelola melalui **Google Apps Script** API (`code.gs` V4.0). Pendekatan ini memungkinkan lembaga pendidikan Islam mengoperasikan sistem manajemen pesantren yang andal, cepat, dan berbiaya operasional nol rupiah (Free Tier Friendly).
+Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan edge worker reverse proxy (`_worker.js`) dan menggunakan **Google Sheets** sebagai basis data yang dikelola melalui **Google Apps Script** API (`code.gs` V4.0). Pendekatan ini memungkinkan lembaga mengoperasikan sistem manajemen pesantren yang andal, aman, cepat, dan berbiaya operasional nol rupiah (*Serverless & Free Tier Friendly*).
 
 ---
 
@@ -17,116 +19,136 @@ Sistem berjalan di atas infrastruktur **Cloudflare Pages** dengan komputasi edge
 ### 2.1 Superadmin / Pimpinan & Bendahara Pondok
 - **Profil**: Pengasuh pondok pesantren, kepala tata usaha, atau bendahara yayasan.
 - **Kebutuhan**:
-  - Memantau ringkasan total santri aktif, jumlah ustadz, total setoran hafalan, serta total pemasukan keuangan yang sudah lunas secara global.
-  - Mengelola **Buku Induk Santri** secara lengkap (biodata sesuai akta, alamat detail RT/RW/Desa/Kecamatan/Kab/Provinsi, riwayat pendidikan, data ayah & ibu lengkap, nomor WhatsApp wali, ustadz pembimbing, dan status santri) dengan kode unik berawalan **`ZQ-`** (contoh: `ZQ-2026-X8K9`).
-  - Menerima data santri baru melalui **2 jalur input**: (1) diinput mandiri oleh Wali Santri melalui Formulir PSB Online di beranda web, atau (2) diinput langsung oleh Admin melalui Dashboard Admin.
-  - Mengelola **Tagihan Keuangan & Syahriyah (SPP)**: menerbitkan tagihan SPP bulanan secara massal (1-klik untuk seluruh santri aktif), mencatat pembayaran lunas, membatalkan status lunas, dan mengirimkan pengingat tagihan via WhatsApp.
+  - Memantau ringkasan total santri aktif, jumlah ustadz, mutasi setoran hafalan, serta total kas masuk secara global.
+  - Mengelola **Buku Induk Santri** secara lengkap (27 kolom sesuai akta, alamat detail, riwayat sekolah, data ayah & ibu, WhatsApp wali, ustadz pembimbing, dan status santri) dengan kode unik berawalan **`ZQ-`** (contoh: `ZQ-2026-X8K9`).
+  - Menerima data santri baru melalui **2 jalur**: (1) diinput mandiri oleh Wali Santri via Formulir PSB Online, atau (2) diinput langsung oleh Admin di dashboard.
+  - Mengelola **Tagihan Keuangan & SPP**: penerbitan otomatis tanggal 1, aturan nominal fleksibel (misal: Rp 200.000 atau Rp 300.000), penyesuaian tagihan belum lunas (*Sync Nominal SPP*), verifikasi lunas, dan penerbitan kwitansi resmi.
+  - Memantau rekapan tahfizh santri dan mengimpor data massal via AI Markdown Import.
 
 ### 2.2 Ustadz Pembimbing Tahfizh
-- **Profil**: Guru pengampu halaqah tahfizh yang menyimak langsung setoran hafalan para santri setiap hari.
+- **Profil**: Guru pengampu halaqah tahfizh yang menyimak setoran harian dan menguji hafalan santri.
 - **Kebutuhan**:
-  - Membuka daftar santri binaan secara terfilter tanpa terganggu data santri halaqah lain.
-  - Menginput setoran ayat dengan cepat: memilih surat, juz, ayat awal, ayat akhir, nomor halaman mushaf, dan predikat kelancaran.
-  - Memiliki fitur lanjutan otomatis (*Smart Pin*) yang dapat mengingat batas hafalan terakhir santri secara instan.
+  - Membuka daftar santri binaan secara terfilter per halaqah.
+  - Menginput setoran harian 4 pilar (*Ziyadah, Muroja'ah, Binnadhor, Tasmi'*) dengan fitur *Smart Pin* (ingat hafalan terakhir).
+  - Melakukan penilaian **Ujian Tasmi' Digital Sekali Duduk**: memberi skor halaman (5, 4, 3, 2) untuk 20 atau 23 halaman serta menilai 9 aspek praktik tajwid (A, B, C, D) dengan status kelulusan instan.
+  - Membuka Buku Rekapitulasi Laporan Hafalan dengan kolom catatan ustadz yang bersih, tombol pembersih catatan sistem 1-klik, dan cetak rapor mutaba'ah.
 
 ### 2.3 Wali Santri
-- **Profil**: Orang tua santri yang ingin mendaftarkan anaknya serta memantau perkembangan hafalan, profil buku induk, dan status tagihan biaya/SPP dari rumah.
+- **Profil**: Orang tua santri yang ingin mendaftarkan anaknya dan memantau perkembangan hafalan serta tagihan dari rumah.
 - **Kebutuhan**:
-  - Membaca **Syarat Pendaftaran Santri Mukim (7 poin)** dan **Rincian Biaya Pendaftaran (Rp 2.000.000)** secara jelas sebelum mengisi formulir pendaftaran online.
-  - Mendapatkan Kode ID Santri (`ZQ-2026-XXXX`) secara otomatis sesaat setelah mengirim formulir pendaftaran online.
-  - Mengakses portal pemantauan cukup dengan memasukkan Kode ID Santri (`ZQ-2026-XXXX`) tanpa password rumit.
-  - Memiliki **3 Tab Navigasi di Portal Wali Santri**:
-    1. **Tab Tahfizh**: Rekap capaian hafalan baru, muroja'ah, dan catatan evaluasi ustadz.
-    2. **Tab SPP & Biaya**: Rekapitulasi total tunggakan (Belum Lunas), total yang sudah dibayar (Sudah Lunas), daftar rincian tagihan, serta tombol konfirmasi pembayaran via WhatsApp Bendahara.
-    3. **Tab Buku Induk**: Tampilan biodata resmi santri yang tercatat di database pondok.
+  - Membaca syarat pendaftaran mukim dan rincian biaya pendaftaran secara transparan.
+  - Mendapatkan Kode ID Santri (`ZQ-2026-XXXX`) otomatis sesaat setelah mendaftar online.
+  - Mengakses portal pemantauan cukup dengan memasukkan Kode ID Santri tanpa kata sandi rumit.
+  - Memantau riwayat setoran hafalan harian yang teratur dengan sistem paginasi mobile (6 kartu per halaman).
+  - Melihat rincian tagihan, mencetak/mengunduh Kwitansi Resmi Pembayaran berstempel sah, dan konfirmasi bayar via WhatsApp Bendahara.
 
 ---
 
 ## 3. Sumber Daya & Konfigurasi Sistem
 
-- **Platform Frontend**: Cloudflare Pages (Single Page Application dengan Tailwind CSS, FontAwesome, TomSelect).
-- **Edge Gateway**: Cloudflare Pages Worker (`_worker.js`) untuk penanganan reverse proxy `/api` dan fallback routing SPA.
+- **Platform Frontend**: Cloudflare Pages (Multi-Page Modular HTML5, Tailwind CSS, FontAwesome, TomSelect, html2canvas).
+- **Edge Gateway**: Cloudflare Pages Worker (`_worker.js`) untuk penanganan reverse proxy `/api`, header CORS, dan fallback routing SPA.
 - **Database Backend**: Google Sheets yang dikelola via Google Apps Script (`code.gs`).
-- **Repository GitHub**: `https://github.com/miztergood/zadilquran.git`
-- **Database Al-Qur'an Terintegrasi**: 114 Surat lengkap dengan informasi jumlah ayat dan nomor juz bawaan aplikasi.
+- **Database Al-Qur'an**: 114 Surat lengkap dengan informasi jumlah ayat dan nomor juz bawaan aplikasi.
+- **Pejabat Penandatangan Kwitansi**: Bendahara Pesantren (*Siti Mei Alvita*), Kota Penerbit: *Tuban*.
+- **PWA Service Worker**: `sw.js` (Cache version: `zadil-quran-pwa-v16`).
 
 ---
 
 ## 4. Persyaratan Fungsional (Functional Requirements)
 
-### 4.0 Modul Landing Page, Syarat & Formulir PSB Online (`/`)
-1. **Tampilan Utama Publik**: Halaman awal yang muncul pertama kali saat domain situs dibuka.
+### 4.0 Modul Landing Page, Syarat & Formulir PSB Online (`/`, `pendaftaran.html`)
+1. **Tampilan Publik & Profil Lembaga**: Menampilkan visi, program unggulan, ekstrakurikuler, dan fasilitas PPTQ Zadil Qur'an Tuban.
 2. **Syarat Pendaftaran Santri Mukim (7 Poin Resmi)**:
    - Berkomitmen menghafal Al-Qur'an 30 Juz.
    - Mengisi formulir pendaftaran.
-   - Menyertakan Foto santri berkopyah (putra) / berkerudung (putri) ukuran 3x4 (3 lembar) saat daftar ulang.
-   - Menyertakan Fotokopi Ijazah terakhir, Raport, KK, Akta Kelahiran (masing-masing 2 lembar).
+   - Menyertakan Foto santri berkopyah/berkerudung 3x4 (3 lembar) saat daftar ulang.
+   - Menyertakan FC Ijazah terakhir, Raport, KK, Akta Kelahiran (masing-masing 2 lembar).
    - Bagi yatim/piatu menyertakan Surat Keterangan Orang Tua Meninggal.
-   - Sanggup menaati seluruh tata tertib dan peraturan Pesantren baik santri maupun Wali santri.
+   - Sanggup menaati tata tertib pesantren baik santri maupun wali.
    - Diantar langsung oleh Wali Santri.
-3. **Rincian Biaya Pendaftaran & Syahriyah (Transparan di Halaman Form)**:
-   - **A. Biaya Pendaftaran**: Pendaftaran (`Rp 100.000`), Almari (`Rp 500.000`), Infaq Gedung (`Rp 1.000.000`), Kesehatan (`Rp 100.000`), Kitab & Buku Panduan (`Rp 100.000`) = **Subtotal Rp 1.800.000**.
-   - **B. Syahriyah (SPP Bulanan)**: **Rp 200.000 / bulan**.
-   - **Total Pembayaran Awal Masuk**: **Rp 2.000.000**.
-4. **Formulir PSB Online Terintegrasi Database (`registerCalonSantriOnline`)**:
-   - Wali santri mengisi Data Calon Santri (Nama sesuai akta, Panggilan, Gender, TTL, Alamat lengkap RT/RW/Desa/Kec/Kab/Provinsi, Pendidikan terakhir, Tahun lulus, Sekolah asal) dan Data Orang Tua (Nama, Pekerjaan, dan Pendidikan Ayah & Ibu, serta Nomor HP/WA).
-   - Saat dikirim, data langsung tersimpan ke sheet `Data_Santri` dengan kode unik **`ZQ-2026-XXXX`** berstatus `Calon Santri`, sekaligus membuat 2 tagihan awal otomatis di `Data_Tagihan` (`Rp 1.800.000` Biaya Pendaftaran & `Rp 200.000` Syahriyah).
-   - Pop-up konfirmasi menampilkan Kode ID Santri `ZQ-` beserta tombol kirim WhatsApp ke panitia (`0857-3180-4663`) dan tombol masuk langsung ke Portal Wali Santri.
+3. **Rincian Biaya Pendaftaran & Syahriyah**:
+   - Biaya Masuk: Pendaftaran (`Rp 100.000`), Almari (`Rp 500.000`), Infaq Gedung (`Rp 1.000.000`), Kesehatan (`Rp 100.000`), Kitab/Panduan (`Rp 100.000`) = Subtotal Rp 1.800.000.
+   - Syahriyah (SPP): Rp 200.000 / bulan. Total Awal Masuk: Rp 2.000.000.
+4. **Formulir Pendaftaran Online Mandiri**:
+   - Merekam data santri dan orang tua lengkap, menerbitkan ID Unik `ZQ-2026-XXXX`, otomatis membuat 2 tagihan awal di database, dan memunculkan tombol konfirmasi WhatsApp panitia.
 
-### 4.1 Modul Autentikasi & Manajemen Sesi
+### 4.1 Modul Autentikasi & Manajemen Sesi (`login.html`)
 1. **Layar Masuk Ganda (Tabbed Login)**:
-   - Tab Pengurus/Ustadz: Input username dan password.
-   - Tab Wali Santri: Input ID Unik Santri berformat kode alfanumerik berawalan **`ZQ`** (contoh: `ZQ-2026-X8K9`).
-2. **Keamanan Sesi**:
-   - Penerbitan token sesi UUID dari Google Apps Script untuk pengurus.
-   - Penyimpanan sesi di `localStorage` peramban.
+   - Tab Pengurus / Ustadz: Autentikasi username dan password terenkripsi token sesi.
+   - Tab Wali Santri: Autentikasi nomor ID Santri (`ZQ-2026-XXXX` atau `ST-2026-XXXX`) tanpa password.
+2. **Keamanan Sesi & Hak Akses**:
+   - Token bearer divalidasi di backend Google Apps Script.
+   - Pencegahan IDOR (*Insecure Direct Object Reference*): Wali santri dibatasi hanya dapat mengakses rekapan santri miliknya sendiri.
 
-### 4.2 Modul Superadmin (Dashboard, Buku Induk, Keuangan & Ustadz)
-1. **Dashboard Statistik Global (`/admin`)**:
-   - 4 Kartu Metrik: Total Santri Terdaftar, Total Ustadz Pembimbing, Total Mutasi Setoran, dan Total Kas Masuk (Tagihan Lunas).
-2. **Modul 1 - Buku Induk Santri (`/admin/santri`)**:
-   - Pencarian multi-kolom dan filter berdasarkan Status Santri (`Aktif`, `Calon Santri`, `Alumni`, `Cuti`).
-   - Generator ID Unik Santri otomatis berformat **`ZQ-YYYY-XXXX`** (contoh: `ZQ-2026-A1B2`).
-   - Input & Edit Buku Induk lengkap (26 kolom sesuai formulir fisik PPTQ Zadil Qur'an) oleh Admin.
-   - Modal Detail Buku Induk (`#modalDetailSantri`) untuk melihat lembar biodata lengkap dan menghubungi WhatsApp Wali Santri dengan sekali klik.
-3. **Modul 2 - Keuangan & SPP (`/admin/keuangan`)**:
-   - Ringkasan 3 kartu keuangan: Total Pembayaran Lunas, Total Belum Lunas (Piutang), dan Total Tagihan Terbit.
-   - Fitur **Generate SPP Massal (`ALL_ACTIVE`)**: Menerbitkan tagihan Syahriyah (`Rp 200.000`) untuk seluruh santri aktif sekaligus.
-   - Fitur Buat Tagihan Baru (Individu / Massal) dengan preset otomatis (Syahriyah Rp 200.000 atau Paket Pendaftaran Rp 1.800.000).
-   - Verifikasi pembayaran (`Lunas`), pembatalan status lunas, hapus tagihan, dan tombol pengingat tagihan via WhatsApp ke nomor orang tua.
-4. **Manajemen Data Ustadz (`/admin/ustadz`) & Pengaturan (`/admin/pengaturan`)**:
-   - CRUD akun ustadz pembimbing dan pengaturan identitas pondok serta inisialisasi sheet database non-destruktif (`setupDatabase`).
+### 4.2 Modul Superadmin (`admin.html`)
+1. **Dashboard Statistik Global**: 4 Kartu metrik (Santri, Asatidz, Setoran, Kas Masuk) dan ringkasan aktivitas terbaru.
+2. **Buku Induk Santri (27 Kolom)**:
+   - Pencarian multi-kolom, filter status santri (*Aktif, Calon Santri, Alumni, Cuti*), generator ID otomatis `ZQ-`, modal detail lengkap, dan penugasan ustadz pembimbing halaqah.
+3. **Manajemen Keuangan & SPP Bulanan**:
+   - Penerbitan otomatis tagihan SPP setiap tanggal 1 (jatuh tempo tanggal 10).
+   - Konfigurasi nominal SPP dinamis (Rp 200.000, Rp 300.000, dll.).
+   - Tombol **"Sesuaikan Tagihan Belum Lunas"** (*Sync Nominal SPP*) untuk memperbarui tagihan aktif yang belum lunas sesuai aturan terbaru tanpa mengubah data tagihan yang sudah lunas.
+   - Matriks Pembayaran SPP 12 Bulan (Januari s.d. Desember) dengan indikator lunas/belum.
+   - Verifikasi pelunasan pembayaran dan reminder tagihan WhatsApp.
+4. **Generator Kwitansi Resmi Digital (PDF & PNG)**:
+   - Tombol cetak PDF dan unduh gambar PNG pada setiap tagihan yang lunas.
+5. **Rekap Tahfizh AI Markdown Import & Pembersihan Massal**:
+   - Parsing berkas `.md` transkripsi fisik menjadi data setoran terstruktur.
+   - Tombol **"Bersihkan Catatan Sistem"** untuk mengosongkan metadata teknis bawaan dari spreadsheet secara massal.
 
-### 4.3 Modul Workspace Ustadz (`/ustadz`)
-1. **Formulir Cerdas Input Setoran**:
-   - Pemilihan santri binaan melalui pencarian nama TomSelect.
-   - Pengenalan Otomatis (*Smart Pin*) untuk melanjutkan batas hafalan terakhir santri.
-   - Pilihan `Hafalan Baru` dan `Muroja'ah`, filter 114 surat & 30 juz, rentang ayat, halaman, predikat (`Lancar`, `Kurang Lancar`, `Ulang`), dan catatan evaluasi.
+### 4.3 Modul Workspace Ustadz (`ustadz.html`)
+1. **Formulir Cerdas Mutaba'ah 4 Pilar**:
+   - Pemilihan santri halaqah via TomSelect.
+   - Fitur *Smart Pin* otomatis mengingat ayat/surat/halaman terakhir.
+   - Pilihan pilar: *Ziyadah*, *Muroja'ah*, *Binnadhor*, dan *Tasmi'*.
+2. **Panel Penilaian Ujian Tasmi' Digital**:
+   - Penilaian interaktif per halaman (skor 5, 4, 3, 2).
+   - Penilaian 9 aspek praktik tajwid (A, B, C, D).
+   - Kalkulasi kelulusan otomatis (minimum 80 poin).
+   - Penerbitan Kartu Hasil Tasmi' Digital.
+3. **Buku Rekapitulasi Laporan Hafalan**:
+   - Tabel riwayat setoran halaqah dengan kolom catatan evaluasi yang bersih (bebas teks metadata teknis).
+   - Tombol **"Bersihkan Catatan Sistem"** (ikon sapu) untuk membersihkan database spreadsheet.
+   - Fitur edit dan hapus catatan setoran.
+   - Cetak Rapor Mutaba'ah Digital.
 
-### 4.4 Modul Portal Wali Santri 3-in-1 (`/wali`)
-1. **Desain Mobile-First Native Viewport**:
-   - Terpusat rapi dalam kontainer `max-w-md mx-auto` dengan kartu hero bergradien Crimson Maroon (`#9a2024`) ke Pine Green (`#1c6b45`).
-2. **Navigasi 3 Tab Terpadu (Segmented Control & Bottom Navigation)**:
-   - **Tab 1: Tahfizh**: Ringkasan 3 metrik setoran (Total, Baru, Muroja'ah), tombol bagikan ke WhatsApp, filter riwayat, dan kartu linimasa evaluasi ustadz.
-   - **Tab 2: SPP & Biaya**: Kartu rekapitulasi finansial (Total Belum Lunas vs Total Sudah Lunas), badge notifikasi jumlah tunggakan belum dibayar, daftar rincian tagihan (Syahriyah & Pendaftaran), info pembayaran resmi, dan tombol **Konfirmasi Pembayaran via WhatsApp** Bendahara.
-   - **Tab 3: Buku Induk**: Kartu profil lengkap santri (NIS/Kode `ZQ-`, TTL, Pendidikan, Alamat Lengkap RT/RW/Desa/Kec/Kab/Prov, serta Data Ayah, Ibu, dan Wali) beserta pengingat penyerahan berkas fisik.
+### 4.4 Modul Portal Wali Santri (`wali.html`)
+1. **Desain Mobile-First 3-in-1**:
+   - Kartu profil santri bergradien dengan info capaian dan tombol salin ID.
+2. **Tab 1: Laporan Hafalan Harian (Paginasi)**:
+   - Ringkasan metrik 4 pilar (Total, Ziyadah, Muroja'ah, Binnadhor, Tasmi').
+   - Daftar riwayat hafalan dengan **Paginasi Dinamis** (maksimal 6 kartu per halaman, tombol Sebelumnya/Berikutnya, counter halaman aktif, auto-scroll).
+   - Gelembung catatan ustadz hijau hanya tampil jika terdapat evaluasi murni.
+   - Tombol bagikan ringkasan progres ke WhatsApp.
+3. **Tab 2: SPP & Kwitansi Resmi**:
+   - Rekapitulasi finansial (Terkumpul vs Tunggakan).
+   - Daftar invoice tagihan beserta tombol unduh **Kwitansi Resmi (PDF & PNG)** untuk setiap pembayaran lunas.
+   - Tombol konfirmasi pembayaran WhatsApp ke Bendahara.
+4. **Tab 3: Buku Induk**:
+   - Lembar biodata resmi santri dan daftar kelengkapan berkas fisik.
 
 ---
 
-## 5. Persyaratan Non-Fungsional (Non-Functional Requirements)
+## 5. Standar Dokumen Kwitansi Resmi Pembayaran
 
-1. **Kecepatan & Responsivitas**:
-   - Seluruh aset statis dilayani dari Cloudflare Global CDN dalam hitungan milidetik.
-   - Panggilan API ke Google Apps Script di-cache dan diteruskan secara efisien oleh Edge Worker (`_worker.js`).
-2. **Kesesuaian Perangkat (Mobile-Friendly & Mobile-First)**:
-   - Portal wali santri menerapkan prinsip ketat *mobile-first design* untuk kenyamanan orang tua yang mengakses via smartphone.
-   - Antarmuka ustadz dirancang optimal untuk penggunaan tablet dan ponsel pintar saat menyimak di aula halaqah tahfizh.
-   - Seluruh elemen sentuh memenuhi standar ergonomis minimum 44 x 44 piksel.
-3. **Kenyamanan Visual (Anti-Slop Institutional Palette)**:
-   - Menghindari warna neon silau dan hitam pekat murni (`#000000`).
-   - Menerapkan palet resmi lembaga: Primary Crimson Maroon (`#9a2024`) dan Secondary Pine Green (`#1c6b45`).
-   - Menggunakan logo resmi `logo.jpg` berdimensi bujur sangkar berkualitas tinggi.
-   - Mendukung Dark Mode otomatis untuk penggunaan di malam hari setelah salat Maghrib dan Isya.
-4. **Keandalan & Ketahanan Data**:
-   - Data tersimpan secara permanen di Google Sheets milik yayasan sendiri.
-   - Tidak ada ketergantungan pada basis data proprietary yang mengunci data (*no vendor lock-in*).
+1. **Format Dokumen**: A5 Landscape (210 x 148 mm).
+2. **Atribut Legalitas**:
+   - Kop Resmi: Nama Yayasan, Akta Notaris Muntafiah, S.H., M.Kn, Nomor SK Kemenkumham, Alamat Tuban.
+   - Badge Bukti Pembayaran Sah & Nomor Kwitansi Unik (`KW-...`).
+   - Tabel Rincian Pembayaran (Telah Terima Dari, Nama Santri & ID, Terbilang Rupiah, Untuk Pembayaran, Metode Bayar).
+   - Badge Nominal Pembayaran Bergaris Putus-Putus Hijau (`Rp XXX.XXX`).
+   - Watermark Diagonal: `LUNAS`.
+3. **Komposisi Stempel & Tanda Tangan Resmi (*Overlapping Alignment*)**:
+   - Stempel basah ungu diposisikan di sisi kiri (`left: 28px`), sedikit miring `-6°`, opacity `0.88`.
+   - Tanda tangan hitam bendahara diposisikan di tengah (`left: 84px`), tepat di atas garis nama *Siti Mei Alvita*.
+   - Area tumpang tindih (*overlap*) selebar 26 piksel: stempel menimpa sepertiga sisi kiri tanda tangan sesuai kaidah tata naskah dinas resmi di Indonesia.
+
+---
+
+## 6. Persyaratan Non-Fungsional (Non-Functional Requirements)
+
+1. **Performa**: Rendering cepat di bawah 500ms, aset di-cache via Cloudflare Global CDN dan Service Worker v16.
+2. **Keandalan Data**: Penyimpanan permanen di Google Sheets yayasan tanpa risiko vendor lock-in.
+3. **Kenyamanan Visual**: Bahasa visual anti-slop dengan palet resmi Crimson Maroon (`#9a2024`) dan Pine Green (`#1c6b45`), kontras tinggi, dan dukungan Dark Mode.
+4. **Kualitas Kode & Testing**: 83 pengujian unit otomatis Vitest mencakup sanitasi XSS, formula kalkulasi tasmi', resolusi ID santri, kwitansi, dan sinkronisasi SPP.

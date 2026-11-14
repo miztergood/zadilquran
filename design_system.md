@@ -51,15 +51,21 @@ Warna sekunder pendamping. Digunakan untuk indikator kelancaran hafalan, badge j
 | `secondary-800` | `#0e3421` | Border gelembung catatan ustadz pada mode gelap |
 | `secondary-900` | `#092316` | Permukaan elevasi terdalam palet hijau mode gelap |
 
-### 2.3 Warna Semantik & Evaluasi Setoran (Status Tokens)
+### 2.3 Warna Semantik & Evaluasi Setoran 4 Pilar (Mutaba'ah Tokens)
 
-Sistem penilaian setoran Al-Qur'an menggunakan 3 tingkatan evaluasi kelancaran:
+Sistem evaluasi setoran Al-Qur'an menggunakan token warna semantik untuk membedakan 4 pilar mutaba'ah dan 3 tingkatan kelancaran:
 
-| Status Evaluasi | Warna Utama | Latar Mode Terang | Latar Mode Gelap | Arti & Makna Evaluasi |
+| Pilar Mutaba'ah | Warna Utama | Badge Terang | Badge Gelap | Karakter & Makna Pilar |
 | :--- | :--- | :--- | :--- | :--- |
-| **Lancar (Mumtaz)** | `#1c6b45` | `#edf7f2` (`secondary-50`) | `#092316` (`secondary-900`) | Bacaan tartil, makhraj fasih, dan tajwid terjaga tanpa cela |
-| **Kurang Lancar (Jayyid)** | `#eab308` | `#fefce8` (Amber-50) | `#713f12` (Amber-900) | Terdapat jeda ragu atau 1-2 koreksi tajwid ringan |
-| **Ulang (Rasib/Takrar)** | `#ef4444` | `#fef2f2` (Red-50) | `#7f1d1d` (Red-900) | Santri belum hafal lancar dan wajib mengulang di halaqah berikutnya |
+| **Ziyadah** | `#1c6b45` (Pine Green) | `#edf7f2` (`secondary-50`) | `#12452c`/50 | Penambahan setoran ayat/halaman baru |
+| **Muroja'ah** | `#9a2024` (Crimson Maroon) | `#fdf2f2` (`primary-50`) | `#731417`/40 | Pengulangan hafalan lama untuk memelihara kelancaran |
+| **Binnadhor** | `#d97706` (Amber Gold) | `bg-amber-50` | `bg-amber-950`/50 | Pembacaan Al-Qur'an secara tartil bin-nadhor (melihat mushaf) |
+| **Tasmi'** | `#4f46e5` (Royal Indigo) | `bg-indigo-50` | `bg-indigo-950`/60 | Ujian sekali duduk 20/23 halaman dengan 9 aspek tajwid |
+
+Tingkatan predikat kelancaran reguler:
+- **Mumtaz / Lancar**: `#1c6b45` (Hijau Pinus)
+- **Jayyid / Kurang Lancar**: `#d97706` (Amber)
+- **Rasib / Ulang**: `#ef4444` (Merah Terang)
 
 ### 2.4 Token Netral & Permukaan (Dual-Mode: Siang & Malam)
 
@@ -90,11 +96,39 @@ Aplikasi menyediakan dua mode tampilan dengan kontras tinggi yang menghindarkan 
 ### 3.3 Gelembung Catatan Evaluasi Ustadz (*Quote Bubble*)
 - Mode Terang: `bg-[#edf7f2] border-l-4 border-[#1c6b45] text-[#12452c]`.
 - Mode Gelap: `bg-[#092316]/50 border-l-4 border-[#1c6b45] text-[#83c9a6]`.
-- Menyajikan petuah evaluasi tajwid dan makhraj secara teduh dan bermartabat.
+- Aturan Tampilan: Hanya muncul jika terdapat catatan evaluasi murni ustadz. Teks metadata sistem otomatis disembunyikan/dikosongkan.
 
-### 3.4 Bilah Bawah Melayang (Floating Bottom Bar)
-- Mengambang di bagian bawah layar ponsel dengan latar belakang tembus pandang berdaya buram: `bg-white/90 dark:bg-darkcard/90 backdrop-blur-md border-t border-gray-200 dark:border-darkborder`.
-- Ikon aktif memanfaatkan warna aksen `text-primary-500` (`#9a2024`).
+### 3.4 Paginasi Dinamis Kartu Riwayat (Mobile Pagination)
+- Batas item: Maksimal 6 kartu riwayat per halaman untuk menjaga kecepatan rendering dan panjang layar ponsel.
+- Kontainer navigasi: Kapsul melayang elegan dengan tombol navigasi Sebelumnya/Berikutnya (`active:scale-95`), teks indikator `Halaman X dari Y`, serta *smooth auto-scroll* kembali ke awal daftar saat berpindah halaman.
+
+---
+
+## 4. Standar Desain Dokumen Kwitansi Resmi Pembayaran Digital
+
+Sebagai representasi tertulis akuntabilitas keuangan lembaga, dokumen kwitansi mengikuti standar tata naskah dinas resmi di Indonesia:
+
+1. **Ukuran & Tata Letak Dasar**:
+   - Dimensi standar: **A5 Landscape** (`210mm x 148mm`) dengan margin seimbang `8mm 10mm`.
+   - Bingkai luar: Border ganda tebal warna Crimson Maroon `#731417` dengan sudut tegas `border-radius: 4px`.
+   - Watermark latar belakang: Tulisan diagonal `LUNAS` warna Pine Green lembut (`color: rgba(28, 107, 69, 0.08)`), ukuran 78px, kemiringan `-25°`.
+2. **Kop Surat Lembaga**:
+   - Logo bujur sangkar `logo.jpg` dimensi `58 x 58 px`.
+   - Identitas Lembaga: *Pondok Pesantren Tahfizh Zadil Qur'an Tuban*.
+   - Legalitas Formal: Akta Notaris Muntafiah, S.H., M.Kn, AHU-0023909.AH.01.12. Tahun 2020.
+   - Badge status: *Bukti Pembayaran Sah* warna Pine Green berlatar `#edf7f2`.
+   - Nomor Kwitansi Unik: Kode monospace tebal berformat `KW-INV-...`.
+3. **Komposisi Stempel & Tanda Tangan Saling Tumpuk (*Overlapping Alignment*)**:
+   - Area Tanda Tangan (`.ttd-box`): Lebar 230px, teks tanggal dan jabatan rata tengah.
+   - Ruang Tanda Tangan (`.ttd-space`): Tinggi 76px dengan penataan tumpang tindih presisi:
+     - **Stempel Basah Ungu (`.stempel-img`)**: Diposisikan di sisi kiri (`left: 28px; top: -2px; width: 82px; height: 80px; transform: rotate(-6deg); z-index: 2; opacity: 0.88; pointer-events: none;`).
+     - **Tanda Tangan Hitam (`.ttd-img`)**: Diposisikan di tengah (`left: 84px; top: 4px; width: 96px; height: 68px; z-index: 1;`).
+     - **Nama Pejabat (`.ttd-name`)**: Nama resmi **Siti Mei Alvita** bergaris bawah tebal di bawah goresan tanda tangan.
+     - **Karakteristik Tumpang Tindih**: Stempel menimpa sepertiga sisi kiri tanda tangan dengan area tumpang tindih selebar 26 piksel. Berkat transparansi `opacity: 0.88`, goresan tanda tangan tetap tembus di balik stempel ungu layaknya stempel basah asli di atas kertas.
+     - **Dukungan Aset Gabungan**: Menyediakan slot `.combined-ttd-stempel-img` jika pengurus mengunggah 1 file gabungan eksternal (Canva).
+4. **Badge Nominal Pembayaran**:
+   - Desain kotak bergaris putus-putus (*dashed border*) warna Pine Green `#1c6b45` dengan latar `#edf7f2`.
+   - Teks nominal berukuran `19px font-black monospace` untuk keterbacaan mutlak.
 
 ---
 
