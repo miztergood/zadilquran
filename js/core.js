@@ -2230,6 +2230,104 @@ async function triggerPwaInstall() {
     }
 }
 
+// ==================== HELPER RESOLUSI ID & NAMA SANTRI FLEKSIBEL ====================
+/**
+ * Memeriksa apakah dua ID Santri identik atau merujuk pada santri yang sama,
+ * menangani toleransi prefiks legacy (ST- vs ZQ-), spasi, huruf besar/kecil, dan suffix acak.
+ */
+function isSameSantriId(id1, id2) {
+    if (!id1 || !id2) return false;
+    const a = String(id1).trim().toUpperCase();
+    const b = String(id2).trim().toUpperCase();
+    if (a === b) return true;
+
+    // Normalisasi prefiks ST- dan ZQ- (misal ST-2026-2FH7 vs ZQ-2026-2FH7)
+    const normA = a.replace(/^(ST|ZQ)-/, '');
+    const normB = b.replace(/^(ST|ZQ)-/, '');
+    if (normA && normB && normA === normB) return true;
+
+    // Pencocokan suffix ID unik (misal "2FH7" atau "2026-2FH7")
+    const partsA = a.split('-');
+    const partsB = b.split('-');
+    if (partsA.length >= 2 && partsB.length >= 2) {
+        const lastA = partsA[partsA.length - 1];
+        const lastB = partsB[partsB.length - 1];
+        if (lastA.length >= 3 && lastB.length >= 3 && lastA === lastB) {
+            if (partsA.length >= 3 && partsB.length >= 3) {
+                return partsA[1] === partsB[1];
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Mencari objek santri dari daftar santri berdasarkan ID atau Nama dengan toleransi tinggi.
+ * Menjamin nama santri tetap muncul meskipun format ID di sheet/setoran berbeda prefiks atau berspasi.
+ */
+function findSantriById(santriList, targetId) {
+    if (!Array.isArray(santriList) || !targetId) return null;
+    const cleanTarget = String(targetId).trim().toUpperCase();
+    if (!cleanTarget) return null;
+
+    // 1. Pencocokan langsung (ID_Santri eksak ter-trim & case-insensitive)
+    let found = santriList.find(s => {
+        if (!s) return false;
+        const sId = String(s.ID_Santri || s.idSantri || s.id || s.Id || '').trim().toUpperCase();
+        return sId === cleanTarget;
+    });
+    if (found) return found;
+
+    // 2. Pencocokan jika targetId adalah nama santri (misal setoran menyimpan nama langsung)
+    found = santriList.find(s => {
+        if (!s) return false;
+        const sName = String(s.Nama_Santri || s.namaSantri || s.nama || '').trim().toUpperCase();
+        return sName === cleanTarget;
+    });
+    if (found) return found;
+
+    // 3. Pencocokan fleksibel prefiks (ST- vs ZQ-) dan suffix ID unik
+    found = santriList.find(s => {
+        if (!s) return false;
+        const sId = String(s.ID_Santri || s.idSantri || s.id || s.Id || '').trim();
+        return isSameSantriId(sId, cleanTarget);
+    });
+    if (found) return found;
+
+    // 4. Pencocokan parsial nama santri jika targetId bukan berupa pola ID ZQ-/ST-
+    if (cleanTarget.length >= 3 && !cleanTarget.startsWith('ZQ-') && !cleanTarget.startsWith('ST-')) {
+        found = santriList.find(s => {
+            if (!s) return false;
+            const sName = String(s.Nama_Santri || s.namaSantri || s.nama || '').trim().toUpperCase();
+            return sName.includes(cleanTarget) || cleanTarget.includes(sName);
+        });
+        if (found) return found;
+    }
+
+    return null;
+}
+
+/**
+ * Mengembalikan nama santri yang layak tampil di tabel/kartu/modal.
+ * Jika santri tidak ditemukan di daftar, mengembalikan targetId (atau fallback) yang bersih.
+ */
+function getSantriDisplayName(santriList, targetId, fallback = '') {
+    if (!targetId && !fallback) return '-';
+    const s = findSantriById(santriList, targetId);
+    if (s && (s.Nama_Santri || s.namaSantri || s.nama)) {
+        return s.Nama_Santri || s.namaSantri || s.nama;
+    }
+    return fallback || String(targetId || '-').trim();
+}
+
+// Window exposures untuk browser
+if (typeof window !== 'undefined') {
+    window.isSameSantriId = isSameSantriId;
+    window.findSantriById = findSantriById;
+    window.getSantriDisplayName = getSantriDisplayName;
+}
+
 // Export untuk lingkungan Node.js / Unit Testing jika tersedia
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -2258,7 +2356,10 @@ if (typeof module !== 'undefined' && module.exports) {
         generateKwitansiCardHtml,
         generateKwitansiHtml,
         cetakKwitansiResmi,
-        unduhKwitansiGambar
+        unduhKwitansiGambar,
+        isSameSantriId,
+        findSantriById,
+        getSantriDisplayName
     };
 }
 

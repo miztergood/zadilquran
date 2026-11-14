@@ -1123,10 +1123,10 @@ function renderTabPerluDitagih() {
     const allTagihan = state.tagihan || [];
     
     const enriched = allTagihan.map(t => {
-        const s = (state.santri || []).find(san => san.ID_Santri === t.ID_Santri);
+        const s = findSantriById(state.santri, t.ID_Santri);
         return {
             ...t,
-            Nama_Santri: s ? s.Nama_Santri : 'Santri Terhapus',
+            Nama_Santri: s ? s.Nama_Santri : (t.ID_Santri || 'Santri Terhapus'),
             No_HP_Wali: s ? s.No_HP_Wali : '',
             periodeCalculated: getTagihanPeriode(t)
         };
@@ -1321,7 +1321,7 @@ function renderTabMatriksSpp() {
 }
 
 async function terbitkanSppSantriBulan(idSantri, periode) {
-    const s = (state.santri || []).find(x => x.ID_Santri === idSantri);
+    const s = findSantriById(state.santri, idSantri);
     const namaSantri = s ? s.Nama_Santri : idSantri;
     const periodeDisplay = formatPeriodeDisplay(periode);
     
@@ -1392,10 +1392,10 @@ function renderTabSemuaTagihan() {
     if (badgeAll) badgeAll.textContent = allTagihan.length;
     
     const enriched = allTagihan.map(t => {
-        const s = (state.santri || []).find(san => san.ID_Santri === t.ID_Santri);
+        const s = findSantriById(state.santri, t.ID_Santri);
         return {
             ...t,
-            Nama_Santri: s ? s.Nama_Santri : 'Santri Terhapus',
+            Nama_Santri: s ? s.Nama_Santri : (t.ID_Santri || 'Santri Terhapus'),
             No_HP_Wali: s ? s.No_HP_Wali : ''
         };
     });
@@ -1729,7 +1729,7 @@ function saveAturanSppAction(e) {
 function openModalBayar(idTagihan) {
     const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
     if (!t) return;
-    const s = (state.santri || []).find(x => x.ID_Santri === t.ID_Santri);
+    const s = findSantriById(state.santri, t.ID_Santri);
     document.getElementById('bayarIdTagihan').value = t.ID_Tagihan;
     document.getElementById('bayarInfoSantri').textContent = s ? `${s.Nama_Santri} (${s.ID_Santri})` : t.ID_Santri;
     document.getElementById('bayarInfoJudul').textContent = t.Judul_Tagihan;
@@ -1773,7 +1773,7 @@ async function deleteTagihanAction(idTagihan, judul) {
 function cetakKwitansiAdmin(idTagihan, format = 'pdf') {
     const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
     if (!t) return;
-    const s = (state.santri || []).find(x => x.ID_Santri === t.ID_Santri);
+    const s = findSantriById(state.santri, t.ID_Santri);
     if (format === 'image') {
         unduhKwitansiGambar(t, s);
     } else {
@@ -1784,7 +1784,7 @@ function cetakKwitansiAdmin(idTagihan, format = 'pdf') {
 function kirimWaTagihan(idTagihan) {
     const t = (state.tagihan || []).find(x => x.ID_Tagihan === idTagihan);
     if (!t) return;
-    const s = (state.santri || []).find(x => x.ID_Santri === t.ID_Santri);
+    const s = findSantriById(state.santri, t.ID_Santri);
     const waClean = s ? formatWaNumber(s.No_HP_Wali) : '';
     if (!waClean) {
         return AppNotify.warning('Nomor WA Kosong', 'Nomor WhatsApp Orang Tua/Wali belum diisi pada Buku Induk santri ini.');
@@ -2747,7 +2747,7 @@ function prosesParseRekapTahfizh() {
 
         if (!sId && defaultSantriId) {
             sId = defaultSantriId;
-            const foundS = (state.santri || []).find(s => s.ID_Santri === defaultSantriId);
+            const foundS = findSantriById(state.santri, defaultSantriId);
             if (foundS) {
                 sNama = foundS.Nama_Santri;
                 isSantriMatched = true;
@@ -2759,7 +2759,7 @@ function prosesParseRekapTahfizh() {
         let isUstadzMatched = item.isUstadzMatched;
 
         if (!uId && sId) {
-            const foundS = (state.santri || []).find(s => s.ID_Santri === sId);
+            const foundS = findSantriById(state.santri, sId);
             if (foundS && foundS.ID_Ustadz) {
                 uId = foundS.ID_Ustadz;
                 const foundU = (state.ustadz || []).find(u => u.ID_Ustadz === uId);
@@ -2990,7 +2990,7 @@ function toggleRekapRowSelect(index, checked) {
 function updateRekapRowSantri(index, santriId) {
     if (parsedRekapSetoranList[index]) {
         parsedRekapSetoranList[index].santriId = santriId;
-        const found = (state.santri || []).find(s => s.ID_Santri === santriId);
+        const found = findSantriById(state.santri, santriId);
         if (found) {
             parsedRekapSetoranList[index].santriNama = found.Nama_Santri;
             parsedRekapSetoranList[index].isSantriMatched = true;
@@ -3073,8 +3073,8 @@ async function executeBatchRekapSave() {
         return {
             ID_Santri: r.santriId,
             santriId: r.santriId,
-            ID_Ustadz: r.ustadzId || (state.santri.find(s => s.ID_Santri === r.santriId)?.ID_Ustadz || ''),
-            ustadzId: r.ustadzId || (state.santri.find(s => s.ID_Santri === r.santriId)?.ID_Ustadz || ''),
+            ID_Ustadz: r.ustadzId || (findSantriById(state.santri, r.santriId)?.ID_Ustadz || ''),
+            ustadzId: r.ustadzId || (findSantriById(state.santri, r.santriId)?.ID_Ustadz || ''),
             Tingkatan: r.tingkatan || "Al-Qur'an",
             tingkatan: r.tingkatan || "Al-Qur'an",
             TM: tmVal,

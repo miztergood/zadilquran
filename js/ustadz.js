@@ -180,7 +180,7 @@ function renderUstadzDashboard() {
     }
 
     mySantri.forEach((santri, idx) => {
-        const santriTodaySetor = todaySetoran.filter(s => s.ID_Santri === santri.ID_Santri);
+        const santriTodaySetor = todaySetoran.filter(s => isSameSantriId(s.ID_Santri, santri.ID_Santri));
         const hasSetor = santriTodaySetor.length > 0;
         const lastEntry = hasSetor ? santriTodaySetor[santriTodaySetor.length - 1] : null;
 
@@ -698,7 +698,7 @@ function checkSmartPin(santriId) {
         return;
     }
 
-    const history = state.setoran.filter(s => s.ID_Santri === santriId);
+    const history = state.setoran.filter(s => isSameSantriId(s.ID_Santri, santriId));
     const nextTmNumber = history.length + 1;
     if (tmInput) tmInput.value = `TM-${nextTmNumber}`;
 
@@ -870,7 +870,7 @@ function saveSetoran(e) {
 function openUstadzTasmiDetail(setId) {
     const set = state.setoran.find(x => x.ID_Setoran === setId);
     if (!set) return;
-    const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+    const s = findSantriById(state.santri, set.ID_Santri);
     tampilkanDetailTasmiModal(set, s, set.ParafUstadz || (sessionData ? sessionData.name : 'Ustadz Penguji'));
 }
 
@@ -887,7 +887,8 @@ function renderUstadzRiwayat() {
     }
 
     mySetoran.forEach(set => {
-        const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+        const s = findSantriById(state.santri, set.ID_Santri);
+        const santriNama = s ? s.Nama_Santri : getSantriDisplayName(state.santri, set.ID_Santri);
         const jenis = set.Jenis || 'Ziyadah';
         const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
         const isBinnadhor = jenis === 'Binnadhor';
@@ -944,7 +945,7 @@ function renderUstadzRiwayat() {
                     <div>
                         <div class="flex items-center gap-1.5">
                             <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${escapeHtml(tmText)}</span>
-                            <h4 class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">${s ? s.Nama_Santri : set.ID_Santri}</h4>
+                            <h4 class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">${escapeHtml(santriNama)}</h4>
                         </div>
                         <p class="text-[10px] text-gray-400 mt-0.5">${set.Tanggal}</p>
                     </div>
@@ -973,8 +974,11 @@ function populateRekapFilterSantri() {
     if (!sel) return;
     const currentVal = sel.value;
     sel.innerHTML = '<option value="all">Semua Santri Binaan</option>';
-    state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : '')).forEach(s => {
-        sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri}</option>`;
+    const myId = sessionData ? sessionData.id : '';
+    const mySantri = (state.santri || []).filter(s => String(s.ID_Ustadz || '').trim() === String(myId).trim());
+    const list = mySantri.length > 0 ? mySantri : (state.santri || []);
+    list.forEach(s => {
+        sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
     });
     if (currentVal) sel.value = currentVal;
 }
@@ -1001,7 +1005,7 @@ function renderUstadzRekapanTable() {
 
     let filtered = mySetoran.filter(set => {
         // Filter Santri
-        if (santriFilter !== 'all' && set.ID_Santri !== santriFilter) return false;
+        if (santriFilter !== 'all' && !isSameSantriId(set.ID_Santri, santriFilter)) return false;
 
         // Filter Waktu
         if (waktuFilter === 'today' && !(set.Tanggal || '').includes(todayStr)) return false;
@@ -1024,8 +1028,8 @@ function renderUstadzRekapanTable() {
 
         // Search Query
         if (searchQuery) {
-            const sObj = state.santri.find(san => san.ID_Santri === set.ID_Santri);
-            const sName = sObj ? sObj.Nama_Santri.toLowerCase() : '';
+            const sObj = findSantriById(state.santri, set.ID_Santri);
+            const sName = sObj ? (sObj.Nama_Santri || '').toLowerCase() : '';
             const match = (
                 (set.Surah || '').toLowerCase().includes(searchQuery) ||
                 (set.TM || '').toLowerCase().includes(searchQuery) ||
@@ -1048,7 +1052,8 @@ function renderUstadzRekapanTable() {
     if (emptyState) emptyState.classList.add('hidden');
 
     filtered.forEach((set, idx) => {
-        const s = state.santri.find(san => san.ID_Santri === set.ID_Santri);
+        const s = findSantriById(state.santri, set.ID_Santri);
+        const sNama = s ? s.Nama_Santri : getSantriDisplayName(state.santri, set.ID_Santri);
         const jenis = set.Jenis || 'Ziyadah';
         const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
         const isBinnadhor = jenis === 'Binnadhor';
@@ -1099,7 +1104,7 @@ function renderUstadzRekapanTable() {
                     <span class="text-[10px] text-gray-400 block">${set.Tanggal}</span>
                 </td>
                 <td class="py-3 px-4">
-                    <span class="font-bold text-gray-900 dark:text-white block">${s ? s.Nama_Santri : set.ID_Santri}</span>
+                    <span class="font-bold text-gray-900 dark:text-white block">${escapeHtml(sNama)}</span>
                     <span class="text-[10px] text-gray-400 block">${set.Tingkatan || "Al-Qur'an"}</span>
                 </td>
                 <td class="py-3 px-4">
@@ -1145,7 +1150,8 @@ function renderUstadzRekapanTable() {
 function openViewSetoran(idSetoran) {
     const set = (state.setoran || []).find(x => String(x.ID_Setoran).trim() === String(idSetoran).trim());
     if (!set) return AppNotify.warning('Data Tidak Ditemukan', 'Catatan setoran tidak ditemukan di riwayat.');
-    const s = (state.santri || []).find(san => san.ID_Santri === set.ID_Santri) || {};
+    const s = findSantriById(state.santri, set.ID_Santri) || {};
+    const santriNama = s.Nama_Santri || getSantriDisplayName(state.santri, set.ID_Santri);
 
     const jenis = set.Jenis || 'Ziyadah';
     const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
@@ -1177,10 +1183,10 @@ function openViewSetoran(idSetoran) {
             <div class="bg-gray-50 dark:bg-slate-800/70 p-4 rounded-2xl border border-gray-100 dark:border-darkborder flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 rounded-2xl bg-[#9a2024] text-white flex items-center justify-center font-black text-sm uppercase shadow-xs">
-                        ${(s.Nama_Santri || set.ID_Santri || 'S').charAt(0)}
+                        ${escapeHtml((santriNama || 'S').charAt(0))}
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">${escapeHtml(s.Nama_Santri || set.ID_Santri)}</h4>
+                        <h4 class="font-bold text-sm sm:text-base text-gray-900 dark:text-white">${escapeHtml(santriNama)}</h4>
                         <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             <span>ID: <strong>${escapeHtml(set.ID_Santri)}</strong></span>
                             <span>&bull;</span>
@@ -1290,13 +1296,14 @@ function openEditSetoran(idSetoran) {
             const opt = document.createElement('option');
             opt.value = s.ID_Santri;
             opt.textContent = `${s.Nama_Santri} (${s.ID_Santri})`;
-            if (s.ID_Santri === set.ID_Santri) opt.selected = true;
+            if (isSameSantriId(s.ID_Santri, set.ID_Santri)) opt.selected = true;
             selSantri.appendChild(opt);
         });
-        if (!Array.from(selSantri.options).some(o => o.value === set.ID_Santri)) {
+        if (!Array.from(selSantri.options).some(o => isSameSantriId(o.value, set.ID_Santri))) {
             const opt = document.createElement('option');
             opt.value = set.ID_Santri;
-            opt.textContent = set.ID_Santri;
+            const foundS = findSantriById(state.santri, set.ID_Santri);
+            opt.textContent = foundS ? `${foundS.Nama_Santri} (${set.ID_Santri})` : set.ID_Santri;
             opt.selected = true;
             selSantri.appendChild(opt);
         }
@@ -1452,8 +1459,8 @@ async function saveEditedSetoran(event) {
 async function deleteSetoranUstadz(idSetoran) {
     const set = (state.setoran || []).find(x => String(x.ID_Setoran).trim() === String(idSetoran).trim());
     if (!set) return AppNotify.warning('Data Tidak Ditemukan', 'Catatan setoran tidak ditemukan.');
-    const s = (state.santri || []).find(san => san.ID_Santri === set.ID_Santri);
-    const santriName = s ? s.Nama_Santri : set.ID_Santri;
+    const s = findSantriById(state.santri, set.ID_Santri);
+    const santriName = s ? s.Nama_Santri : getSantriDisplayName(state.santri, set.ID_Santri);
 
     const confirmed = await AppNotify.confirm(
         'Hapus Catatan Setoran?',
@@ -1506,7 +1513,7 @@ function renderUstadzSantriList() {
     }
 
     mySantri.forEach(santri => {
-        const santriSetoran = state.setoran.filter(s => s.ID_Santri === santri.ID_Santri);
+        const santriSetoran = state.setoran.filter(s => isSameSantriId(s.ID_Santri, santri.ID_Santri));
         const zCount = santriSetoran.filter(s => s.Jenis === 'Ziyadah' || s.Jenis === 'Hafalan Baru').length;
         const mCount = santriSetoran.filter(s => s.Jenis === 'Murojaah' || s.Jenis === "Muroja'ah").length;
         const bCount = santriSetoran.filter(s => s.Jenis === 'Binnadhor').length;
@@ -1595,17 +1602,18 @@ function renderUstadzSantriList() {
 
 // ==================== MODAL CETAK RAPOR BUKU MUTABA'AH DIGITAL ====================
 function cetakRekapanUstadz(santriId) {
-    const mySantri = state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    const mySantri = (state.santri || []).filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    const santriPool = mySantri.length > 0 ? mySantri : (state.santri || []);
     let targetSantri = null;
 
     if (santriId && santriId !== 'all') {
-        targetSantri = mySantri.find(s => s.ID_Santri === santriId);
+        targetSantri = findSantriById(state.santri, santriId);
     } else {
         const rekapSel = document.getElementById('rekapFilterSantri');
         if (rekapSel && rekapSel.value !== 'all') {
-            targetSantri = mySantri.find(s => s.ID_Santri === rekapSel.value);
-        } else if (mySantri.length > 0) {
-            targetSantri = mySantri[0];
+            targetSantri = findSantriById(state.santri, rekapSel.value);
+        } else if (santriPool.length > 0) {
+            targetSantri = santriPool[0];
         }
     }
 
@@ -1613,7 +1621,7 @@ function cetakRekapanUstadz(santriId) {
         return AppNotify.warning('Pilih Santri', 'Silakan pilih santri yang hendak dicetak laporan hafalannya.');
     }
 
-    const santriSetoran = state.setoran.filter(s => s.ID_Santri === targetSantri.ID_Santri);
+    const santriSetoran = (state.setoran || []).filter(s => isSameSantriId(s.ID_Santri, targetSantri.ID_Santri));
     const zCount = santriSetoran.filter(s => s.Jenis === 'Ziyadah' || s.Jenis === 'Hafalan Baru').length;
     const mCount = santriSetoran.filter(s => s.Jenis === 'Murojaah' || s.Jenis === "Muroja'ah").length;
     const bCount = santriSetoran.filter(s => s.Jenis === 'Binnadhor').length;

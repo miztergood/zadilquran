@@ -492,12 +492,38 @@ function getSheetDataAsObjects(sheetName) {
   const values = sheet.getDataRange().getDisplayValues();
   if (values.length <= 1) return []; 
   
-  const headers = values.shift();
+  const headers = values.shift().map(function(h) { return String(h || "").trim(); });
   return values.map(function(row) {
     const obj = {};
-    headers.forEach(function(h, i) { obj[h] = row[i]; });
+    headers.forEach(function(h, i) { 
+      obj[h] = typeof row[i] === "string" ? row[i].trim() : (row[i] !== undefined ? row[i] : ""); 
+    });
     return obj;
   });
+}
+
+function isSameSantriId_(id1, id2) {
+  if (!id1 || !id2) return false;
+  var a = String(id1).trim().toUpperCase();
+  var b = String(id2).trim().toUpperCase();
+  if (a === b) return true;
+  var normA = a.replace(/^(ST|ZQ)-/, "");
+  var normB = b.replace(/^(ST|ZQ)-/, "");
+  if (normA && normB && normA === normB) return true;
+
+  var partsA = a.split("-");
+  var partsB = b.split("-");
+  if (partsA.length >= 2 && partsB.length >= 2) {
+    var lastA = partsA[partsA.length - 1];
+    var lastB = partsB[partsB.length - 1];
+    if (lastA.length >= 3 && lastB.length >= 3 && lastA === lastB) {
+      if (partsA.length >= 3 && partsB.length >= 3) {
+        return partsA[1] === partsB[1];
+      }
+      return true;
+    }
+  }
+  return false;
 }
 
 // === BOILERPLATE: API RESPONSE HANDLER ===
@@ -725,10 +751,12 @@ function fetchWaliData(arg1, arg2) {
     }
 
     const p = getSheetDataAsObjects("Pengaturan").find(x => x.Key === "Nama_Pondok");
-    const setoran = getSheetDataAsObjects("Data_Setoran").filter(s => String(s.ID_Santri || "").trim().toUpperCase() === cleanId).reverse();
-    const santri = getSheetDataAsObjects("Data_Santri").find(s => String(s.ID_Santri || "").trim().toUpperCase() === cleanId);
+    const santriList = getSheetDataAsObjects("Data_Santri");
+    const santri = santriList.find(s => isSameSantriId_(s.ID_Santri, cleanId));
+    const realSantriId = santri ? String(santri.ID_Santri || "").trim().toUpperCase() : cleanId;
+    const setoran = getSheetDataAsObjects("Data_Setoran").filter(s => isSameSantriId_(s.ID_Santri, cleanId) || isSameSantriId_(s.ID_Santri, realSantriId)).reverse();
     const ustadz = getSheetDataAsObjects("Users_Ustadz").find(u => u.ID_Ustadz === (santri ? santri.ID_Ustadz : ""));
-    const tagihan = getSheetDataAsObjects("Data_Tagihan").filter(t => String(t.ID_Santri || "").trim().toUpperCase() === cleanId).reverse();
+    const tagihan = getSheetDataAsObjects("Data_Tagihan").filter(t => isSameSantriId_(t.ID_Santri, cleanId) || isSameSantriId_(t.ID_Santri, realSantriId)).reverse();
     
     return createResponse(true, { 
       appName: p ? p.Value : "Zadil Quran",
@@ -2013,3 +2041,6 @@ function updateAdminPassword(token, oldPw, newPw) {
     return createResponse(false, null, "Password lama salah.");
   });
 }
+
+// === AKHIR DARI FILE CODE.GS (PASTIKAN SELURUH ISI FILE DI-COPY HINGGA BARIS INI TANPA TERPOTONG) ===
+
