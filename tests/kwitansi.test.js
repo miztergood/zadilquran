@@ -80,6 +80,32 @@ describe('Kwitansi Resmi PPTQ Zadil Quran', () => {
     expect(fullHtml).toContain('Siti Mei Alvita');
   });
 
+  it('memastikan styling CSS memposisikan stempel dan tanda tangan saling tumpuk (overlapping) sesuai standar Indonesia', () => {
+    const fullHtml = generateKwitansiHtml(dummyTagihan, dummySantri);
+
+    // Stempel di sebelah kiri (left: 28px) menimpa tanda tangan (left: 84px)
+    expect(fullHtml).toContain('.stempel-img {');
+    expect(fullHtml).toContain('left: 28px;');
+    expect(fullHtml).toContain('.ttd-img {');
+    expect(fullHtml).toContain('left: 84px;');
+    expect(fullHtml).toContain('.combined-ttd-stempel-img');
+  });
+
+  it('mendukung opsi 1 file gabungan (combined) jika diatur pada konfigurasi aset', () => {
+    global.window = {
+      KWITANSI_ASSETS: {
+        ...KWITANSI_ASSETS,
+        combinedUrl: 'assets/stempel-ttd-gabung.png'
+      }
+    };
+
+    const html = generateKwitansiCardHtml(dummyTagihan, dummySantri);
+    expect(html).toContain('class="combined-ttd-stempel-img"');
+    expect(html).toContain('assets/stempel-ttd-gabung.png');
+
+    delete global.window;
+  });
+
   it('memastikan fallback aset kwitansi bekerja saat KWITANSI_ASSETS tidak didefinisikan secara global', () => {
     const assets = getKwitansiAssets();
     expect(assets.namaBendahara).toBe('Siti Mei Alvita');

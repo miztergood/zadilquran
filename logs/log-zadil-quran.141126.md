@@ -91,6 +91,24 @@
 
 ---
 
+### E. Isu 5: Penataan Stempel & Tanda Tangan Saling Tumpuk (Overlapping) pada Kwitansi Resmi
+* **Latar Belakang**:
+  * Sesuai standar tata naskah dinas dan administrasi kwitansi resmi di Indonesia, stempel dan tanda tangan tidak boleh berjauhan atau terpisah ruang kosong, melainkan **saling tumpuk (overlapping)**: stempel ditempatkan di sisi kiri dan menimpa/menindih sekitar sepertiga (1/3) bagian kiri tanda tangan dengan posisi tanda tangan berada pas di atas nama penandatangan (Siti Mei Alvita).
+* **Solusi & Rekayasa Kode**:
+  1. **Pengaturan Presisi Posisi Tumpang Tindih (CSS)**:
+     * Pada [`js/core.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/core.js) (baik untuk tampilan popup cetak PDF maupun rendering ekspor gambar PNG `html2canvas`):
+       * `.stempel-img`: diatur pada `left: 28px; top: -2px; width: 82px; height: 80px; transform: rotate(-6deg); z-index: 2; opacity: 0.88; pointer-events: none;`.
+       * `.ttd-img`: diatur pada `left: 84px; top: 4px; width: 96px; height: 68px; z-index: 1;`.
+       * Menghasilkan area tumpang tindih natural sebesar 26px (antara X = 84px hingga 110px) persis menimpa sisi kiri goresan tanda tangan di atas nama bendahara tanpa menghalangi keterbacaan nama.
+  2. **Dukungan Opsi 1 File Gabungan (Canva / Desain Eksternal)**:
+     * Menambahkan properti opsional `combined` (`combinedUrl` / `combinedBase64`) pada `KWITANSI_ASSETS`.
+     * Jika pengguna sewaktu-waktu memilih menggunakan satu file gambar tumpuk hasil rancangan mandiri Canva, sistem otomatis merender satu elemen `.combined-ttd-stempel-img` tanpa merusak tata letak.
+  3. **Pengujian Unit & PWA Cache**:
+     * Menambahkan 2 uji unit baru di [`tests/kwitansi.test.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/tests/kwitansi.test.js).
+     * Versi cache pada [`sw.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/sw.js) dinaikkan menjadi `zadil-quran-pwa-v15`.
+
+---
+
 ## 2. Status Hasil Pengujian Otomatis (Vitest)
 ```
 ✓ tests/ustadz-rekap-actions.test.js (6 tests)
@@ -98,9 +116,9 @@
 ✓ tests/spp-sync.test.js (5 tests)
 ✓ tests/tasmi.test.js (15 tests)
 ✓ tests/worker.test.js (3 tests)
-✓ tests/kwitansi.test.js (5 tests)
+✓ tests/kwitansi.test.js (7 tests)
 ✓ tests/core-helpers.test.js (31 tests)
 
 Test Files  7 passed (7)
-     Tests  77 passed (77)
+     Tests  79 passed (79)
 ```

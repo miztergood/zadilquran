@@ -280,7 +280,8 @@ const DEFAULT_KWITANSI_CONFIG = {
     kotaPenerbit: 'Tuban',
     logoUrl: 'logo.jpg',
     ttdUrl: 'assets/tanda-tangan.png',
-    stempelUrl: 'assets/stempel.png'
+    stempelUrl: 'assets/stempel.png',
+    combinedTtdStempelUrl: ''
 };
 
 function getKwitansiAssets() {
@@ -291,7 +292,8 @@ function getKwitansiAssets() {
             kotaPenerbit: window.KWITANSI_ASSETS.kotaPenerbit || DEFAULT_KWITANSI_CONFIG.kotaPenerbit,
             logo: window.KWITANSI_ASSETS.logoBase64 || window.KWITANSI_ASSETS.logoUrl || DEFAULT_KWITANSI_CONFIG.logoUrl,
             ttd: window.KWITANSI_ASSETS.ttdBase64 || window.KWITANSI_ASSETS.ttdUrl || DEFAULT_KWITANSI_CONFIG.ttdUrl,
-            stempel: window.KWITANSI_ASSETS.stempelBase64 || window.KWITANSI_ASSETS.stempelUrl || DEFAULT_KWITANSI_CONFIG.stempelUrl
+            stempel: window.KWITANSI_ASSETS.stempelBase64 || window.KWITANSI_ASSETS.stempelUrl || DEFAULT_KWITANSI_CONFIG.stempelUrl,
+            combined: window.KWITANSI_ASSETS.combinedBase64 || window.KWITANSI_ASSETS.combinedUrl || DEFAULT_KWITANSI_CONFIG.combinedTtdStempelUrl || ''
         };
     }
     return {
@@ -300,7 +302,8 @@ function getKwitansiAssets() {
         kotaPenerbit: DEFAULT_KWITANSI_CONFIG.kotaPenerbit,
         logo: DEFAULT_KWITANSI_CONFIG.logoUrl,
         ttd: DEFAULT_KWITANSI_CONFIG.ttdUrl,
-        stempel: DEFAULT_KWITANSI_CONFIG.stempelUrl
+        stempel: DEFAULT_KWITANSI_CONFIG.stempelUrl,
+        combined: DEFAULT_KWITANSI_CONFIG.combinedTtdStempelUrl || ''
     };
 }
 
@@ -391,8 +394,12 @@ function generateKwitansiCardHtml(tagihan, santri) {
                 <div class="tgl">${escapeHtml(assets.kotaPenerbit)}, ${escapeHtml(tglCetak)}</div>
                 <div class="role">${escapeHtml(assets.jabatanBendahara)}</div>
                 <div class="ttd-space">
-                    <img src="${assets.stempel}" alt="Stempel Resmi" class="stempel-img" onerror="this.style.display='none'">
-                    <img src="${assets.ttd}" alt="Tanda Tangan" class="ttd-img" onerror="this.style.display='none'">
+                    ${assets.combined ? `
+                        <img src="${assets.combined}" alt="Tanda Tangan & Stempel" class="combined-ttd-stempel-img" onerror="this.style.display='none'">
+                    ` : `
+                        <img src="${assets.stempel}" alt="Stempel Resmi" class="stempel-img" onerror="this.style.display='none'">
+                        <img src="${assets.ttd}" alt="Tanda Tangan" class="ttd-img" onerror="this.style.display='none'">
+                    `}
                 </div>
                 <div class="ttd-name">${escapeHtml(assets.namaBendahara)}</div>
             </div>
@@ -687,25 +694,29 @@ function generateKwitansiHtml(tagihan, santri) {
         }
         .stempel-img {
             position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%) rotate(-6deg);
+            left: 28px;
+            top: -2px;
             width: 82px;
-            height: 86px;
+            height: 80px;
             object-fit: contain;
+            transform: rotate(-6deg);
             opacity: 0.88;
             pointer-events: none;
-            z-index: 1;
+            z-index: 2;
         }
         .ttd-img {
             position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 88px;
-            height: 70px;
+            left: 84px;
+            top: 4px;
+            width: 96px;
+            height: 68px;
             object-fit: contain;
-            z-index: 2;
+            z-index: 1;
+        }
+        .combined-ttd-stempel-img {
+            max-width: 175px;
+            max-height: 74px;
+            object-fit: contain;
         }
         .ttd-name {
             font-size: 12px;
@@ -1083,25 +1094,29 @@ async function unduhKwitansiGambar(tagihan, santri) {
             }
             .stempel-img {
                 position: absolute;
-                left: 10px;
-                top: 50%;
-                transform: translateY(-50%) rotate(-6deg);
+                left: 28px;
+                top: -2px;
                 width: 82px;
-                height: 86px;
+                height: 80px;
                 object-fit: contain;
+                transform: rotate(-6deg);
                 opacity: 0.88;
                 pointer-events: none;
-                z-index: 1;
+                z-index: 2;
             }
             .ttd-img {
                 position: absolute;
-                right: 20px;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 88px;
-                height: 70px;
+                left: 84px;
+                top: 4px;
+                width: 96px;
+                height: 68px;
                 object-fit: contain;
-                z-index: 2;
+                z-index: 1;
+            }
+            .combined-ttd-stempel-img {
+                max-width: 175px;
+                max-height: 74px;
+                object-fit: contain;
             }
             .ttd-name {
                 font-size: 12px;
