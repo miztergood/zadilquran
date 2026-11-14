@@ -1,13 +1,13 @@
 {
   "id": "./",
-  "name": "Pondok Pesantren Tahfizh Zadil Qur'an",
-  "short_name": "Zadil Qur'an",
-  "description": "Sistem Manajemen Tahfizh & Pantauan Hafalan Al-Qur'an Santri",
+  "name": "e-zaqu - PPTQ Zadil Qur'an",
+  "short_name": "e-zaqu",
+  "description": "e-zaqu: Portal Digital Pemantauan Hafalan, Rekapan Ustadz & Administrasi Santri PPTQ Zadil Qur'an",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
-  "background_color": "#480a0c",
+  "background_color": "#240305",
   "theme_color": "#9a2024",
   "orientation": "any",
   "categories": ["education", "productivity", "lifestyle"],
@@ -34,12 +34,6 @@
       "src": "./assets/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./logo.jpg",
-      "sizes": "1254x1254",
-      "type": "image/jpeg",
       "purpose": "any"
     }
   ]

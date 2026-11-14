@@ -2149,13 +2149,13 @@ function initPwa() {
         deferredInstallPrompt = null;
         document.body.classList.add('pwa-installed');
         updatePwaInstallUI();
-        AppNotify.toast('success', 'Aplikasi Zadil Quran berhasil dipasang di perangkat Anda!');
+        AppNotify.toast('success', 'Aplikasi e-zaqu berhasil dipasang di perangkat Anda!');
     });
 }
 
 async function triggerPwaInstall() {
     if (isStandalonePWA()) {
-        AppNotify.toast('info', 'Aplikasi Zadil Quran sudah terpasang dan berjalan dalam mode layar penuh.');
+        AppNotify.toast('info', 'Aplikasi e-zaqu sudah terpasang dan berjalan dalam mode layar penuh.');
         return;
     }
 
@@ -2167,7 +2167,7 @@ async function triggerPwaInstall() {
             if (choice && choice.outcome === 'accepted') {
                 document.body.classList.add('pwa-installed');
                 updatePwaInstallUI();
-                AppNotify.toast('success', 'Terima kasih telah memasang aplikasi Zadil Quran!');
+                AppNotify.toast('success', 'Terima kasih telah memasang aplikasi e-zaqu!');
             }
             return;
         } catch (err) {
@@ -2179,10 +2179,10 @@ async function triggerPwaInstall() {
 
     if (platform === 'ios') {
         AppNotify.info(
-            'Pasang di iPhone / iPad',
+            'Pasang e-zaqu di iPhone / iPad',
             `<div class="text-left text-sm leading-relaxed space-y-3">
                 <p class="text-gray-600 dark:text-gray-300">
-                    Pasang <b>Zadil Quran</b> di layar utama iPhone/iPad Anda agar dapat dibuka cepat satu sentuhan:
+                    Pasang <b>e-zaqu</b> di layar utama iPhone/iPad Anda agar dapat dibuka cepat satu sentuhan:
                 </p>
                 <div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2.5">
                     <div class="flex items-start gap-2.5">
@@ -2202,10 +2202,10 @@ async function triggerPwaInstall() {
         );
     } else if (platform === 'android') {
         AppNotify.info(
-            'Pasang di Android',
+            'Pasang e-zaqu di Android',
             `<div class="text-left text-sm leading-relaxed space-y-3">
                 <p class="text-gray-600 dark:text-gray-300">
-                    Pasang <b>Zadil Quran</b> sebagai aplikasi mandiri di ponsel atau tablet Android Anda:
+                    Pasang <b>e-zaqu</b> sebagai aplikasi mandiri di ponsel atau tablet Android Anda:
                 </p>
                 <div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2.5">
                     <div class="flex items-start gap-2.5">
@@ -2218,17 +2218,17 @@ async function triggerPwaInstall() {
                     </div>
                     <div class="flex items-start gap-2.5">
                         <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-                        <span>Ketuk konfirmasi <b>"Instal"</b>. Ikon aplikasi akan langsung muncul di beranda ponsel Anda.</span>
+                        <span>Ketuk konfirmasi <b>"Instal"</b>. Ikon <b>e-zaqu</b> akan langsung muncul di beranda ponsel Anda.</span>
                     </div>
                 </div>
             </div>`
         );
     } else {
         AppNotify.info(
-            'Pasang di Komputer / Laptop',
+            'Pasang e-zaqu di Komputer / Laptop',
             `<div class="text-left text-sm leading-relaxed space-y-3">
                 <p class="text-gray-600 dark:text-gray-300">
-                    Pasang <b>Zadil Quran</b> sebagai aplikasi desktop mandiri di Windows atau Mac:
+                    Pasang <b>e-zaqu</b> sebagai aplikasi desktop mandiri di Windows atau Mac:
                 </p>
                 <div class="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-3.5 space-y-2.5">
                     <div class="flex items-start gap-2.5">
@@ -2237,7 +2237,7 @@ async function triggerPwaInstall() {
                     </div>
                     <div class="flex items-start gap-2.5">
                         <span class="w-5 h-5 rounded-full bg-[#9a2024] text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-                        <span>Atau klik menu titik tiga browser (⋮) &gt; pilih <b>"Simpan dan Bagikan / Aplikasi"</b> &gt; klik <b>"Instal Zadil Quran"</b>.</span>
+                        <span>Atau klik menu titik tiga browser (⋮) &gt; pilih <b>"Simpan dan Bagikan / Aplikasi"</b> &gt; klik <b>"Instal e-zaqu"</b>.</span>
                     </div>
                 </div>
             </div>`

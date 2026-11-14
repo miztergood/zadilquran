@@ -89,7 +89,11 @@ Dirancang khusus untuk **Pondok Pesantren Tahfizh Zadil Qur'an (PPT ZAQU) Tuban*
 ├── assets/
 │   ├── stempel.png            # Stempel resmi transparan PNG PPTQ Zadil Qur'an
 │   ├── tanda-tangan.png       # Tanda tangan digital transparan PNG Bendahara Pesantren
-│   └── icons/                 # Ikon PWA berbagai resolusi (192px, 512px, apple-touch)
+│   ├── e-zaqu-logo.svg        # Master vektor ikon aplikasi e-zaqu
+│   ├── icon-192.png           # Ikon aplikasi PWA e-zaqu (192x192)
+│   ├── icon-512.png           # Ikon aplikasi PWA e-zaqu (512x512)
+│   ├── icon-maskable-512.png  # Ikon adaptif Android safe-zone e-zaqu (512x512)
+│   └── apple-touch-icon.png   # Ikon PWA e-zaqu untuk iOS / iPadOS (180x180)
 ├── index.html                 # Router Utama & Beranda Pesantren
 ├── landingpage.html           # Landing Page Profil & Alur PSB Santri Mukim
 ├── pendaftaran.html           # Formulir Pendaftaran Calon Santri Baru Online
@@ -100,7 +104,7 @@ Dirancang khusus untuk **Pondok Pesantren Tahfizh Zadil Qur'an (PPT ZAQU) Tuban*
 ├── _worker.js                 # Cloudflare Pages Functions: Reverse Proxy API & Clean URL Router
 ├── _redirects                 # Konfigurasi routing Clean URL Cloudflare Pages
 ├── _routes.json               # Aturan eksekusi Cloudflare Pages Functions
-├── sw.js                      # Service Worker PWA (Cache: zadil-quran-pwa-v16)
+├── sw.js                      # Service Worker PWA (Cache: e-zaqu-pwa-v17)
 ├── config.js                  # Konfigurasi endpoint & storage key client-side
 ├── code.gs                    # Backend Google Apps Script V4.0 (2044+ baris, RBAC, DB Sheets, Batch Clean)
 ├── logo.jpg                   # Logo resmi resolusi tinggi PPTQ Zadil Qur'an

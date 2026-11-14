@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient: Deep Maroon to Rich Burgundy -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#240305"/>
+      <stop offset="40%" stop-color="#4d0a0f"/>
+      <stop offset="75%" stop-color="#791419"/>
+      <stop offset="100%" stop-color="#9a2024"/>
+    </linearGradient>
+
+    <!-- Emerald Gem Gradient -->
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="40%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </linearGradient>
+
+    <!-- Luxury Gold Gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb"/>
+      <stop offset="25%" stop-color="#fef08a"/>
+      <stop offset="55%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+
+    <!-- Clean Book Page Gradients -->
+    <linearGradient id="pageLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="80%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <linearGradient id="pageRight" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="80%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+
+    <!-- Wood Rehal Gradient -->
+    <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97706"/>
+      <stop offset="40%" stop-color="#92400e"/>
+      <stop offset="100%" stop-color="#451a03"/>
+    </linearGradient>
+    <linearGradient id="woodGradLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="50%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+
+    <!-- Glow & Shadow Filters -->
+    <filter id="nurGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bgGrad)"/>
+
+  <!-- Sleek Golden Squircle Border for non-maskable -->
+  <rect x='4' y='4' width='504' height='504' rx='108' ry='108' fill='none' stroke='url(#goldGrad)' stroke-width='2' stroke-opacity='0.35'/>
+
+  <!-- Geometric Star Pattern Background Watermark -->
+  <g opacity="0.04" stroke="#ffffff" stroke-width="1.2" fill="none">
+    <circle cx="256" cy="256" r="225"/>
+    <circle cx="256" cy="256" r="175"/>
+    <polygon points="256,40 310,170 450,170 338,252 380,388 256,306 132,388 174,252 62,170 202,170" />
+    <polygon points="256,472 202,342 62,342 174,260 132,124 256,206 380,124 338,260 450,342 310,342" />
+  </g>
+
+  <!-- Golden Radial Ambient Light from Holy Quran -->
+  <circle cx="256" cy="210" r="130.0" fill="#fbbf24" opacity="0.16" filter="url(#nurGlow)"/>
+
+  <!-- Centered / Scaled Group for Maskable Safe Zone -->
+  <g transform="translate(0.0, 0) scale(1.0)">
+
+    <!-- Top Islamic Dome & Minaret Finial with Crescent -->
+    <g filter="url(#nurGlow)">
+      <!-- Outer Dome Halo Arch -->
+      <path d="M192 182 C192 125, 226 88, 256 72 C286 88, 320 125, 320 182 C302 168, 280 160, 256 160 C232 160, 210 168, 192 182 Z" 
+            fill="url(#emeraldGrad)" opacity="0.85"/>
+      <path d="M196 182 C196 130, 228 94, 256 78 C284 94, 316 130, 316 182" 
+            fill="none" stroke="url(#goldGrad)" stroke-width="3" stroke-linecap="round"/>
+
+      <!-- Inner Mihrab Light -->
+      <path d="M220 180 C220 148, 238 126, 256 116 C274 126, 292 148, 292 180 Z" 
+            fill="url(#goldGrad)" opacity="0.95"/>
+
+      <!-- Dome Finial (Spire / Pucuk Kubah) & Crescent + Star -->
+      <!-- Spire Rod -->
+      <line x1="256" y1="74" x2="256" y2="52" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="256" cy="62" r="3.5" fill="url(#goldGrad)"/>
+      
+      <!-- Crescent (Hilal) -->
+      <path d="M256 46 A9 9 0 1 1 262 31 A7 7 0 1 0 256 46 Z" fill="url(#goldGrad)"/>
+      
+      <!-- Star in Crescent -->
+      <polygon points="266,32 268,36 272,36 269,38 270,42 266,40 262,42 263,38 260,36 264,36" fill="#ffffff" filter="url(#nurGlow)"/>
+    </g>
+
+    <!-- Wood Rehal (Stand) -->
+    <g filter="url(#softShadow)">
+      <!-- Ground Shadow -->
+      <ellipse cx="256" cy="308" rx="145" ry="16" fill="#000000" opacity="0.55"/>
+
+      <!-- Rehal X Crossing Legs (Stylized Modern Curves) -->
+      <!-- Back Left Leg -->
+      <path d="M185 282 L142 334 C138 339, 142 344, 150 344 L175 344 C182 344, 192 338, 202 324 L232 284 Z" fill="url(#woodGrad)"/>
+      <!-- Back Right Leg -->
+      <path d="M327 282 L370 334 C374 339, 370 344, 362 344 L337 344 C330 344, 320 338, 310 324 L280 284 Z" fill="url(#woodGrad)"/>
+
+      <!-- Front Left Arc -->
+      <path d="M256 304 C232 304, 204 290, 185 278 C198 296, 225 316, 256 316 Z" fill="url(#woodGradLight)"/>
+      <!-- Front Right Arc -->
+      <path d="M256 304 C280 304, 308 290, 327 278 C314 296, 287 316, 256 316 Z" fill="url(#woodGradLight)"/>
+
+      <!-- Center Gold Medallion on Rehal -->
+      <circle cx="256" cy="310" r="6" fill="url(#goldGrad)"/>
+    </g>
+
+    <!-- The Holy Quran (Open Mushaf) -->
+    <g filter="url(#softShadow)">
+      <!-- Bottom Cover Edges (Deep Green & Gold Bound) -->
+      <path d="M256 288 C210 284, 150 268, 122 254 C117 251, 116 244, 120 239 L128 226 C155 240, 215 256, 256 258 Z" fill="#064e3b"/>
+      <path d="M256 288 C302 284, 362 268, 390 254 C395 251, 396 244, 392 239 L384 226 C357 240, 297 256, 256 258 Z" fill="#064e3b"/>
+
+      <!-- Gold Page Trims (Gilded Pages / Kertas Emas) -->
+      <path d="M256 284 C212 280, 154 265, 127 251 L132 235 C158 247, 214 260, 256 262 Z" fill="url(#goldGrad)"/>
+      <path d="M256 284 C300 280, 358 265, 385 251 L380 235 C354 247, 298 260, 256 262 Z" fill="url(#goldGrad)"/>
+
+      <!-- Left Page Main Glowing Surface -->
+      <path d="M256 278 C212 273, 152 255, 128 239 C124 236, 123 230, 126 226 L140 188 C142 183, 148 181, 153 183 C180 194, 226 212, 256 215 Z" 
+            fill="url(#pageLeft)"/>
+
+      <!-- Right Page Main Glowing Surface -->
+      <path d="M256 278 C300 273, 360 255, 384 239 C388 236, 389 230, 386 226 L372 188 C370 183, 364 181, 359 183 C332 194, 286 212, 256 215 Z" 
+            fill="url(#pageRight)"/>
+
+      <!-- Elegant Ayat Lines (Left Page) -->
+      <g stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" opacity="0.65">
+        <line x1="156" y1="202" x2="238" y2="220" />
+        <line x1="152" y1="216" x2="240" y2="234" />
+        <line x1="148" y1="230" x2="242" y2="248" />
+        <line x1="144" y1="244" x2="232" y2="260" />
+      </g>
+
+      <!-- Elegant Ayat Lines (Right Page) -->
+      <g stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" opacity="0.65">
+        <line x1="274" y1="220" x2="356" y2="202" />
+        <line x1="272" y1="234" x2="360" y2="216" />
+        <line x1="270" y1="248" x2="364" y2="230" />
+        <line x1="280" y1="260" x2="368" y2="244" />
+      </g>
+
+      <!-- Central Spine Binding -->
+      <path d="M256 215 L256 280" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+
+      <!-- Golden Bookmark Ribbon Draping Over Stand -->
+      <path d="M256 216 Q252 250 248 290 Q246 315 250 326 L256 332 L262 326 Q266 315 264 290 Q260 250 256 216 Z" 
+            fill="url(#goldGrad)" filter="url(#nurGlow)"/>
+    </g>
+
+    <!-- App Name Typographic Lockup: e-zaqu -->
+    <g text-anchor="middle" id="brandText">
+      <!-- "e-zaqu" Main Title -->
+      <text x="256" y="394" font-family="'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="900" font-size="54" letter-spacing="-1">
+        <tspan fill="url(#goldGrad)">e-</tspan><tspan fill="#ffffff">zaqu</tspan>
+      </text>
+
+      <!-- Pill Badge for Subtitle -->
+      <rect x="146" y="412" width="220" height="22" rx="11" fill="#000000" fill-opacity="0.4"/>
+      <text x="256" y="427" font-family="'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, sans-serif" font-weight="700" font-size="10" fill="#fde047" letter-spacing="3.2">
+        TAHFIZH ZADIL QUR'AN
+      </text>
+    </g>
+
+  </g>
+</svg>

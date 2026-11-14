@@ -1,9 +1,9 @@
 /**
- * SERVICE WORKER ZADIL QURAN (v2 - Multi-Page Modular Architecture)
- * Mendukung instalasi PWA lintas platform (Android, iOS/iPadOS, Windows, Mac) & akses offline
+ * SERVICE WORKER E-ZAQU / ZADIL QURAN (v2 - Multi-Page Modular Architecture)
+ * Mendukung instalasi PWA e-zaqu lintas platform (Android, iOS/iPadOS, Windows, Mac) & akses offline
  */
 
-const CACHE_NAME = 'zadil-quran-pwa-v16';
+const CACHE_NAME = 'e-zaqu-pwa-v17';
 
 // Aset inti lokal yang wajib tersedia saat offline
 const CORE_ASSETS = [
@@ -33,7 +33,8 @@ const CORE_ASSETS = [
   './assets/icon-192.png',
   './assets/icon-512.png',
   './assets/icon-maskable-512.png',
-  './assets/apple-touch-icon.png'
+  './assets/apple-touch-icon.png',
+  './assets/e-zaqu-logo.svg'
 ];
 
 // Aset CDN eksternal (dicache terpisah secara best-effort)
