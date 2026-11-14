@@ -17,6 +17,24 @@ let state = {
 
 let waliFilter = 'all';
 let waliSearchQuery = '';
+let waliPagination = {
+    page: 1,
+    limit: 6
+};
+
+function changeWaliPage(delta, maxPage) {
+    const newPage = waliPagination.page + delta;
+    if (newPage >= 1 && newPage <= maxPage) {
+        waliPagination.page = newPage;
+        renderWaliList();
+        const el = document.getElementById('waliSetoranList');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.changeWaliPage = changeWaliPage;
+}
 
 function copySantriId() {
     if (!state.santri || !state.santri.ID_Santri) return;
@@ -53,9 +71,10 @@ function shareProgressWa() {
         const isJilid = last.Tingkatan === 'Jilid';
         const detailLast = (last.Jenis || '').toLowerCase().includes('tasmi') ? parseDetailTasmi(last.Detail_Tasmi) : null;
         const lastMaxSkor = detailLast ? (detailLast.maksimalSkor || (String(detailLast.juz || last.Juz) === '30' ? 115 : 100)) : 100;
+        const halText = detailLast ? (last.Halaman || '') : formatHalamanDisplay(last.Halaman);
         text += `\n*Setoran Terakhir (${last.TM || 'TM'}):*\n`;
         text += `• Tingkatan: ${last.Tingkatan || "Al-Qur'an"}\n`;
-        text += `• Materi: ${last.Surah} (${isJilid ? last.Juz : 'Juz ' + last.Juz}), ${isJilid ? 'Baris/Materi ' : 'Ayat '}${last.Ayat}, ${detailLast ? last.Halaman : 'Hal ' + last.Halaman}\n`;
+        text += `• Materi: ${last.Surah} (${isJilid ? last.Juz : 'Juz ' + last.Juz}), ${isJilid ? 'Baris/Materi ' : 'Ayat '}${last.Ayat}${halText ? ', ' + halText : ''}\n`;
         text += `• Kategori: ${last.Jenis}\n`;
         if (detailLast) {
             text += `• Total Skor Tasmi': *${detailLast.totalSkor} / ${lastMaxSkor}* (Min. Lulus 80)\n`;
@@ -109,7 +128,7 @@ function cetakMutabaahWali() {
                 ayatHal = `${detailTasmi.totalPages || (String(detailTasmi.juz || item.Juz) === '30' ? 23 : 20)} Halaman &bull; Skor ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || item.Juz) === '30' ? 115 : 100)}`;
             } else {
                 const aVal = item.Ayat && item.Ayat !== '-' ? item.Ayat : '';
-                const hVal = item.Halaman && item.Halaman !== '-' ? `Hal ${item.Halaman}` : '';
+                const hVal = formatHalamanDisplay(item.Halaman);
                 if (aVal && hVal) ayatHal = `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${aVal} &bull; ${hVal}`;
                 else if (aVal) ayatHal = `${tingkatan === 'Jilid' ? 'Baris ' : 'Ayat '}${aVal}`;
                 else if (hVal) ayatHal = hVal;
@@ -212,6 +231,7 @@ function cetakMutabaahWali() {
 
 function setWaliFilter(filterType) {
     waliFilter = filterType;
+    waliPagination.page = 1;
     const btnAll = document.getElementById('btnFilterAll');
     const btnBaru = document.getElementById('btnFilterBaru');
     const btnMurojaah = document.getElementById('btnFilterMurojaah');
@@ -250,6 +270,7 @@ function setWaliFilter(filterType) {
 
 function handleWaliSearch(q) {
     waliSearchQuery = (q || '').toLowerCase().trim();
+    waliPagination.page = 1;
     renderWaliList();
 }
 
@@ -332,6 +353,7 @@ function renderWaliList() {
     const listContainer = document.getElementById('waliSetoranList');
     const emptyState = document.getElementById('waliEmptyState');
     const countDisplay = document.getElementById('waliCountDisplay');
+    const pagContainer = document.getElementById('waliPaginationContainer');
     if (!listContainer) return;
 
     listContainer.innerHTML = '';
@@ -356,123 +378,164 @@ function renderWaliList() {
         );
     }
 
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / waliPagination.limit) || 1;
+    if (waliPagination.page > totalPages) waliPagination.page = totalPages;
+    if (waliPagination.page < 1) waliPagination.page = 1;
+
     if (countDisplay) {
-        countDisplay.textContent = `${filtered.length} riwayat`;
+        countDisplay.textContent = totalPages > 1 
+            ? `${totalItems} riwayat (Hal ${waliPagination.page}/${totalPages})`
+            : `${totalItems} riwayat`;
     }
 
-    if (filtered.length === 0) {
+    if (totalItems === 0) {
         if (emptyState) emptyState.classList.remove('hidden');
-    } else {
-        if (emptyState) emptyState.classList.add('hidden');
-        filtered.forEach(set => {
-            const nilaiText = set.Nilai || set.Predikat || 'Mumtaz';
-            const isZiyadah = set.Jenis === 'Ziyadah' || set.Jenis === 'Hafalan Baru';
-            const isBinnadhor = set.Jenis === 'Binnadhor';
-            const isTasmi = (set.Jenis || '').toLowerCase().includes('tasmi');
-            const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
+        if (pagContainer) pagContainer.innerHTML = '';
+        return;
+    }
 
-            const isLulusTasmi = detailTasmi ? detailTasmi.statusKelulusan === 'LULUS' : String(nilaiText).toUpperCase().startsWith('LULUS');
-            const isMumtaz = nilaiText === 'Mumtaz' || nilaiText === 'Lancar' || isLulusTasmi;
-            const isJayyid = nilaiText === 'Jayyid' || nilaiText === 'Kurang Lancar';
-            const bgLeft = isMumtaz ? 'bg-[#1c6b45]' : isJayyid ? 'bg-amber-500' : 'bg-red-500';
-            const predIcon = isMumtaz ? 'fa-circle-check text-[#1c6b45]' : isJayyid ? 'fa-circle-exclamation text-amber-500' : 'fa-circle-xmark text-red-500';
+    if (emptyState) emptyState.classList.add('hidden');
 
-            const badgeClass = isZiyadah
-                ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
-                : isBinnadhor
-                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                    : isTasmi
-                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
-                        : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
+    const startIdx = (waliPagination.page - 1) * waliPagination.limit;
+    const paginatedItems = filtered.slice(startIdx, startIdx + waliPagination.limit);
 
-            const isJilid = set.Tingkatan === 'Jilid';
-            const tingkatanLabel = isJilid ? 'Jilid / Tahsin' : "Al-Qur'an";
-            const tmLabel = set.TM || 'TM';
-            const parafText = set.ParafUstadz || (state.ustadz ? state.ustadz.Nama : 'Ustadz Pembimbing');
+    paginatedItems.forEach(set => {
+        const nilaiText = set.Nilai || set.Predikat || 'Mumtaz';
+        const isZiyadah = set.Jenis === 'Ziyadah' || set.Jenis === 'Hafalan Baru';
+        const isBinnadhor = set.Jenis === 'Binnadhor';
+        const isTasmi = (set.Jenis || '').toLowerCase().includes('tasmi');
+        const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
 
-            // Ringkasan 9 Aspek Tajwid bila ini adalah catatan Tasmi' lengkap
-            let tasmiSectionHtml = '';
-            if (isTasmi && detailTasmi) {
-                const totalSkor = detailTasmi.totalSkor || 0;
-                const totalPages = detailTasmi.totalPages || (String(detailTasmi.juz || set.Juz) === '30' ? 23 : 20);
-                const maxScore = detailTasmi.maksimalSkor || (totalPages * 5);
-                const statusBadge = isLulusTasmi
-                    ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8]">✅ LULUS TASMI\'</span>'
-                    : '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-50 text-red-700 border border-red-200">🔁 TIDAK LULUS (Mengulang)</span>';
+        const isLulusTasmi = detailTasmi ? detailTasmi.statusKelulusan === 'LULUS' : String(nilaiText).toUpperCase().startsWith('LULUS');
+        const isMumtaz = nilaiText === 'Mumtaz' || nilaiText === 'Lancar' || isLulusTasmi;
+        const isJayyid = nilaiText === 'Jayyid' || nilaiText === 'Kurang Lancar';
+        const bgLeft = isMumtaz ? 'bg-[#1c6b45]' : isJayyid ? 'bg-amber-500' : 'bg-red-500';
+        const predIcon = isMumtaz ? 'fa-circle-check text-[#1c6b45]' : isJayyid ? 'fa-circle-exclamation text-amber-500' : 'fa-circle-xmark text-red-500';
 
-                tasmiSectionHtml = `
-                    <div class="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 rounded-xl p-3 my-2.5 space-y-2">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 block">Total Skor Kelancaran (${totalPages} Hal)</span>
-                                <span class="text-base font-black ${isLulusTasmi ? 'text-[#1c6b45] dark:text-[#83c9a6]' : 'text-red-600 dark:text-red-400'}">${totalSkor} / ${maxScore}</span>
-                                <span class="text-[10px] text-gray-500 dark:text-gray-400 ml-1">(Min. Lulus 80)</span>
-                            </div>
-                            ${statusBadge}
+        const badgeClass = isZiyadah
+            ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
+            : isBinnadhor
+                ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                : isTasmi
+                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+                    : 'bg-[#fdf2f2] text-[#9a2024] dark:bg-[#731417]/40 dark:text-[#f29fa3]';
+
+        const isJilid = set.Tingkatan === 'Jilid';
+        const tingkatanLabel = isJilid ? 'Jilid / Tahsin' : "Al-Qur'an";
+        const tmLabel = set.TM || 'TM';
+        const parafText = set.ParafUstadz || (state.ustadz ? state.ustadz.Nama : 'Ustadz Pembimbing');
+
+        const juzText = isJilid ? (set.Juz || '') : (set.Juz ? `Juz ${set.Juz}` : '');
+        const halText = detailTasmi ? (set.Halaman || '') : formatHalamanDisplay(set.Halaman);
+        const juzHalCombined = (juzText && halText) ? `${juzText} &bull; ${halText}` : (juzText || halText || '-');
+
+        // Ringkasan 9 Aspek Tajwid bila ini adalah catatan Tasmi' lengkap
+        let tasmiSectionHtml = '';
+        if (isTasmi && detailTasmi) {
+            const totalSkor = detailTasmi.totalSkor || 0;
+            const totalPages = detailTasmi.totalPages || (String(detailTasmi.juz || set.Juz) === '30' ? 23 : 20);
+            const maxScore = detailTasmi.maksimalSkor || (totalPages * 5);
+            const statusBadge = isLulusTasmi
+                ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#edf7f2] text-[#1c6b45] border border-[#b2dfc8]">✅ LULUS TASMI\'</span>'
+                : '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-50 text-red-700 border border-red-200">🔁 TIDAK LULUS (Mengulang)</span>';
+
+            tasmiSectionHtml = `
+                <div class="bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-900/50 rounded-xl p-3 my-2.5 space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300 block">Total Skor Kelancaran (${totalPages} Hal)</span>
+                            <span class="text-base font-black ${isLulusTasmi ? 'text-[#1c6b45] dark:text-[#83c9a6]' : 'text-red-600 dark:text-red-400'}">${totalSkor} / ${maxScore}</span>
+                            <span class="text-[10px] text-gray-500 dark:text-gray-400 ml-1">(Min. Lulus 80)</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 pt-1.5 border-t border-indigo-200/60 dark:border-indigo-900/40">
-                            <button type="button" onclick="openWaliTasmiDetail('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-white dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-table-list"></i>
-                                <span>Rincian ${totalPages} Hal &amp; Tajwid</span>
-                            </button>
-                            <button type="button" onclick="cetakWaliTasmiCard('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                <span>Unduh Kartu Tasmi'</span>
-                            </button>
-                        </div>
+                        ${statusBadge}
                     </div>
-                `;
-            } else {
-                tasmiSectionHtml = `
-                    <div class="bg-gray-50 dark:bg-slate-800/60 rounded-xl p-2.5 my-2.5 flex items-center justify-between text-xs">
-                        <span class="text-gray-600 dark:text-gray-300 font-medium">
-                            <i class="fa-solid fa-lines-leaning mr-1 text-gray-400"></i> ${isJilid ? 'Baris / Materi:' : 'Ayat'} ${set.Ayat}
-                        </span>
-                        <span class="font-bold flex items-center gap-1.5">
-                            <i class="fa-solid ${predIcon}"></i> Nilai: ${nilaiText}
-                        </span>
-                    </div>
-                `;
-            }
-
-            listContainer.innerHTML += `
-                <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-4 overflow-hidden relative transition hover:shadow-sm">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${bgLeft}"></div>
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center text-gray-700 dark:text-gray-300">
-                                ${isJilid ? 'JLD' : (isTasmi ? 'TSM' : (set.SurahNo || 'QS'))}
-                            </span>
-                            <div>
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">${tmLabel}</span>
-                                    <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">&bull; ${tingkatanLabel}</span>
-                                </div>
-                                <h4 class="font-bold text-gray-900 dark:text-white text-base leading-tight mt-0.5">${set.Surah}</h4>
-                                <p class="text-[11px] text-gray-500 dark:text-gray-400">${isJilid ? set.Juz : 'Juz ' + set.Juz} &bull; ${detailTasmi ? set.Halaman : 'Hal ' + set.Halaman}</p>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${badgeClass}">
-                            ${set.Jenis}
-                        </span>
-                    </div>
-
-                    ${tasmiSectionHtml}
-
-                    ${set.Catatan ? `
-                    <div class="bg-[#edf7f2] dark:bg-[#12452c]/20 border border-[#b2dfc8]/50 dark:border-[#12452c]/50 rounded-xl p-2.5 mb-2 text-xs text-[#1c6b45] dark:text-[#83c9a6] flex items-start gap-2">
-                        <i class="fa-solid fa-comment-dots mt-0.5"></i>
-                        <span class="italic leading-relaxed">"${set.Catatan}"</span>
-                    </div>
-                    ` : ''}
-
-                    <div class="flex items-center justify-between text-[11px] text-gray-400 pt-1.5 border-t border-gray-100 dark:border-darkborder/50">
-                        <span><i class="fa-regular fa-calendar mr-1"></i>${set.Tanggal}</span>
-                        <span class="text-[#1c6b45] dark:text-[#83c9a6] font-semibold"><i class="fa-solid fa-signature mr-1"></i>Paraf: ${parafText}</span>
+                    <div class="grid grid-cols-2 gap-2 pt-1.5 border-t border-indigo-200/60 dark:border-indigo-900/40">
+                        <button type="button" onclick="openWaliTasmiDetail('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-white dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-table-list"></i>
+                            <span>Rincian ${totalPages} Hal &amp; Tajwid</span>
+                        </button>
+                        <button type="button" onclick="cetakWaliTasmiCard('${set.ID_Setoran}')" class="py-1.5 px-2.5 bg-[#9a2024] hover:bg-[#871a1e] text-white rounded-lg text-[11px] font-bold transition flex items-center justify-center gap-1.5 shadow-2xs">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <span>Unduh Kartu Tasmi'</span>
+                        </button>
                     </div>
                 </div>
             `;
-        });
+        } else {
+            tasmiSectionHtml = `
+                <div class="bg-gray-50 dark:bg-slate-800/60 rounded-xl p-2.5 my-2.5 flex items-center justify-between text-xs">
+                    <span class="text-gray-600 dark:text-gray-300 font-medium">
+                        <i class="fa-solid fa-lines-leaning mr-1 text-gray-400"></i> ${isJilid ? 'Baris / Materi:' : 'Ayat'} ${set.Ayat}
+                    </span>
+                    <span class="font-bold flex items-center gap-1.5">
+                        <i class="fa-solid ${predIcon}"></i> Nilai: ${nilaiText}
+                    </span>
+                </div>
+            `;
+        }
+
+        listContainer.innerHTML += `
+            <div class="bg-white dark:bg-darkcard rounded-2xl shadow-xs border border-gray-100 dark:border-darkborder p-4 overflow-hidden relative transition hover:shadow-sm">
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 ${bgLeft}"></div>
+                <div class="flex items-start justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-8 h-8 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold flex items-center justify-center text-gray-700 dark:text-gray-300">
+                            ${isJilid ? 'JLD' : (isTasmi ? 'TSM' : (set.SurahNo || 'QS'))}
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300">${tmLabel}</span>
+                                <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">&bull; ${tingkatanLabel}</span>
+                            </div>
+                            <h4 class="font-bold text-gray-900 dark:text-white text-base leading-tight mt-0.5">${set.Surah}</h4>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400">${juzHalCombined}</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider ${badgeClass}">
+                        ${set.Jenis}
+                    </span>
+                </div>
+
+                ${tasmiSectionHtml}
+
+                ${set.Catatan ? `
+                <div class="bg-[#edf7f2] dark:bg-[#12452c]/20 border border-[#b2dfc8]/50 dark:border-[#12452c]/50 rounded-xl p-2.5 mb-2 text-xs text-[#1c6b45] dark:text-[#83c9a6] flex items-start gap-2">
+                    <i class="fa-solid fa-comment-dots mt-0.5"></i>
+                    <span class="italic leading-relaxed">"${set.Catatan}"</span>
+                </div>
+                ` : ''}
+
+                <div class="flex items-center justify-between text-[11px] text-gray-400 pt-1.5 border-t border-gray-100 dark:border-darkborder/50">
+                    <span><i class="fa-regular fa-calendar mr-1"></i>${set.Tanggal}</span>
+                    <span class="text-[#1c6b45] dark:text-[#83c9a6] font-semibold"><i class="fa-solid fa-signature mr-1"></i>Paraf: ${parafText}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    if (pagContainer) {
+        if (totalPages <= 1) {
+            pagContainer.innerHTML = '';
+        } else {
+            pagContainer.innerHTML = `
+                <div class="flex items-center justify-between bg-white dark:bg-darkcard p-3 rounded-2xl border border-gray-100 dark:border-darkborder shadow-xs text-xs mt-1">
+                    <span class="text-gray-500 dark:text-gray-400 font-medium">
+                        Halaman <b>${waliPagination.page}</b> dari <b>${totalPages}</b>
+                    </span>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="changeWaliPage(-1, ${totalPages})" ${waliPagination.page <= 1 ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-darkborder bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed font-semibold transition active:scale-95 flex items-center gap-1 shadow-xs">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            <span>Prev</span>
+                        </button>
+                        <button type="button" onclick="changeWaliPage(1, ${totalPages})" ${waliPagination.page >= totalPages ? 'disabled' : ''} class="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-darkborder bg-[#9a2024] text-white hover:bg-[#85181b] disabled:bg-gray-100 disabled:dark:bg-slate-800 disabled:text-gray-400 disabled:cursor-not-allowed font-semibold transition active:scale-95 flex items-center gap-1 shadow-xs">
+                            <span>Next</span>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
     }
 }
 

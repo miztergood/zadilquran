@@ -708,8 +708,8 @@ function checkSmartPin(santriId) {
     if (pinCandidate) {
         lastPinData = pinCandidate;
         const jenisLabel = lastPinData.Jenis || 'Ziyadah';
-        const halLabel = String(lastPinData.Halaman || '').startsWith('Skor:') ? lastPinData.Halaman : `Hal ${lastPinData.Halaman}`;
-        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz}), ${halLabel} [${jenisLabel}]`;
+        const halLabel = formatHalamanDisplay(lastPinData.Halaman);
+        document.getElementById('smartPinText').textContent = `Terakhir (${lastPinData.TM || 'TM'}): ${lastPinData.Surah} (${lastPinData.Juz})${halLabel ? ', ' + halLabel : ''} [${jenisLabel}]`;
         if (pinContainer) pinContainer.classList.remove('hidden');
     } else {
         if (pinContainer) pinContainer.classList.add('hidden');
@@ -933,7 +933,7 @@ function renderUstadzRiwayat() {
             ayatHalText = `Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || set.Juz) === '30' ? 115 : 100)}`;
         } else {
             const aVal = set.Ayat && set.Ayat !== '-' ? set.Ayat : '';
-            const hVal = set.Halaman && set.Halaman !== '-' ? `Hal ${set.Halaman}` : '';
+            const hVal = formatHalamanDisplay(set.Halaman);
             if (aVal && hVal) ayatHalText = `${aVal} &bull; ${hVal}`;
             else if (aVal) ayatHalText = aVal;
             else if (hVal) ayatHalText = hVal;
@@ -1091,7 +1091,8 @@ function renderUstadzRekapanTable() {
             ayatHalRekapHtml = `${detailTasmi.totalPages || (String(detailTasmi.juz || set.Juz) === '30' ? 23 : 20)} Halaman <br><span class="text-[10px] font-bold text-indigo-600">Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || (String(detailTasmi.juz || set.Juz) === '30' ? 115 : 100)}</span>`;
         } else {
             const aVal = set.Ayat && set.Ayat !== '-' ? set.Ayat : '';
-            const hVal = set.Halaman && set.Halaman !== '-' ? `<span class="text-[10px] text-gray-400">Hal ${set.Halaman}</span>` : '';
+            const hRaw = formatHalamanDisplay(set.Halaman);
+            const hVal = hRaw ? `<span class="text-[10px] text-gray-400">${hRaw}</span>` : '';
             if (aVal && hVal) ayatHalRekapHtml = `${escapeHtml(aVal)} <br>${hVal}`;
             else if (aVal) ayatHalRekapHtml = escapeHtml(aVal);
             else if (hVal) ayatHalRekapHtml = hVal;
@@ -1209,7 +1210,7 @@ function openViewSetoran(idSetoran) {
                 <div class="bg-white dark:bg-darkcard p-3.5 rounded-2xl border border-gray-200 dark:border-darkborder">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-gray-400 block mb-1">Ayat & Halaman</span>
                     <span class="font-bold text-gray-900 dark:text-white text-sm block">${escapeHtml(set.Ayat || '-')}</span>
-                    <span class="text-xs text-gray-500">${isTasmi && detailTasmi ? `Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || 100}` : 'Hal ' + escapeHtml(set.Halaman || '-')}</span>
+                    <span class="text-xs text-gray-500">${isTasmi && detailTasmi ? `Skor: ${detailTasmi.totalSkor}/${detailTasmi.maksimalSkor || 100}` : escapeHtml(formatHalamanDisplay(set.Halaman) || '-')}</span>
                 </div>
             </div>
 
@@ -1571,7 +1572,7 @@ function renderUstadzSantriList() {
                     <div class="text-xs text-gray-600 dark:text-gray-300 mb-4 p-2.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30">
                         <span class="text-[10px] text-amber-800 dark:text-amber-400 font-bold uppercase tracking-wider block mb-0.5">Posisi Terakhir:</span>
                         ${lastSet 
-                            ? `<span class="font-bold text-gray-900 dark:text-white">${lastSet.Surah} (${lastSet.Tingkatan === 'Jilid' ? lastSet.Juz : 'Juz ' + lastSet.Juz})</span>, ${String(lastSet.Halaman || '').startsWith('Skor:') ? lastSet.Halaman : 'Hal ' + lastSet.Halaman} &bull; <strong class="text-[#1c6b45]">${lastSet.Predikat || 'Mumtaz'}</strong>`
+                            ? `<span class="font-bold text-gray-900 dark:text-white">${lastSet.Surah} (${lastSet.Tingkatan === 'Jilid' ? lastSet.Juz : 'Juz ' + lastSet.Juz})</span>${formatHalamanDisplay(lastSet.Halaman) ? ', ' + formatHalamanDisplay(lastSet.Halaman) : ''} &bull; <strong class="text-[#1c6b45]">${lastSet.Predikat || 'Mumtaz'}</strong>`
                             : '<span class="text-gray-400 italic">Belum pernah setoran</span>'
                         }
                     </div>
@@ -1692,16 +1693,14 @@ function cetakRekapanUstadz(santriId) {
 
                     // Ayat & Halaman
                     let displayAyat = set.Ayat && set.Ayat !== '-' ? set.Ayat : '';
-                    let displayHal = set.Halaman && set.Halaman !== '-' ? set.Halaman : '';
+                    let displayHal = formatHalamanDisplay(set.Halaman);
                     let ayatHalCombined = '-';
                     if (displayAyat && displayHal) {
-                        const halText = String(displayHal).startsWith('Skor:') ? displayHal : `Hal ${displayHal}`;
-                        ayatHalCombined = `${escapeHtml(displayAyat)}<br><span class="text-gray-500">${escapeHtml(halText)}</span>`;
+                        ayatHalCombined = `${escapeHtml(displayAyat)}<br><span class="text-gray-500">${escapeHtml(displayHal)}</span>`;
                     } else if (displayAyat) {
                         ayatHalCombined = escapeHtml(displayAyat);
                     } else if (displayHal) {
-                        const halText = String(displayHal).startsWith('Skor:') ? displayHal : `Hal ${displayHal}`;
-                        ayatHalCombined = escapeHtml(halText);
+                        ayatHalCombined = escapeHtml(displayHal);
                     }
 
                     // Catatan tajwid & adab yang bersih

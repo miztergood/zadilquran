@@ -56,16 +56,51 @@
 
 ---
 
+### C. Isu 3: Eliminasi Teks Ganda "Hal Hal" (pada Portal Wali Santri & Workspace Ustadz)
+* **Penyebab**:
+  1. Placeholder input di formulir `ustadz.html` sebelumnya bertuliskan `Contoh: Hal 582 (atau Hal 15)`, sehingga ustadz mengetikkan nilai seperti `"Hal 589"`, `"HAL 274"`, atau `"Hal : 568-569"`.
+  2. Logika perenderan di `js/ustadz.js` dan `js/wali.js` sebelumnya langsung menggabungkan `'Hal ' + set.Halaman` tanpa memeriksa apakah data `set.Halaman` sudah mengandung kata "Hal", menghasilkan tampilan teks dobel seperti `"Hal Hal 589"` atau `"Hal HAL 274"`.
+* **Solusi**:
+  1. **Helper Normalisasi di [`js/core.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/core.js)**:
+     * `stripHalamanPrefix(hal)`: Menghapus seluruh awalan `hal`, `halaman`, `hal:`, `hal.`, `hal -` yang berulang secara case-insensitive menggunakan regex `clean.replace(/^(?:hal(?:aman)?\.?\s*[:\-]?\s*)+/i, '').trim()`.
+     * `formatHalamanDisplay(hal)`: Memastikan tampilan selalu rapi dengan format `"Hal <nomor/rentang>"`, sekaligus mempertahankan nilai khusus Tasmi seperti `"Skor: 87/100"`.
+     * Pembaruan regex parser di `parseTahfizhMarkdownTable()` untuk mendukung rentang halaman (contoh: `Hal 568-569`).
+  2. **Pembaruan di [`js/ustadz.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/ustadz.js)**:
+     * Mengganti penggabungan string manual di `checkSmartPin()`, `renderUstadzRiwayat()`, `renderUstadzRekapanTable()`, `openViewSetoran()`, `renderUstadzSantriList()`, dan `cetakRekapanUstadz()` agar menggunakan `formatHalamanDisplay()`.
+  3. **Pembaruan di [`ustadz.html`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/ustadz.html)**:
+     * Placeholder input `#smartHal` disederhanakan menjadi `Contoh: 582 (atau 15)` untuk mencegah input awalan ganda dari pengguna.
+  4. **Pembaruan di [`js/wali.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/wali.js)**:
+     * Tampilan kartu riwayat hafalan harian, bagikan ke WhatsApp (`shareProgressWa`), dan cetak mutabaah (`cetakMutabaahWali`) kini seragam menggunakan `formatHalamanDisplay()`.
+
+---
+
+### D. Isu 4: Paginasi Riwayat Setoran Harian di Portal Orang Tua / Wali Santri (`wali.html`)
+* **Penyebab**:
+  * Sebelumnya, seluruh data riwayat setoran anak dirender sekaligus tanpa paginasi di `#waliSetoranList`. Saat data setoran mencapai puluhan hingga ratusan, kartu berderet panjang ke bawah sehingga tidak ramah pengguna perangkat mobile.
+* **Solusi**:
+  1. **Container Paginasi di [`wali.html`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/wali.html)**:
+     * Menambahkan kontainer `#waliPaginationContainer` di bawah `#waliSetoranList`.
+  2. **Logika State Paginasi di [`js/wali.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/wali.js)**:
+     * Menambahkan state `waliPagination = { page: 1, limit: 6 }`.
+     * `renderWaliList()` memotong data array setoran berdasarkan halaman aktif (`paginatedItems = items.slice(start, end)`).
+     * Menghasilkan navigasi interaktif "Sebelumnya" dan "Berikutnya" beserta indikator "Halaman X dari Y".
+     * Fungsi `changeWaliPage(delta, maxPage)` secara halus menggulirkan layar kembali ke `#waliSetoranList` (`scrollIntoView({ behavior: 'smooth', block: 'start' })`).
+     * Navigasi tab kategori (Semua, Ziyadah, Muroja'ah, Binnadhor, Tasmi') dan input pencarian surat/TM otomatis me-reset halaman aktif kembali ke halaman 1.
+  3. **Pembaruan Cache PWA**:
+     * Versi cache pada [`sw.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/sw.js) dinaikkan menjadi `zadil-quran-pwa-v14`.
+
+---
+
 ## 2. Status Hasil Pengujian Otomatis (Vitest)
 ```
 ✓ tests/ustadz-rekap-actions.test.js (6 tests)
-✓ tests/worker.test.js (3 tests)
 ✓ tests/santri-resolution.test.js (12 tests)
-✓ tests/tasmi.test.js (15 tests)
 ✓ tests/spp-sync.test.js (5 tests)
-✓ tests/core-helpers.test.js (26 tests)
+✓ tests/tasmi.test.js (15 tests)
+✓ tests/worker.test.js (3 tests)
 ✓ tests/kwitansi.test.js (5 tests)
+✓ tests/core-helpers.test.js (31 tests)
 
 Test Files  7 passed (7)
-     Tests  72 passed (72)
+     Tests  77 passed (77)
 ```

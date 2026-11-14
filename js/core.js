@@ -1829,9 +1829,9 @@ function parseTahfizhMarkdownTable(mdText, santriList = [], ustadzList = []) {
                     const start = startM ? startM[0] : '1';
                     ayatVal = qFound ? `${start} - ${qFound.ayat}` : `${start} - akhir`;
                 } else {
-                    const halMatch = ayatHalRaw.match(/(?:halaman|hal)\.?\s*[:\-]?\s*(\d+)/i);
+                    const halMatch = ayatHalRaw.match(/(?:halaman|hal)\.?\s*[:\-]?\s*(\d+(?:\s*[-–—]\s*\d+)?)/i);
                     const ayatMatch = ayatHalRaw.match(/(?:ayat\s*)?(\d+\s*[-–—s\.d\s]+\d+)/i);
-                    if (halMatch) halVal = halMatch[1];
+                    if (halMatch) halVal = halMatch[1].trim();
                     if (ayatMatch) {
                         ayatVal = ayatMatch[1];
                     } else if (halMatch && !/ayat/i.test(ayatHalRaw)) {
@@ -2321,11 +2321,39 @@ function getSantriDisplayName(santriList, targetId, fallback = '') {
     return fallback || String(targetId || '-').trim();
 }
 
+/**
+ * Membersihkan awalan "Hal", "Halaman", "Hal :", "HAL", dsb. dari string nomor halaman.
+ */
+function stripHalamanPrefix(hal) {
+    if (!hal || hal === '-') return '';
+    const clean = String(hal).trim();
+    if (!clean || clean === '-') return '';
+    if (clean.toLowerCase().startsWith('skor') || clean.toLowerCase().endsWith('halaman')) {
+        return clean;
+    }
+    return clean.replace(/^(?:hal(?:aman)?\.?\s*[:\-]?\s*)+/i, '').trim();
+}
+
+/**
+ * Memformat nomor halaman secara konsisten (misal: "Hal 589" atau "Hal 568-569").
+ * Mencegah dobel teks seperti "Hal Hal 589", "Hal HAL 274", "Hal Hal : 568-569", dsb.
+ */
+function formatHalamanDisplay(hal) {
+    const stripped = stripHalamanPrefix(hal);
+    if (!stripped) return '';
+    if (stripped.toLowerCase().startsWith('skor') || stripped.toLowerCase().endsWith('halaman')) {
+        return stripped;
+    }
+    return `Hal ${stripped}`;
+}
+
 // Window exposures untuk browser
 if (typeof window !== 'undefined') {
     window.isSameSantriId = isSameSantriId;
     window.findSantriById = findSantriById;
     window.getSantriDisplayName = getSantriDisplayName;
+    window.stripHalamanPrefix = stripHalamanPrefix;
+    window.formatHalamanDisplay = formatHalamanDisplay;
 }
 
 // Export untuk lingkungan Node.js / Unit Testing jika tersedia
@@ -2359,7 +2387,9 @@ if (typeof module !== 'undefined' && module.exports) {
         unduhKwitansiGambar,
         isSameSantriId,
         findSantriById,
-        getSantriDisplayName
+        getSantriDisplayName,
+        stripHalamanPrefix,
+        formatHalamanDisplay
     };
 }
 

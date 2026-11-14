@@ -10,7 +10,9 @@ import {
   closeModal,
   QURAN_DB,
   convertArabicNumerals,
-  parseTahfizhMarkdownTable
+  parseTahfizhMarkdownTable,
+  stripHalamanPrefix,
+  formatHalamanDisplay
 } from '../js/core.js';
 
 describe('Zadil Quran Core Helpers (js/core.js)', () => {
@@ -221,6 +223,53 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
       // Baris 3: Ayat 21 - 30 -> Ayat 21 - 30, Halaman '-'
       expect(res[2].ayat).toBe('21 - 30');
       expect(res[2].halaman).toBe('-');
+    });
+    it('mengekstrak rentang halaman ganda (misal Hal 568-569) dengan baik', () => {
+      const mdContent = `
+| TM | Tanggal | Surat / Jilid | Ayat / Hal | Nilai | Paraf | Kode |
+| :---: | :---: | :--- | :--- | :---: | :---: | :---: |
+| 98 | 2026-11-12 | Al-Ma'arij | Ayat 1 - 44 Hal : 568-569 | Jayyid | U06 | M |
+`;
+      const res = parseTahfizhMarkdownTable(mdContent, [], []);
+      expect(res).toHaveLength(1);
+      expect(res[0].ayat).toBe('1 - 44');
+      expect(res[0].halaman).toBe('568-569');
+      expect(formatHalamanDisplay(res[0].halaman)).toBe('Hal 568-569');
+    });
+  });
+
+  describe('wali.html DOM verification', () => {
+    it('memastikan container paginasi riwayat setoran #waliPaginationContainer tersedia di wali.html', () => {
+      const waliHtml = fs.readFileSync('wali.html', 'utf8');
+      expect(waliHtml).toContain('id="waliPaginationContainer"');
+      expect(waliHtml).toContain('id="waliSetoranList"');
+    });
+  });
+
+  describe('formatHalamanDisplay() & stripHalamanPrefix()', () => {
+    it('membersihkan awalan hal/halaman berulang dan mencegah dobel teks Hal Hal', () => {
+      expect(formatHalamanDisplay('589')).toBe('Hal 589');
+      expect(formatHalamanDisplay('Hal 589')).toBe('Hal 589');
+      expect(formatHalamanDisplay('Hal Hal 589')).toBe('Hal 589');
+      expect(formatHalamanDisplay('HAL 274')).toBe('Hal 274');
+      expect(formatHalamanDisplay('Hal : 568-569')).toBe('Hal 568-569');
+      expect(formatHalamanDisplay('Hal. 126')).toBe('Hal 126');
+      expect(formatHalamanDisplay('Hal Hal 553')).toBe('Hal 553');
+    });
+
+    it('mempertahankan format nilai tasmi dan mengembalikan string kosong jika strip menghasilkan nilai kosong', () => {
+      expect(formatHalamanDisplay('Skor: 87/100')).toBe('Skor: 87/100');
+      expect(formatHalamanDisplay('20 Halaman')).toBe('20 Halaman');
+      expect(formatHalamanDisplay('-')).toBe('');
+      expect(formatHalamanDisplay('')).toBe('');
+      expect(formatHalamanDisplay(null)).toBe('');
+    });
+
+    it('stripHalamanPrefix() mengembalikan hanya angka / rentang halaman', () => {
+      expect(stripHalamanPrefix('Hal 589')).toBe('589');
+      expect(stripHalamanPrefix('Hal Hal 589')).toBe('589');
+      expect(stripHalamanPrefix('HAL 274')).toBe('274');
+      expect(stripHalamanPrefix('Hal : 568-569')).toBe('568-569');
     });
   });
 });
