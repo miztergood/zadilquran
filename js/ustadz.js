@@ -961,7 +961,7 @@ function renderUstadzRiwayat() {
                         <button type="button" onclick="openUstadzTasmiDetail('${set.ID_Setoran}')" class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold transition shadow-2xs shrink-0">
                             <i class="fa-solid fa-table-list mr-1"></i>Lihat Kartu Tasmi'
                         </button>
-                    ` : (set.Catatan ? `<span class="text-gray-400 truncate max-w-[150px] italic">"${set.Catatan}"</span>` : '')}
+                    ` : (cleanCatatan(set.Catatan) ? `<span class="text-gray-400 truncate max-w-[150px] italic">"${escapeHtml(cleanCatatan(set.Catatan))}"</span>` : '')}
                 </div>
             </div>
         `;
@@ -1121,7 +1121,7 @@ function renderUstadzRekapanTable() {
                     ${nilai}
                 </td>
                 <td class="py-3 px-4 text-gray-500 italic text-xs max-w-xs truncate">
-                    ${set.Catatan ? `"${set.Catatan}"` : '-'}
+                    ${cleanCatatan(set.Catatan) ? `"${escapeHtml(cleanCatatan(set.Catatan))}"` : '-'}
                 </td>
                 <td class="py-3 px-4 text-center whitespace-nowrap space-x-1">
                     <button onclick="openViewSetoran('${set.ID_Setoran}')" class="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition text-xs shadow-2xs" title="Lihat Detail Setoran">
@@ -1234,7 +1234,7 @@ function openViewSetoran(idSetoran) {
                     Catatan Evaluasi Ustadz
                 </span>
                 <p class="text-xs sm:text-sm text-gray-700 dark:text-gray-200 italic leading-relaxed">
-                    ${set.Catatan ? `"${escapeHtml(set.Catatan)}"` : '<span class="text-gray-400 not-italic">(Tidak ada catatan tambahan untuk setoran ini)</span>'}
+                    ${cleanCatatan(set.Catatan) ? `"${escapeHtml(cleanCatatan(set.Catatan))}"` : '<span class="text-gray-400 not-italic">(Tidak ada catatan tambahan untuk setoran ini)</span>'}
                 </p>
             </div>
 
@@ -1358,7 +1358,7 @@ function openEditSetoran(idSetoran) {
         }
     }
 
-    document.getElementById('editSetoranCatatan').value = set.Catatan || '';
+    document.getElementById('editSetoranCatatan').value = cleanCatatan(set.Catatan);
     toggleEditTingkatanFields();
 
     const subTitleEl = document.getElementById('editSetoranSubtitle');
@@ -1704,12 +1704,7 @@ function cetakRekapanUstadz(santriId) {
                     }
 
                     // Catatan tajwid & adab yang bersih
-                    let displayCatatan = (set.Catatan || '').trim();
-                    if (/^TM:\s*[^\s|]+\s*\|\s*Paraf:\s*[^\s|]+(\s*\|\s*Kode:\s*[^\s|]+)?$/i.test(displayCatatan)) {
-                        displayCatatan = '-';
-                    } else if (displayCatatan.includes('| Catatan:')) {
-                        displayCatatan = displayCatatan.split('| Catatan:')[1].trim();
-                    }
+                    const displayCatatan = cleanCatatan(set.Catatan) || '-';
 
                     return `
                     <tr class="border-b border-gray-300">
@@ -1749,6 +1744,43 @@ function tutupModalCetak() {
 }
 
 // ==================== INISIALISASI & LOAD DATA ====================
+async function bersihkanCatatanSistemOtomatis() {
+    AppNotify.confirm(
+        'Bersihkan Catatan Sistem Otomatis?',
+        'Teks format bawaan sistem (seperti <em>"TM: ... | Paraf: ..."</em>) akan dihapus dari seluruh catatan setoran di spreadsheet dan dikosongkan.<br><br>Catatan evaluasi murni asatidz tidak akan terhapus. Lanjutkan?',
+        async () => {
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            AppNotify.loading('Membersihkan catatan sistem di database...');
+            try {
+                const res = await apiCall('cleanAllLegacyNotes', token);
+                AppNotify.close();
+                if (state.setoran && Array.isArray(state.setoran)) {
+                    state.setoran.forEach(s => {
+                        s.Catatan = cleanCatatan(s.Catatan);
+                    });
+                }
+                renderUstadzRekapanTable();
+                renderUstadzRiwayat();
+                if (res && res.status === 'success') {
+                    AppNotify.toast('success', res.message || 'Catatan sistem berhasil dibersihkan!');
+                } else {
+                    AppNotify.toast('success', 'Catatan sistem berhasil dikosongkan dari tampilan!');
+                }
+            } catch (err) {
+                AppNotify.close();
+                if (state.setoran && Array.isArray(state.setoran)) {
+                    state.setoran.forEach(s => {
+                        s.Catatan = cleanCatatan(s.Catatan);
+                    });
+                }
+                renderUstadzRekapanTable();
+                renderUstadzRiwayat();
+                AppNotify.toast('info', 'Catatan sistem dibersihkan dari tampilan lokal.');
+            }
+        }
+    );
+}
+
 function loadUstadzData() {
     const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
     AppNotify.loading('Memuat Data Halaqah Ustadz...');
@@ -1756,6 +1788,11 @@ function loadUstadzData() {
         AppNotify.close();
         if (res.status === 'success') {
             state = { ...state, ...res.data };
+            if (state.setoran && Array.isArray(state.setoran)) {
+                state.setoran.forEach(s => {
+                    s.Catatan = cleanCatatan(s.Catatan);
+                });
+            }
             updateBrandingDOM(state.appName);
             initSmartForm();
             renderUstadzDashboard();
@@ -1778,6 +1815,7 @@ if (typeof window !== 'undefined') {
     window.toggleEditTingkatanFields = toggleEditTingkatanFields;
     window.saveEditedSetoran = saveEditedSetoran;
     window.deleteSetoranUstadz = deleteSetoranUstadz;
+    window.bersihkanCatatanSistemOtomatis = bersihkanCatatanSistemOtomatis;
 }
 
 window.addEventListener('DOMContentLoaded', () => {

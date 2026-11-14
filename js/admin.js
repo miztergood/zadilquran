@@ -226,6 +226,11 @@ function refreshAdminData() {
         AppNotify.close();
         if (res.status === 'success') {
             state = { ...state, ...res.data };
+            if (state.setoran && Array.isArray(state.setoran)) {
+                state.setoran.forEach(s => {
+                    s.Catatan = cleanCatatan(s.Catatan);
+                });
+            }
             updateBrandingDOM(state.appName);
             loadContent();
         } else {
@@ -3068,7 +3073,7 @@ async function executeBatchRekapSave() {
         const tglVal = r.tanggal || new Date().toISOString().split('T')[0];
         const tmVal = r.tm || r.TM || '-';
         const parafVal = r.parafUstadz || r.paraf || (state.ustadz.find(u => u.ID_Ustadz === r.ustadzId)?.Nama || 'Ustadz Pembimbing');
-        const catatanVal = r.catatan || `TM: ${tmVal} | Paraf: ${r.paraf || '-'}${r.kategoriRaw ? ' | Kode: ' + r.kategoriRaw : ''}`;
+        const catatanVal = cleanCatatan(r.catatan || '');
 
         return {
             ID_Santri: r.santriId,
@@ -3226,7 +3231,41 @@ function fallbackCopyPrompt(text, onSuccess) {
     document.body.removeChild(ta);
 }
 
+async function bersihkanCatatanSistemAdmin() {
+    AppNotify.confirm(
+        'Bersihkan Catatan Sistem Otomatis?',
+        'Teks format bawaan (seperti <em>"TM: ... | Paraf: ..."</em>) akan dihapus dari seluruh baris catatan setoran di spreadsheet dan dikosongkan.<br><br>Catatan evaluasi ustadz murni tetap aman. Lanjutkan proses?',
+        async () => {
+            const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+            AppNotify.loading('Membersihkan catatan sistem di database spreadsheet...');
+            try {
+                const res = await apiCall('cleanAllLegacyNotes', token);
+                AppNotify.close();
+                if (state.setoran && Array.isArray(state.setoran)) {
+                    state.setoran.forEach(s => {
+                        s.Catatan = cleanCatatan(s.Catatan);
+                    });
+                }
+                if (res && res.status === 'success') {
+                    AppNotify.toast('success', res.message || 'Catatan sistem berhasil dibersihkan!');
+                } else {
+                    AppNotify.toast('success', 'Catatan sistem berhasil dikosongkan dari tampilan!');
+                }
+            } catch (err) {
+                AppNotify.close();
+                if (state.setoran && Array.isArray(state.setoran)) {
+                    state.setoran.forEach(s => {
+                        s.Catatan = cleanCatatan(s.Catatan);
+                    });
+                }
+                AppNotify.toast('info', 'Catatan sistem dibersihkan dari tampilan.');
+            }
+        }
+    );
+}
+
 if (typeof window !== 'undefined') {
+    window.bersihkanCatatanSistemAdmin = bersihkanCatatanSistemAdmin;
     window.getCurrentYearMonth = getCurrentYearMonth;
     window.getActiveSppConfig = getActiveSppConfig;
     window.isTagihanSpp = isTagihanSpp;

@@ -2362,6 +2362,44 @@ function formatHalamanDisplay(hal) {
     return `Hal ${stripped}`;
 }
 
+/**
+ * Membersihkan catatan evaluasi setoran dari format otomatis/sistem bawaan lama.
+ * Menghilangkan metadata sistem seperti "TM: 1709 | Paraf: U04 | Kode: B", "TM: 808 | Paraf: U05", "Paraf: U01 (ALYA CHAIRO BILVAZA)", dsb.
+ * Mengembalikan string kosong jika hanya berisi teks sistem, atau mengembalikan catatan evaluasi murni ustadz.
+ */
+function cleanCatatan(catatan) {
+    if (!catatan) return '';
+    let c = String(catatan).trim();
+    if (!c || c === '-' || c === 'undefined' || c === 'null') return '';
+
+    // Jika mengandung '| Catatan: <isi murni>'
+    if (c.includes('| Catatan:')) {
+        const parts = c.split('| Catatan:');
+        return parts[1].trim();
+    }
+
+    // Pola sistem TM / Paraf / Kode otomatis tanpa catatan asli ustadz
+    if (/^TM:\s*[^\s|]+\s*\|\s*Paraf:\s*[^\s|]+(\s*\|\s*Kode:\s*[^\s|]+)?$/i.test(c)) {
+        return '';
+    }
+    if (/^TM:\s*\d+\s*\|\s*Paraf:/i.test(c)) {
+        return '';
+    }
+    if (/^Paraf:\s*U\d+/i.test(c)) {
+        return '';
+    }
+    if (/^TM:\s*\d+$/i.test(c)) {
+        return '';
+    }
+
+    return c;
+}
+
+function formatCatatanDisplay(catatan) {
+    const clean = cleanCatatan(catatan);
+    return clean ? clean : '-';
+}
+
 // Window exposures untuk browser
 if (typeof window !== 'undefined') {
     window.isSameSantriId = isSameSantriId;
@@ -2369,6 +2407,8 @@ if (typeof window !== 'undefined') {
     window.getSantriDisplayName = getSantriDisplayName;
     window.stripHalamanPrefix = stripHalamanPrefix;
     window.formatHalamanDisplay = formatHalamanDisplay;
+    window.cleanCatatan = cleanCatatan;
+    window.formatCatatanDisplay = formatCatatanDisplay;
 }
 
 // Export untuk lingkungan Node.js / Unit Testing jika tersedia
@@ -2404,7 +2444,9 @@ if (typeof module !== 'undefined' && module.exports) {
         findSantriById,
         getSantriDisplayName,
         stripHalamanPrefix,
-        formatHalamanDisplay
+        formatHalamanDisplay,
+        cleanCatatan,
+        formatCatatanDisplay
     };
 }
 

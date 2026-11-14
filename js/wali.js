@@ -84,7 +84,8 @@ function shareProgressWa() {
         }
         text += `• Tanggal: ${last.Tanggal}\n`;
         text += `• Paraf Pengampu: ${last.ParafUstadz || (u ? u.Nama : 'Ustadz Pembimbing')}\n`;
-        if (last.Catatan) text += `• Catatan Ustadz: "${last.Catatan}"\n`;
+        const cleanCat = cleanCatatan(last.Catatan);
+        if (cleanCat) text += `• Catatan Ustadz: "${cleanCat}"\n`;
     }
     text += `\n_"Bacalah Al-Qur'an karena dia akan datang pada hari kiamat sebagai penolong bagi pembacanya." (HR. Muslim)_`;
 
@@ -134,12 +135,13 @@ function cetakMutabaahWali() {
                 else if (hVal) ayatHal = hVal;
             }
             const paraf = item.ParafUstadz || (u ? u.Nama : 'Disahkan');
-            return `
+                    const cleanCat = cleanCatatan(item.Catatan);
+                    return `
                 <tr>
                     <td style="text-align:center;font-weight:700;">${tm}</td>
                     <td>${item.Tanggal || '-'}</td>
                     <td style="text-align:center;font-weight:700;">${item.Jenis || '-'}</td>
-                    <td><strong>${suratJilid}</strong><br><span style="font-size:10px;color:#475569;">${item.Catatan ? 'Catatan: ' + item.Catatan : ''}</span></td>
+                    <td><strong>${suratJilid}</strong><br><span style="font-size:10px;color:#475569;">${cleanCat ? 'Catatan: ' + escapeHtml(cleanCat) : ''}</span></td>
                     <td style="text-align:center;">${ayatHal}</td>
                     <td style="text-align:center;font-weight:700;">${nilai}</td>
                     <td style="text-align:center;color:#1c6b45;font-weight:700;">&#10003; ${paraf}</td>
@@ -499,10 +501,10 @@ function renderWaliList() {
 
                 ${tasmiSectionHtml}
 
-                ${set.Catatan ? `
+                ${cleanCatatan(set.Catatan) ? `
                 <div class="bg-[#edf7f2] dark:bg-[#12452c]/20 border border-[#b2dfc8]/50 dark:border-[#12452c]/50 rounded-xl p-2.5 mb-2 text-xs text-[#1c6b45] dark:text-[#83c9a6] flex items-start gap-2">
                     <i class="fa-solid fa-comment-dots mt-0.5"></i>
-                    <span class="italic leading-relaxed">"${set.Catatan}"</span>
+                    <span class="italic leading-relaxed">"${escapeHtml(cleanCatatan(set.Catatan))}"</span>
                 </div>
                 ` : ''}
 
@@ -795,6 +797,11 @@ function loadWaliData() {
         AppNotify.close();
         if (res.status === 'success') {
             state = { ...state, ...res.data };
+            if (state.setoran && Array.isArray(state.setoran)) {
+                state.setoran.forEach(s => {
+                    s.Catatan = cleanCatatan(s.Catatan);
+                });
+            }
             updateBrandingDOM(state.appName);
             renderWali();
         } else {

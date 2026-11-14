@@ -109,6 +109,29 @@
 
 ---
 
+### F. Isu 6: Pengosongan Otomatis Catatan Setoran Bawaan Sistem ("TM: ... | Paraf: ...")
+* **Penyebab**:
+  * Pada modul impor rekapan tahfizh sebelumnya ([`js/admin.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/admin.js)), jika baris setoran tidak memiliki catatan khusus dari ustadz, sistem secara otomatis mengisi kolom `Catatan` dengan string fallback metadata: `TM: ${tmVal} | Paraf: ${r.paraf || '-'}${r.kategoriRaw ? ' | Kode: ' + r.kategoriRaw : ''}`.
+  * Akibatnya, pada Buku Rekapan Ustadz ([`ustadz.html`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/ustadz.html)), modal detail, dan kartu laporan wali santri ([`wali.html`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/wali.html)), kolom catatan ustadz menampilkan teks teknis seperti `"TM: 1709 | Paraf: U04 | Kode: B"` padahal ustadz tidak menuliskan catatan apa pun.
+* **Solusi & Rekayasa Kode**:
+  1. **Helper `cleanCatatan()` & `formatCatatanDisplay()` di [`js/core.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/core.js)**:
+     * Mendeteksi dan membersihkan pola bawaan sistem (`/^TM:\s*.*?Paraf:/i`, `/^Paraf:\s*U\d+/i`, dsb.) sehingga dikembalikan sebagai string kosong `""`.
+     * Menjaga catatan evaluasi murni ustadz (seperti *"pertahankan kualitasnya"*, *"Mumtaz"*, atau catatan spesifik tajwid).
+     * Jika formatnya mengandung `| Catatan: <isi>`, hanya isi catatan murni yang diekstrak dan ditampilkan.
+  2. **Pembersihan Tampilan Seketika (Frontend)**:
+     * [`js/ustadz.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/ustadz.js): Pada tabel `renderUstadzRekapanTable()`, riwayat dashboard `renderUstadzRiwayat()`, modal detail `openViewSetoran()`, formulir edit `openEditSetoran()`, dan cetak `cetakRekapanUstadz()`, seluruh teks sistem otomatis kosong/menjadi `-`.
+     * [`js/wali.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/wali.js): Gelembung catatan ustadz hijau hanya muncul jika ustadz benar-benar mengisi catatan evaluasi murni.
+     * [`js/admin.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/js/admin.js): Generator payload `executeBatchRekapSave()` tidak lagi menyisipkan metadata sistem ke kolom `Catatan`.
+  3. **Fitur Pembersihan Massal 1-Klik di Database Spreadsheet**:
+     * Menambahkan fungsi `cleanAllLegacyNotes(token)` di [`code.gs`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/code.gs) dan aksi API `cleanAllLegacyNotes`.
+     * Menambahkan tombol **"Bersihkan Catatan Sistem"** di Buku Rekapan Ustadz ([`ustadz.html`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/ustadz.html)) dan Rekap Tahfizh Admin ([`admin.html`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/admin.html)).
+     * Saat diklik, sistem secara otomatis mengosongkan seluruh teks format bawaan pada sheet `Data_Setoran` di Google Spreadsheet sekaligus menyelamatkan nomor TM dan kode paraf ustadz ke kolom resminya masing-masing tanpa ada data yang hilang.
+  4. **Pembaruan Pengujian & Cache PWA**:
+     * Menambahkan 4 uji unit baru di [`tests/core-helpers.test.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/tests/core-helpers.test.js) (total 83 tests passing 100%).
+     * Versi cache pada [`sw.js`](file:///d:/1.%20MIZTERGOOD/04%20-%20Keuangan%20dan%20Bisnis/JASA/21.%20ZADIL%20QURAN/sw.js) dinaikkan menjadi `zadil-quran-pwa-v16`.
+
+---
+
 ## 2. Status Hasil Pengujian Otomatis (Vitest)
 ```
 ✓ tests/ustadz-rekap-actions.test.js (6 tests)
@@ -117,8 +140,8 @@
 ✓ tests/tasmi.test.js (15 tests)
 ✓ tests/worker.test.js (3 tests)
 ✓ tests/kwitansi.test.js (7 tests)
-✓ tests/core-helpers.test.js (31 tests)
+✓ tests/core-helpers.test.js (35 tests)
 
 Test Files  7 passed (7)
-     Tests  79 passed (79)
+     Tests  83 passed (83)
 ```

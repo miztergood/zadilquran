@@ -273,6 +273,10 @@ function doPost(e) {
         result = saveSetoranBatch(args[0], args[1]);
         break;
 
+      case 'cleanAllLegacyNotes':
+        result = cleanAllLegacyNotes(args[0]);
+        break;
+
       // MODUL 2: KEUANGAN & SPP
       case 'createTagihan':
         result = createTagihan(args[0], args[1]);
@@ -1259,7 +1263,7 @@ function saveSetoran(token, dataSetoran) {
       "Ayat": ayatVal,
       "Halaman": halVal,
       "Predikat": predikatVal,
-      "Catatan": dataSetoran.catatan || dataSetoran.Catatan || "",
+      "Catatan": cleanCatatan_(dataSetoran.catatan || dataSetoran.Catatan || ""),
       "Tanggal": dataSetoran.date || dataSetoran.tanggal || dataSetoran.Tanggal || dataSetoran.Tgl_Setoran || Utilities.formatDate(new Date(), "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
       "ParafUstadz": dataSetoran.parafUstadz || dataSetoran.ParafUstadz || dataSetoran.paraf || auth.data.name || "Ustadz Pembimbing",
       "Detail_Tasmi": detailTasmiJson
@@ -1343,7 +1347,7 @@ function saveSetoranBatch(token, setoranList) {
           "Ayat": item.ayat || item.Ayat || item.ayatRentang || "-",
           "Halaman": item.halaman || item.Halaman || "-",
           "Predikat": item.predikat || item.Predikat || item.nilai || item.Nilai || "Mumtaz",
-          "Catatan": item.catatan || item.Catatan || "",
+          "Catatan": cleanCatatan_(item.catatan || item.Catatan || ""),
           "Tanggal": item.date || item.tanggal || item.Tanggal || item.Tgl_Setoran || Utilities.formatDate(now, "Asia/Jakarta", "dd MMM yyyy, HH:mm"),
           "ParafUstadz": item.parafUstadz || item.ParafUstadz || item.paraf || item.namaUstadz || auth.data.name || "Ustadz Pembimbing",
           "Detail_Tasmi": item.detailTasmi ? (typeof item.detailTasmi === 'string' ? item.detailTasmi : JSON.stringify(item.detailTasmi)) : ""
@@ -1363,6 +1367,82 @@ function saveSetoranBatch(token, setoranList) {
     } finally {
       lock.releaseLock();
     }
+  });
+}
+
+function cleanCatatan_(cat) {
+  if (!cat) return "";
+  var c = String(cat).trim();
+  if (!c || c === "-" || c === "undefined" || c === "null") return "";
+  if (/^TM:\s*[^\s|]+\s*\|\s*Paraf:\s*[^\s|]+(\s*\|\s*Kode:\s*[^\s|]+)?$/i.test(c)) return "";
+  if (/^TM:\s*\d+\s*\|\s*Paraf:/i.test(c)) return "";
+  if (/^Paraf:\s*U\d+/i.test(c)) return "";
+  if (/^TM:\s*\d+$/i.test(c)) return "";
+  if (c.indexOf("| Catatan:") !== -1) return c.split("| Catatan:")[1].trim();
+  return c;
+}
+
+function cleanAllLegacyNotes(token) {
+  var auth = checkRole(token, ["superadmin", "ustadz"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data_Setoran");
+    if (!sheet) return createResponse(false, null, "Sheet Data_Setoran tidak ditemukan.");
+
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    if (lastRow <= 1) return createResponse(true, { cleaned: 0 }, "Tidak ada data setoran untuk dibersihkan.");
+
+    var headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    var catIdx = headers.indexOf("Catatan");
+    var tmIdx = headers.indexOf("TM");
+    var parafIdx = headers.indexOf("ParafUstadz");
+
+    if (catIdx === -1) return createResponse(false, null, "Kolom Catatan tidak ditemukan.");
+
+    var range = sheet.getRange(2, 1, lastRow - 1, lastCol);
+    var data = range.getValues();
+    var cleanedCount = 0;
+
+    for (var i = 0; i < data.length; i++) {
+      var origCat = String(data[i][catIdx] || "").trim();
+      if (!origCat) continue;
+
+      var isSystemNote = /^TM:\s*[^\s|]+\s*\|\s*Paraf:\s*[^\s|]+(\s*\|\s*Kode:\s*[^\s|]+)?$/i.test(origCat)
+        || /^TM:\s*\d+\s*\|\s*Paraf:/i.test(origCat)
+        || /^Paraf:\s*U\d+/i.test(origCat)
+        || /^TM:\s*\d+$/i.test(origCat);
+
+      if (isSystemNote || origCat.indexOf("| Catatan:") !== -1) {
+        if (tmIdx !== -1) {
+          var currentTM = String(data[i][tmIdx] || "").trim();
+          if (!currentTM || currentTM === "-") {
+            var mTM = origCat.match(/TM:\s*([^\s|]+)/i);
+            if (mTM) data[i][tmIdx] = mTM[1];
+          }
+        }
+
+        if (parafIdx !== -1) {
+          var currentParaf = String(data[i][parafIdx] || "").trim();
+          if (!currentParaf || currentParaf === "-" || currentParaf === "Ttd") {
+            var mParaf = origCat.match(/Paraf:\s*([^\s|]+)/i);
+            if (mParaf) data[i][parafIdx] = mParaf[1];
+          }
+        }
+
+        var cleanVal = cleanCatatan_(origCat);
+        data[i][catIdx] = cleanVal;
+        cleanedCount++;
+      }
+    }
+
+    if (cleanedCount > 0) {
+      range.setValues(data);
+      SpreadsheetApp.flush();
+    }
+
+    return createResponse(true, { cleaned: cleanedCount }, "Alhamdulillah, berhasil membersihkan " + cleanedCount + " catatan sistem otomatis menjadi kosong!");
   });
 }
 

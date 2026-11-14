@@ -12,7 +12,9 @@ import {
   convertArabicNumerals,
   parseTahfizhMarkdownTable,
   stripHalamanPrefix,
-  formatHalamanDisplay
+  formatHalamanDisplay,
+  cleanCatatan,
+  formatCatatanDisplay
 } from '../js/core.js';
 
 describe('Zadil Quran Core Helpers (js/core.js)', () => {
@@ -270,6 +272,40 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
       expect(stripHalamanPrefix('Hal Hal 589')).toBe('589');
       expect(stripHalamanPrefix('HAL 274')).toBe('274');
       expect(stripHalamanPrefix('Hal : 568-569')).toBe('568-569');
+    });
+  });
+
+  describe('cleanCatatan() & formatCatatanDisplay()', () => {
+    it('mengosongkan catatan sistem otomatis seperti TM / Paraf / Kode yang tidak memiliki catatan murni', () => {
+      expect(cleanCatatan('TM: 1709 | Paraf: U04 | Kode: B')).toBe('');
+      expect(cleanCatatan('TM: 1708 | Paraf: U07 | Kode: Z')).toBe('');
+      expect(cleanCatatan('TM: 1706 | Paraf: U07 | Kode: Z')).toBe('');
+      expect(cleanCatatan('TM: 808 | Paraf: U05')).toBe('');
+      expect(cleanCatatan('Paraf: U01 (ALYA CHAIRO BILVAZA)')).toBe('');
+      expect(cleanCatatan('Paraf: U06 (A. AFIF NURWAHID)')).toBe('');
+      expect(cleanCatatan('Paraf: U09')).toBe('');
+      expect(cleanCatatan('TM: 1709')).toBe('');
+    });
+
+    it('menjaga catatan evaluasi murni ustadz dan mengekstrak pesan jika berformat | Catatan:', () => {
+      expect(cleanCatatan('pertahankan kualitasnya')).toBe('pertahankan kualitasnya');
+      expect(cleanCatatan('Mumtaz')).toBe('Mumtaz');
+      expect(cleanCatatan('TM: 101 | Paraf: U01 | Catatan: Makhraj tajwid perlu diperbaiki')).toBe('Makhraj tajwid perlu diperbaiki');
+    });
+
+    it('formatCatatanDisplay() mengembalikan strip (-) jika catatan kosong atau teks sistem', () => {
+      expect(formatCatatanDisplay('TM: 1709 | Paraf: U04 | Kode: B')).toBe('-');
+      expect(formatCatatanDisplay('')).toBe('-');
+      expect(formatCatatanDisplay(null)).toBe('-');
+      expect(formatCatatanDisplay('pertahankan kualitasnya')).toBe('pertahankan kualitasnya');
+    });
+
+    it('memastikan tombol pembersih catatan sistem tersedia di ustadz.html dan admin.html', () => {
+      const ustadzHtml = fs.readFileSync('ustadz.html', 'utf8');
+      expect(ustadzHtml).toContain('bersihkanCatatanSistemOtomatis()');
+
+      const adminHtml = fs.readFileSync('admin.html', 'utf8');
+      expect(adminHtml).toContain('bersihkanCatatanSistemAdmin()');
     });
   });
 });
