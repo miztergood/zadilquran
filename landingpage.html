@@ -558,12 +558,32 @@
                 </div>
             </div>
 
-            <!-- Tombol Aksi Buka Halaman Pendaftaran Khusus -->
-            <div class="mt-12 text-center">
+            <!-- Tombol Aksi Buka Halaman Pendaftaran Khusus & Info Rekening -->
+            <div class="mt-12 text-center space-y-4">
                 <a href="pendaftaran.html" class="inline-flex items-center gap-2 bg-[#9a2024] hover:bg-[#871a1e] text-white font-bold px-8 py-4 rounded-xl shadow-md transition active:scale-95 text-sm sm:text-base">
                     <i class="fa-solid fa-file-signature"></i>
                     <span>Buka Halaman Formulir Pendaftaran Online &rarr;</span>
                 </a>
+
+                <!-- Banner Rekening Resmi Pesantren -->
+                <div class="max-w-xl mx-auto p-4 rounded-2xl bg-blue-50/90 dark:bg-slate-900 border border-blue-200 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-left shadow-2xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+                            BRI
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                <span>Rekening Resmi Pembayaran Pesantren</span>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-bold">Sah</span>
+                            </div>
+                            <div class="font-mono text-sm font-extrabold text-blue-700 dark:text-blue-400">6580 0101 4224 533</div>
+                            <div class="text-[11px] text-gray-500">Bank BRI a.n. <b>Fariz Mas'udin</b> (SPP &amp; PSB)</div>
+                        </div>
+                    </div>
+                    <button onclick="copyRekeningResmi()" type="button" class="shrink-0 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-600 text-xs font-bold shadow-2xs transition active:scale-95 flex items-center gap-1.5" title="Salin Nomor Rekening BRI">
+                        <i class="fa-regular fa-copy text-blue-600"></i> Salin
+                    </button>
+                </div>
             </div>
         </div>
     </section>
@@ -616,6 +636,16 @@
                     </button>
                     <div id="faq-content-4" class="faq-content hidden p-5 pt-0 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-darkborder">
                         Pondok Pesantren Zadil Qur'an dilengkapi dengan Portal Wali Santri 3-in-1 (Tahfizh, SPP &amp; Biaya, dan Buku Induk). Setiap santri diberikan Kode ID Unik (<strong>ZQ-...</strong>) yang dapat dimasukkan oleh wali santri kapan saja melalui menu Portal Tahfizh di website ini.
+                    </div>
+                </div>
+
+                <div class="border border-gray-200 dark:border-darkborder rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-900/60">
+                    <button onclick="toggleFaq(5)" class="w-full p-5 text-left font-bold text-sm sm:text-base text-gray-900 dark:text-white flex items-center justify-between gap-4">
+                        <span>Ke mana pembayaran biaya pendaftaran &amp; Syahriyah (SPP) ditransfer?</span>
+                        <i id="faq-icon-5" class="fa-solid fa-chevron-down faq-icon transition-transform duration-200 text-gray-400"></i>
+                    </button>
+                    <div id="faq-content-5" class="faq-content hidden p-5 pt-0 text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-darkborder">
+                        Seluruh pembayaran resmi pesantren dapat ditransfer ke rekening resmi: <strong>Bank BRI</strong> No. Rekening: <strong>6580 0101 4224 533</strong> atas nama <strong>Fariz Mas'udin</strong> atau diserahkan tunai di Kantor Administrasi Pesantren. Setelah transfer, kirimkan bukti transfer ke WhatsApp Bendahara di nomor <strong>0857-3180-4663</strong> agar kwitansi resmi digital segera diterbitkan.
                     </div>
                 </div>
             </div>

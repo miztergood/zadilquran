@@ -513,6 +513,14 @@ function submitPsbForm(event) {
                             <div class="font-mono text-2xl font-extrabold text-[#9a2024] dark:text-white tracking-wider">${idZq}</div>
                             <p class="text-[11px] text-gray-500 mt-1">Gunakan kode di atas untuk masuk ke <b>Portal Wali Santri</b> (Cek Hafalan, Tagihan SPP ${formatRupiah(curSpp)} & Biaya Masuk ${formatRupiah(curSubtotal)}).</p>
                         </div>
+                        <div class="bg-blue-50/90 dark:bg-slate-800/90 border border-blue-200 dark:border-slate-700 rounded-xl p-3 text-xs space-y-1">
+                            <div class="font-bold text-gray-800 dark:text-gray-200 flex items-center justify-between">
+                                <span><i class="fa-solid fa-building-columns text-blue-600 mr-1"></i> Rekening Resmi Pembayaran:</span>
+                                <span class="text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 px-1.5 py-0.5 rounded font-mono font-bold">Bank BRI</span>
+                            </div>
+                            <div class="font-mono text-base font-extrabold text-gray-900 dark:text-white">6580 0101 4224 533</div>
+                            <div class="text-[11px] text-gray-600 dark:text-gray-400">a.n. <b>Fariz Mas'udin</b> &bull; Konfirmasi WA: <b>0857-3180-4663</b></div>
+                        </div>
                     </div>
                 `,
                 showCancelButton: true,

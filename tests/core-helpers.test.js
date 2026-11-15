@@ -308,5 +308,35 @@ describe('Zadil Quran Core Helpers (js/core.js)', () => {
       expect(adminHtml).toContain('bersihkanCatatanSistemAdmin()');
     });
   });
+
+  describe('Rekening Resmi Pesantren (Bank BRI)', () => {
+    it('memastikan config.js mendefinisikan rekening resmi Bank BRI a.n Fariz Masudin', () => {
+      const configJs = fs.readFileSync('config.js', 'utf8');
+      expect(configJs).toContain('Bank BRI');
+      expect(configJs).toContain('658001014224533');
+      expect(configJs).toContain('6580 0101 4224 533');
+      expect(configJs).toContain("Fariz Mas'udin");
+      expect(configJs).toContain('copyRekeningResmi');
+    });
+
+    it('memastikan nomor rekening BRI terpasang di portal wali, pendaftaran, dan beranda', () => {
+      const waliHtml = fs.readFileSync('wali.html', 'utf8');
+      expect(waliHtml).toContain('6580 0101 4224 533');
+      expect(waliHtml).toContain("Fariz Mas'udin");
+      expect(waliHtml).toContain('copyRekeningResmi()');
+
+      const pendaftaranHtml = fs.readFileSync('pendaftaran.html', 'utf8');
+      expect(pendaftaranHtml).toContain('6580 0101 4224 533');
+      expect(pendaftaranHtml).toContain("Fariz Mas'udin");
+
+      const indexHtml = fs.readFileSync('index.html', 'utf8');
+      expect(indexHtml).toContain('6580 0101 4224 533');
+      expect(indexHtml).toContain("Fariz Mas'udin");
+
+      const waliJs = fs.readFileSync('js/wali.js', 'utf8');
+      expect(waliJs).toContain('konfirmasiBayarWaliWa');
+      expect(waliJs).toContain('REKENING_RESMI');
+    });
+  });
 });
 

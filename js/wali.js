@@ -724,14 +724,18 @@ function konfirmasiBayarWaliWa(idTagihan = null) {
         if (unpaid.length > 0) t = unpaid[0];
     }
 
+    const rek = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.REKENING_RESMI) 
+        ? APP_CONFIG.REKENING_RESMI 
+        : { bank: 'Bank BRI', nomorFormat: '6580 0101 4224 533', atasNama: "Fariz Mas'udin", waKonfirmasi: '6285731804663' };
+
     let pesan = `Assalamu'alaikum Wr. Wb. Admin Bendahara *PPTQ Zadil Qur'an*.\n\nSaya Orang Tua/Wali dari:\n• *Nama Santri:* ${s.Nama_Santri}\n• *ID Santri:* ${s.ID_Santri}\n\n`;
     if (t) {
         pesan += `Ingin mengonfirmasi pembayaran tagihan:\n• *Tagihan:* ${t.Judul_Tagihan}\n• *Nominal:* ${formatRupiah(t.Nominal)}\n• *Jatuh Tempo:* ${t.Jatuh_Tempo || '-'}\n\n`;
     } else {
-        pesan += `Ingin melakukan konfirmasi pembayaran Syahriyah (SPP) / Administrasi Pondok.\n\n`;
+        pesan += `Ingin mengonfirmasi pembayaran Syahriyah (SPP) / Administrasi Pondok.\n\n`;
     }
-    pesan += `Mohon informasi rekening dan verifikasinya. Terima kasih.`;
-    window.open(`https://wa.me/6285731804663?text=${encodeURIComponent(pesan)}`, '_blank');
+    pesan += `Telah kami transfer ke rekening resmi pondok:\n• *Bank:* ${rek.bank}\n• *No. Rekening:* ${rek.nomorFormat}\n• *Atas Nama:* ${rek.atasNama}\n\nBerikut kami lampirkan bukti transfernya. Mohon verifikasi dan penerbitan kwitansi resminya. Terima kasih.`;
+    window.open(`https://wa.me/${rek.waKonfirmasi}?text=${encodeURIComponent(pesan)}`, '_blank');
 }
 
 function unduhKwitansiWali(idTagihan, format = 'pdf') {
