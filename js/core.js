@@ -312,8 +312,9 @@ function getKwitansiAssets() {
  */
 function generateKwitansiCardHtml(tagihan, santri) {
     const s = santri || {};
-    const noKwitansi = `KW-${tagihan.ID_Tagihan || Date.now()}`;
-    const tglCetak = tagihan.Tgl_Bayar || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const isUangSaku = !!(tagihan.isUangSaku || (tagihan.ID_Transaksi && tagihan.Jenis === 'MASUK'));
+    const noKwitansi = `KW-${tagihan.ID_Transaksi || tagihan.ID_Tagihan || Date.now()}`;
+    const tglCetak = tagihan.Tgl_Bayar || tagihan.Tanggal || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
     const nominal = Number(tagihan.Nominal) || 0;
     const terbilangStr = angkaKeTerbilang(nominal);
     const assets = getKwitansiAssets();
@@ -321,10 +322,12 @@ function generateKwitansiCardHtml(tagihan, santri) {
     const pembayar = escapeHtml(s.Nama_Wali || s.Nama_Ayah || s.Nama_Ibu || 'Orang Tua / Wali Santri');
     const namaSantri = escapeHtml(s.Nama_Santri || tagihan.Nama_Santri || '-');
     const idSantri = escapeHtml(tagihan.ID_Santri || s.ID_Santri || '-');
-    const judulTagihan = escapeHtml(tagihan.Judul_Tagihan || 'Pembayaran Syahriyah / Pondok');
-    const kategori = escapeHtml(tagihan.Kategori || 'Syahriyah');
-    const metode = escapeHtml(tagihan.Metode_Bayar || 'Tunai / Kas Pondok');
-    const catatan = tagihan.Catatan ? ` &bull; <em>(${escapeHtml(tagihan.Catatan)})</em>` : '';
+    const judulTagihan = escapeHtml(tagihan.Judul_Tagihan || (isUangSaku ? 'Titipan Uang Saku Santri' : 'Pembayaran Syahriyah / Pondok'));
+    const kategori = escapeHtml(tagihan.Kategori || (isUangSaku ? 'Titipan Uang Saku' : 'Syahriyah'));
+    const metode = escapeHtml(tagihan.Metode_Bayar || (isUangSaku ? 'Transfer Bank / Kasir Pondok' : 'Tunai / Kas Pondok'));
+    const catatanRaw = tagihan.Catatan || tagihan.Keterangan || '';
+    const catatan = catatanRaw ? ` &bull; <em>(${escapeHtml(catatanRaw)})</em>` : '';
+    const judulDokumen = isUangSaku ? 'Tanda Terima Titipan Uang Saku' : 'Kwitansi Pembayaran';
 
     return `
     <div class="kwitansi-wrapper" id="kwitansiWrapperCard">
@@ -349,7 +352,7 @@ function generateKwitansiCardHtml(tagihan, santri) {
         </div>
 
         <div class="title-bar">
-            <h1>Kwitansi Pembayaran</h1>
+            <h1>${judulDokumen}</h1>
         </div>
 
         <!-- Rincian Kwitansi -->

@@ -314,6 +314,19 @@ function doPost(e) {
         result = deleteTagihan(args[0], args[1]);
         break;
 
+      // MODUL TITIPAN & UANG SAKU SANTRI
+      case 'catatMutasiUangSaku':
+        result = catatMutasiUangSaku(args[0], args[1]);
+        break;
+
+      case 'deleteMutasiUangSaku':
+        result = deleteMutasiUangSaku(args[0], args[1]);
+        break;
+
+      case 'getUangSakuSantri':
+        result = getUangSakuSantri(args[0], args[1]);
+        break;
+
       case 'updatePondokName':
         result = updatePondokName(args[0], args[1]);
         break;
@@ -376,7 +389,8 @@ const SHEET_CONFIG = {
     "Nama_Wali", "No_HP_Wali", "ID_Ustadz", "Status", "Timestamp"
   ],
   "Data_Setoran": ["ID_Setoran", "ID_Santri", "ID_Ustadz", "Tingkatan", "TM", "Jenis", "Juz", "Surah", "SurahNo", "Ayat", "Halaman", "Predikat", "Catatan", "Tanggal", "ParafUstadz", "Detail_Tasmi"],
-  "Data_Tagihan": ["ID_Tagihan", "ID_Santri", "Kategori", "Judul_Tagihan", "Nominal", "Jatuh_Tempo", "Status", "Tgl_Bayar", "Metode_Bayar", "Catatan", "Timestamp", "Periode"]
+  "Data_Tagihan": ["ID_Tagihan", "ID_Santri", "Kategori", "Judul_Tagihan", "Nominal", "Jatuh_Tempo", "Status", "Tgl_Bayar", "Metode_Bayar", "Catatan", "Timestamp", "Periode"],
+  "Data_Uang_Saku": ["ID_Transaksi", "ID_Santri", "Tanggal", "Jenis", "Nominal", "Saldo_Akhir", "Keterangan", "Dicatat_Oleh", "Timestamp"]
 };
 
 // Helper: Parser Bulan & Tahun Indonesia (contoh "November 2026" -> "2026-11")
@@ -723,7 +737,8 @@ function fetchAppData(token) {
       ustadz: getSheetDataAsObjects("Users_Ustadz").reverse(),
       santri: getSheetDataAsObjects("Data_Santri").reverse(),
       setoran: getSheetDataAsObjects("Data_Setoran"),
-      tagihan: getSheetDataAsObjects("Data_Tagihan").reverse()
+      tagihan: getSheetDataAsObjects("Data_Tagihan").reverse(),
+      uangSaku: getSheetDataAsObjects("Data_Uang_Saku").reverse()
     };
     return createResponse(true, data, "Data berhasil dimuat");
   });
@@ -761,13 +776,20 @@ function fetchWaliData(arg1, arg2) {
     const setoran = getSheetDataAsObjects("Data_Setoran").filter(s => isSameSantriId_(s.ID_Santri, cleanId) || isSameSantriId_(s.ID_Santri, realSantriId)).reverse();
     const ustadz = getSheetDataAsObjects("Users_Ustadz").find(u => u.ID_Ustadz === (santri ? santri.ID_Ustadz : ""));
     const tagihan = getSheetDataAsObjects("Data_Tagihan").filter(t => isSameSantriId_(t.ID_Santri, cleanId) || isSameSantriId_(t.ID_Santri, realSantriId)).reverse();
+    const allUangSaku = getSheetDataAsObjects("Data_Uang_Saku");
+    const myUangSaku = allUangSaku.filter(u => isSameSantriId_(u.ID_Santri, cleanId) || isSameSantriId_(u.ID_Santri, realSantriId));
+    const saldoUangSaku = myUangSaku.length > 0 ? (Number(myUangSaku[myUangSaku.length - 1].Saldo_Akhir) || 0) : 0;
     
     return createResponse(true, { 
       appName: p ? p.Value : "Zadil Quran",
       santri: santri || null, 
       setoran: setoran, 
       ustadz: ustadz || null,
-      tagihan: tagihan
+      tagihan: tagihan,
+      uangSaku: {
+        saldo: saldoUangSaku,
+        mutasi: myUangSaku.slice().reverse()
+      }
     }, "Data wali dimuat");
   });
 }
@@ -2075,6 +2097,179 @@ function batalBayarTagihan(token, idTagihan) {
 
 function deleteTagihan(token, idTagihan) {
   return deleteDataGlobal(token, "Data_Tagihan", idTagihan);
+}
+
+// ==================== MODUL 3: TITIPAN & UANG SAKU SANTRI ====================
+
+function catatMutasiUangSaku(token, payloadData) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    if (!payloadData) return createResponse(false, null, "Data mutasi uang saku tidak valid.");
+    
+    const idSantri = String(payloadData.idSantri || "").trim().toUpperCase();
+    const jenis = String(payloadData.jenis || "").trim().toUpperCase();
+    const nominal = Math.abs(parseInt(payloadData.nominal, 10) || 0);
+    const keterangan = String(payloadData.keterangan || "").trim();
+    const now = new Date();
+    const tanggal = String(payloadData.tanggal || "").trim() || Utilities.formatDate(now, "Asia/Jakarta", "yyyy-MM-dd");
+
+    if (!idSantri) return createResponse(false, null, "Santri wajib dipilih.");
+    if (jenis !== "MASUK" && jenis !== "KELUAR") {
+      return createResponse(false, null, "Jenis transaksi harus 'MASUK' (titipan) atau 'KELUAR' (pencairan).");
+    }
+    if (nominal <= 0) return createResponse(false, null, "Nominal harus lebih besar dari Rp 0.");
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName("Data_Uang_Saku");
+    if (!sheet) {
+      setupDatabase();
+      sheet = ss.getSheetByName("Data_Uang_Saku");
+    }
+
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (e) {
+      return createResponse(false, null, "Server sibuk. Silakan coba beberapa saat lagi.");
+    }
+
+    try {
+      const allRows = getSheetDataAsObjects("Data_Uang_Saku");
+      const santriRows = allRows.filter(r => isSameSantriId_(r.ID_Santri, idSantri));
+      const lastSaldo = santriRows.length > 0 ? (Number(santriRows[santriRows.length - 1].Saldo_Akhir) || 0) : 0;
+
+      if (jenis === "KELUAR" && nominal > lastSaldo) {
+        return createResponse(false, null, "Saldo tidak mencukupi! Saldo saat ini: Rp " + lastSaldo.toLocaleString("id-ID") + ", pencairan yang diminta: Rp " + nominal.toLocaleString("id-ID") + ".");
+      }
+
+      const newSaldo = jenis === "MASUK" ? (lastSaldo + nominal) : (lastSaldo - nominal);
+      const idTransaksi = "SAKU-" + now.getTime().toString(36).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+      const dicatatOleh = (auth.data && (auth.data.nama || auth.data.username)) ? (auth.data.nama || auth.data.username) : "Bendahara";
+
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const rowObj = {
+        "ID_Transaksi": idTransaksi,
+        "ID_Santri": idSantri,
+        "Tanggal": tanggal,
+        "Jenis": jenis,
+        "Nominal": nominal,
+        "Saldo_Akhir": newSaldo,
+        "Keterangan": keterangan || (jenis === "MASUK" ? "Titipan Uang Saku dari Wali" : "Pencairan Uang Saku Santri"),
+        "Dicatat_Oleh": dicatatOleh,
+        "Timestamp": now
+      };
+
+      const newRow = headers.map(h => rowObj.hasOwnProperty(h) ? rowObj[h] : "");
+      sheet.appendRow(newRow);
+      SpreadsheetApp.flush();
+
+      return createResponse(true, {
+        idTransaksi: idTransaksi,
+        idSantri: idSantri,
+        jenis: jenis,
+        nominal: nominal,
+        saldoAkhir: newSaldo,
+        keterangan: rowObj.Keterangan,
+        tanggal: tanggal,
+        dicatatOleh: dicatatOleh
+      }, "Transaksi uang saku (" + jenis + " Rp " + nominal.toLocaleString("id-ID") + ") berhasil dicatat.");
+    } finally {
+      lock.releaseLock();
+    }
+  });
+}
+
+function deleteMutasiUangSaku(token, idTransaksi) {
+  const auth = checkRole(token, ["superadmin"]);
+  if (auth.status === "error") return auth;
+
+  return safeExecute(function() {
+    const cleanId = String(idTransaksi || "").trim();
+    if (!cleanId) return createResponse(false, null, "ID Transaksi wajib diisi.");
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName("Data_Uang_Saku");
+    if (!sheet) return createResponse(false, null, "Sheet Data_Uang_Saku tidak ditemukan.");
+
+    const lock = LockService.getScriptLock();
+    try {
+      lock.waitLock(20000);
+    } catch (e) {
+      return createResponse(false, null, "Server sibuk. Silakan coba beberapa saat lagi.");
+    }
+
+    try {
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return createResponse(false, null, "Data uang saku kosong.");
+      const headers = data[0];
+      const colIdIdx = headers.indexOf("ID_Transaksi");
+      const colSantriIdx = headers.indexOf("ID_Santri");
+      const colJenisIdx = headers.indexOf("Jenis");
+      const colNominalIdx = headers.indexOf("Nominal");
+      const colSaldoIdx = headers.indexOf("Saldo_Akhir");
+
+      let targetRowIndex = -1;
+      let targetSantri = "";
+
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][colIdIdx]).trim() === cleanId) {
+          targetRowIndex = i + 1;
+          targetSantri = String(data[i][colSantriIdx]).trim();
+          break;
+        }
+      }
+
+      if (targetRowIndex === -1) {
+        return createResponse(false, null, "Transaksi " + cleanId + " tidak ditemukan.");
+      }
+
+      sheet.deleteRow(targetRowIndex);
+
+      // Rekalkulasi Saldo_Akhir untuk santri yang bersangkutan secara berurutan
+      const updatedData = sheet.getDataRange().getValues();
+      let runningSaldo = 0;
+      for (let i = 1; i < updatedData.length; i++) {
+        if (isSameSantriId_(updatedData[i][colSantriIdx], targetSantri)) {
+          const jns = String(updatedData[i][colJenisIdx]).toUpperCase();
+          const nom = Number(updatedData[i][colNominalIdx]) || 0;
+          runningSaldo = jns === "MASUK" ? (runningSaldo + nom) : (runningSaldo - nom);
+          sheet.getRange(i + 1, colSaldoIdx + 1).setValue(runningSaldo);
+        }
+      }
+
+      SpreadsheetApp.flush();
+      return createResponse(true, { idTransaksi: cleanId, santri: targetSantri, saldoTerkini: runningSaldo }, "Transaksi berhasil dihapus dan saldo telah direkalkulasi.");
+    } finally {
+      lock.releaseLock();
+    }
+  });
+}
+
+function getUangSakuSantri(token, idSantri) {
+  return safeExecute(function() {
+    const cleanId = String(idSantri || "").trim().toUpperCase();
+    if (!cleanId) return createResponse(false, null, "ID Santri wajib diisi.");
+
+    if (token) {
+      const auth = checkRole(token, ["walisantri", "superadmin", "ustadz"]);
+      if (auth.status === "error") return auth;
+      if (auth.data.role === "walisantri" && String(auth.data.id).trim().toUpperCase() !== cleanId) {
+        return createResponse(false, null, "Akses ditolak: Anda hanya berhak mengakses data santri Anda sendiri.");
+      }
+    }
+
+    const allRows = getSheetDataAsObjects("Data_Uang_Saku");
+    const santriRows = allRows.filter(r => isSameSantriId_(r.ID_Santri, cleanId));
+    const saldo = santriRows.length > 0 ? (Number(santriRows[santriRows.length - 1].Saldo_Akhir) || 0) : 0;
+
+    return createResponse(true, {
+      idSantri: cleanId,
+      saldo: saldo,
+      mutasi: santriRows.slice().reverse()
+    }, "Data uang saku berhasil dimuat.");
+  });
 }
 
 // --- PENGATURAN SUPERADMIN ---

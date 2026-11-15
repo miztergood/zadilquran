@@ -12,8 +12,11 @@ let state = {
     ustadz: null,
     setoran: [],
     tagihan: [],
+    uangSaku: { saldo: 0, mutasi: [] },
     appName: "Zadil Quran"
 };
+
+let currentWaliSubTabKeu = 'tagihan';
 
 let waliFilter = 'all';
 let waliSearchQuery = '';
@@ -347,6 +350,7 @@ function renderWali() {
 
     renderWaliList();
     renderWaliKeuangan();
+    renderWaliUangSaku();
     renderWaliProfil();
 }
 
@@ -748,6 +752,159 @@ function unduhKwitansiWali(idTagihan, format = 'pdf') {
         unduhKwitansiGambar(t, state.santri);
     } else {
         cetakKwitansiResmi(t, state.santri);
+    }
+}
+
+// ==================== SUB-MODUL: TITIPAN & UANG SAKU SANTRI (PORTAL WALI) ====================
+function switchWaliSubTabKeu(subTab) {
+    currentWaliSubTabKeu = subTab;
+    const btnTagihan = document.getElementById('waliSubTabTagihanBtn');
+    const btnUangSaku = document.getElementById('waliSubTabUangSakuBtn');
+    const viewTagihan = document.getElementById('waliSubViewTagihan');
+    const viewUangSaku = document.getElementById('waliSubViewUangSaku');
+
+    const activeBtn = "py-2 px-2.5 rounded-xl text-xs font-bold bg-white dark:bg-darkcard text-[#9a2024] dark:text-[#f29fa3] shadow-xs transition flex items-center justify-center gap-1.5";
+    const inactiveBtn = "py-2 px-2.5 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 transition flex items-center justify-center gap-1.5";
+
+    if (btnTagihan) btnTagihan.className = subTab === 'tagihan' ? activeBtn : inactiveBtn;
+    if (btnUangSaku) btnUangSaku.className = subTab === 'uangsaku' ? activeBtn : inactiveBtn;
+
+    if (viewTagihan) viewTagihan.classList.toggle('hidden', subTab !== 'tagihan');
+    if (viewUangSaku) viewUangSaku.classList.toggle('hidden', subTab !== 'uangsaku');
+
+    if (subTab === 'uangsaku') {
+        renderWaliUangSaku();
+    }
+}
+
+function renderWaliUangSaku() {
+    const s = state.santri;
+    if (!s) return;
+
+    const rawSaku = state.uangSaku || { saldo: 0, mutasi: [] };
+    const saldo = Number(rawSaku.saldo) || 0;
+    const mutasiList = Array.isArray(rawSaku.mutasi) ? rawSaku.mutasi : (Array.isArray(rawSaku) ? rawSaku : []);
+
+    let totalMasuk = 0;
+    let totalKeluar = 0;
+    mutasiList.forEach(m => {
+        const nom = Number(m.Nominal) || 0;
+        const jns = String(m.Jenis || '').toUpperCase();
+        if (jns === 'MASUK') totalMasuk += nom;
+        else if (jns === 'KELUAR') totalKeluar += nom;
+    });
+
+    const elSaldo = document.getElementById('waliUangSakuSaldo');
+    const elMasuk = document.getElementById('waliUangSakuTotalMasuk');
+    const elKeluar = document.getElementById('waliUangSakuTotalKeluar');
+    const badgeStatus = document.getElementById('waliUangSakuStatusBadge');
+    const countEl = document.getElementById('waliUangSakuMutasiCount');
+    const listEl = document.getElementById('waliUangSakuMutasiList');
+
+    if (elSaldo) elSaldo.textContent = formatRupiah(saldo);
+    if (elMasuk) elMasuk.textContent = formatRupiah(totalMasuk);
+    if (elKeluar) elKeluar.textContent = formatRupiah(totalKeluar);
+    if (countEl) countEl.textContent = `${mutasiList.length} transaksi`;
+
+    if (badgeStatus) {
+        if (saldo > 50000) {
+            badgeStatus.textContent = '✓ Saldo Aman';
+            badgeStatus.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-xs text-white';
+        } else if (saldo > 0) {
+            badgeStatus.textContent = '⚠ Saldo Menipis';
+            badgeStatus.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-amber-950';
+        } else {
+            badgeStatus.textContent = 'Saldo Habis';
+            badgeStatus.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white';
+        }
+    }
+
+    if (!listEl) return;
+
+    if (mutasiList.length === 0) {
+        listEl.innerHTML = `
+            <div class="text-center py-8 px-4 bg-white dark:bg-darkcard rounded-2xl border border-dashed border-gray-200 dark:border-darkborder text-xs text-gray-500">
+                <i class="fa-solid fa-wallet text-2xl text-gray-300 dark:text-gray-600 mb-2 block"></i>
+                Belum ada mutasi uang saku ananda yang tercatat.
+            </div>
+        `;
+        return;
+    }
+
+    listEl.innerHTML = mutasiList.map(m => {
+        const isMasuk = String(m.Jenis || '').toUpperCase() === 'MASUK';
+        const nom = Number(m.Nominal) || 0;
+        const saldoAkhir = Number(m.Saldo_Akhir) || 0;
+
+        return `
+            <div class="p-3.5 rounded-2xl bg-white dark:bg-darkcard border border-gray-100 dark:border-darkborder shadow-xs flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl ${isMasuk ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/50'} flex items-center justify-center text-xs shrink-0 font-bold">
+                        <i class="fa-solid ${isMasuk ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-bold text-gray-900 dark:text-white block truncate">${escapeHtml(m.Keterangan || (isMasuk ? 'Titipan Uang Saku' : 'Pengambilan Uang Jajan'))}</span>
+                        <div class="text-[10px] text-gray-400 flex items-center gap-2 mt-0.5">
+                            <span>${escapeHtml(m.Tanggal || '-')}</span>
+                            <span>&bull;</span>
+                            <span>Saldo: <strong>${formatRupiah(saldoAkhir)}</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                    <span class="font-black text-xs sm:text-sm ${isMasuk ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                        ${isMasuk ? '+' : '-'} ${formatRupiah(nom)}
+                    </span>
+                    ${isMasuk ? `
+                        <button onclick="unduhKwitansiUangSakuWali('${m.ID_Transaksi}')" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 text-[10px] font-bold flex items-center gap-1 shadow-2xs transition active:scale-95" title="Unduh Tanda Terima">
+                            <i class="fa-solid fa-receipt"></i>
+                            <span>Bukti</span>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function konfirmasiUangSakuWaliWa() {
+    const s = state.santri;
+    if (!s) return;
+
+    const rek = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.REKENING_RESMI) 
+        ? APP_CONFIG.REKENING_RESMI 
+        : { bank: 'Bank BRI', nomorFormat: '6580 0101 4224 533', atasNama: "Fariz Mas'udin", waKonfirmasi: '6285731804663' };
+
+    const pesan = `Assalamu'alaikum Wr. Wb. Admin Bendahara *PPTQ Zadil Qur'an*.\n\nSaya Orang Tua/Wali dari:\n• *Nama Santri:* ${s.Nama_Santri}\n• *ID Santri:* ${s.ID_Santri}\n\nIngin mengonfirmasi transfer *Titipan Uang Saku Santri* ke rekening resmi pondok:\n• *Bank:* ${rek.bank}\n• *No. Rekening:* ${rek.nomorFormat}\n• *Atas Nama:* ${rek.atasNama}\n\nBerikut kami lampirkan bukti transfernya. Mohon dicatat ke saldo dompet ananda. Terima kasih.`;
+    window.open(`https://wa.me/${rek.waKonfirmasi}?text=${encodeURIComponent(pesan)}`, '_blank');
+}
+
+function unduhKwitansiUangSakuWali(idTransaksi, format = 'pdf') {
+    const rawSaku = state.uangSaku || { saldo: 0, mutasi: [] };
+    const mutasiList = Array.isArray(rawSaku.mutasi) ? rawSaku.mutasi : (Array.isArray(rawSaku) ? rawSaku : []);
+    const m = mutasiList.find(x => x.ID_Transaksi === idTransaksi);
+
+    if (!m) {
+        return AppNotify.toast('Data transaksi uang saku tidak ditemukan', 'warning');
+    }
+
+    const receiptObj = {
+        ID_Transaksi: m.ID_Transaksi,
+        ID_Santri: m.ID_Santri || (state.santri ? state.santri.ID_Santri : ''),
+        Judul_Tagihan: 'Titipan Uang Saku Santri',
+        Kategori: 'Titipan Uang Saku',
+        Nominal: m.Nominal,
+        Tgl_Bayar: m.Tanggal,
+        Metode_Bayar: 'Transfer / Kasir Pondok',
+        Catatan: m.Keterangan || 'Titipan uang saku',
+        isUangSaku: true
+    };
+
+    if (format === 'image') {
+        unduhKwitansiGambar(receiptObj, state.santri);
+    } else {
+        cetakKwitansiResmi(receiptObj, state.santri);
     }
 }
 

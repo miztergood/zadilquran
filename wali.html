@@ -201,85 +201,166 @@
 
             <!-- ==================== TAB 2: KEUANGAN, REKAP SPP & KWITANSI OTOMATIS ==================== -->
             <div id="waliSectionKeuangan" class="hidden space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 border border-red-200 dark:border-red-900/50 shadow-xs">
-                        <p class="text-[10px] font-bold uppercase text-red-600 dark:text-red-400">Total Belum Lunas</p>
-                        <p class="text-lg font-extrabold text-red-600 dark:text-red-400 mt-0.5" id="waliKeuBelum">Rp 0</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5" id="waliKeuBelumCount">0 Tagihan</p>
-                    </div>
-                    <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 border border-emerald-200 dark:border-emerald-900/50 shadow-xs">
-                        <p class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">Sudah Terbayar</p>
-                        <p class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="waliKeuLunas">Rp 0</p>
-                        <p class="text-[10px] text-gray-400 mt-0.5" id="waliKeuLunasCount">0 Kwitansi Tersedia</p>
-                    </div>
+                <!-- Sub-tab Switcher: Tagihan SPP vs Uang Saku & Tabungan -->
+                <div class="grid grid-cols-2 gap-1.5 p-1 bg-gray-100 dark:bg-slate-800 rounded-2xl">
+                    <button type="button" onclick="switchWaliSubTabKeu('tagihan')" id="waliSubTabTagihanBtn" class="py-2 px-2.5 rounded-xl text-xs font-bold bg-white dark:bg-darkcard text-[#9a2024] dark:text-[#f29fa3] shadow-xs transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span>Tagihan &amp; SPP</span>
+                    </button>
+                    <button type="button" onclick="switchWaliSubTabKeu('uangsaku')" id="waliSubTabUangSakuBtn" class="py-2 px-2.5 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-wallet"></i>
+                        <span>Uang Saku &amp; Tabungan</span>
+                    </button>
                 </div>
 
-                <!-- Info Kwitansi Otomatis -->
-                <div class="bg-[#edf7f2] dark:bg-[#12452c]/30 border border-[#b2dfc8] dark:border-[#12452c] rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-[#1c6b45] dark:text-[#83c9a6]">
-                    <i class="fa-solid fa-file-invoice text-base mt-0.5"></i>
-                    <div>
-                        <span class="font-bold block">Kwitansi Resmi Digital (PDF &amp; Gambar)</span>
-                        <span class="text-[11px] text-gray-600 dark:text-gray-300">Setiap pembayaran yang telah diverifikasi Lunas oleh Bendahara dapat diunduh sebagai dokumen <strong>PDF</strong> atau file <strong>Gambar (PNG)</strong> berstempel &amp; tanda tangan resmi.</span>
-                    </div>
-                </div>
-
-                <div class="space-y-2.5">
-                    <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
-                        <i class="fa-solid fa-file-invoice-dollar text-[#9a2024]"></i> Daftar Tagihan &amp; Kwitansi Pembayaran
-                    </h3>
-                    <div id="waliTagihanList" class="space-y-2.5"></div>
-                </div>
-
-                <!-- Rekening Pembayaran Resmi Card -->
-                <div class="bg-white dark:bg-darkcard rounded-2xl p-4 border border-gray-200 dark:border-darkborder space-y-3.5 shadow-xs">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs tracking-tight shadow-xs">
-                                BRI
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-gray-900 dark:text-white">Rekening Pembayaran Resmi</h4>
-                                <p class="text-[10px] text-gray-500">Syahriyah (SPP), Pendaftaran &amp; Infaq</p>
-                            </div>
+                <!-- SUB-VIEW 1: TAGIHAN & SPP -->
+                <div id="waliSubViewTagihan" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 border border-red-200 dark:border-red-900/50 shadow-xs">
+                            <p class="text-[10px] font-bold uppercase text-red-600 dark:text-red-400">Total Belum Lunas</p>
+                            <p class="text-lg font-extrabold text-red-600 dark:text-red-400 mt-0.5" id="waliKeuBelum">Rp 0</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5" id="waliKeuBelumCount">0 Tagihan</p>
                         </div>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-check text-[9px]"></i> Terverifikasi
-                        </span>
+                        <div class="bg-white dark:bg-darkcard rounded-2xl p-3.5 border border-emerald-200 dark:border-emerald-900/50 shadow-xs">
+                            <p class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">Sudah Terbayar</p>
+                            <p class="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5" id="waliKeuLunas">Rp 0</p>
+                            <p class="text-[10px] text-gray-400 mt-0.5" id="waliKeuLunasCount">0 Kwitansi Tersedia</p>
+                        </div>
                     </div>
 
-                    <!-- Bank Account Box with Copy Button -->
-                    <div class="p-3.5 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-emerald-50/50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-blue-200/70 dark:border-slate-700 space-y-2">
+                    <!-- Info Kwitansi Otomatis -->
+                    <div class="bg-[#edf7f2] dark:bg-[#12452c]/30 border border-[#b2dfc8] dark:border-[#12452c] rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-[#1c6b45] dark:text-[#83c9a6]">
+                        <i class="fa-solid fa-file-invoice text-base mt-0.5"></i>
+                        <div>
+                            <span class="font-bold block">Kwitansi Resmi Digital (PDF &amp; Gambar)</span>
+                            <span class="text-[11px] text-gray-600 dark:text-gray-300">Setiap pembayaran yang telah diverifikasi Lunas oleh Bendahara dapat diunduh sebagai dokumen <strong>PDF</strong> atau file <strong>Gambar (PNG)</strong> berstempel &amp; tanda tangan resmi.</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice-dollar text-[#9a2024]"></i> Daftar Tagihan &amp; Kwitansi Pembayaran
+                        </h3>
+                        <div id="waliTagihanList" class="space-y-2.5"></div>
+                    </div>
+
+                    <!-- Rekening Pembayaran Resmi Card -->
+                    <div class="bg-white dark:bg-darkcard rounded-2xl p-4 border border-gray-200 dark:border-darkborder space-y-3.5 shadow-xs">
                         <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
-                                <i class="fa-solid fa-building-columns text-blue-600 dark:text-blue-400"></i>
-                                Bank BRI (Bank Rakyat Indonesia)
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs tracking-tight shadow-xs">
+                                    BRI
+                                </div>
+                                <div>
+                                    <h4 class="text-xs font-bold text-gray-900 dark:text-white">Rekening Pembayaran Resmi</h4>
+                                    <p class="text-[10px] text-gray-500">Syahriyah (SPP), Pendaftaran &amp; Infaq</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                                <i class="fa-solid fa-circle-check text-[9px]"></i> Terverifikasi
                             </span>
-                            <button onclick="copyRekeningResmi()" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-600 text-[11px] font-bold shadow-2xs transition active:scale-95" title="Salin Nomor Rekening BRI">
-                                <i class="fa-regular fa-copy text-blue-600 dark:text-blue-400"></i>
-                                <span>Salin No. Rek</span>
-                            </button>
                         </div>
-                        <div class="font-mono text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white tracking-wider flex items-center justify-between">
-                            <span>6580 0101 4224 533</span>
+
+                        <!-- Bank Account Box with Copy Button -->
+                        <div class="p-3.5 rounded-xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-emerald-50/50 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 border border-blue-200/70 dark:border-slate-700 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-building-columns text-blue-600 dark:text-blue-400"></i>
+                                    Bank BRI (Bank Rakyat Indonesia)
+                                </span>
+                                <button onclick="copyRekeningResmi()" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-slate-600 text-[11px] font-bold shadow-2xs transition active:scale-95" title="Salin Nomor Rekening BRI">
+                                    <i class="fa-regular fa-copy text-blue-600 dark:text-blue-400"></i>
+                                    <span>Salin No. Rek</span>
+                                </button>
+                            </div>
+                            <div class="font-mono text-lg sm:text-xl font-extrabold text-gray-900 dark:text-white tracking-wider flex items-center justify-between">
+                                <span>6580 0101 4224 533</span>
+                            </div>
+                            <div class="pt-1.5 border-t border-gray-200/60 dark:border-slate-700 flex items-center justify-between text-xs">
+                                <span class="text-gray-500 dark:text-gray-400 text-[11px]">Atas Nama:</span>
+                                <span class="font-bold text-gray-800 dark:text-white">Fariz Mas'udin</span>
+                            </div>
                         </div>
-                        <div class="pt-1.5 border-t border-gray-200/60 dark:border-slate-700 flex items-center justify-between text-xs">
-                            <span class="text-gray-500 dark:text-gray-400 text-[11px]">Atas Nama:</span>
-                            <span class="font-bold text-gray-800 dark:text-white">Fariz Mas'udin</span>
+
+                        <!-- Catatan Konfirmasi & Tombol WhatsApp -->
+                        <div class="text-[11px] text-gray-500 dark:text-gray-400 space-y-1">
+                            <p class="flex items-start gap-1.5">
+                                <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 shrink-0"></i>
+                                <span>Setelah transfer, mohon kirim bukti transfer ke WA Bendahara agar status tagihan menjadi <b>Lunas</b> dan kwitansi resmi digital segera terbit.</span>
+                            </p>
+                        </div>
+
+                        <button onclick="konfirmasiBayarWaliWa()" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white py-3 px-4 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span>Konfirmasi Pembayaran via WhatsApp</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SUB-VIEW 2: UANG SAKU & TABUNGAN SANTRI -->
+                <div id="waliSubViewUangSaku" class="hidden space-y-4">
+                    <!-- Kartu Dompet Santri -->
+                    <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-800 text-white shadow-lg relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-6 text-white/10 text-8xl pointer-events-none">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs uppercase font-extrabold tracking-wider opacity-85">Dompet Uang Saku Santri</span>
+                                <span id="waliUangSakuStatusBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-xs text-white">Saldo Aktif</span>
+                            </div>
+                            <div class="text-2xl sm:text-3xl font-black mt-2 tracking-tight" id="waliUangSakuSaldo">Rp 0</div>
+                            <div class="pt-3 mt-3 border-t border-white/20 flex items-center justify-between text-xs">
+                                <div>
+                                    <span class="opacity-75 text-[10px] block">Total Masuk (Titipan)</span>
+                                    <strong id="waliUangSakuTotalMasuk">Rp 0</strong>
+                                </div>
+                                <div class="text-right">
+                                    <span class="opacity-75 text-[10px] block">Total Diambil (Jajan)</span>
+                                    <strong id="waliUangSakuTotalKeluar">Rp 0</strong>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Catatan Konfirmasi & Tombol WhatsApp -->
-                    <div class="text-[11px] text-gray-500 dark:text-gray-400 space-y-1">
-                        <p class="flex items-start gap-1.5">
-                            <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 shrink-0"></i>
-                            <span>Setelah transfer, mohon kirim bukti transfer ke WA Bendahara agar status tagihan menjadi <b>Lunas</b> dan kwitansi resmi digital segera terbit.</span>
+                    <!-- Tombol Aksi Titip Uang Saku via WhatsApp -->
+                    <div class="space-y-2">
+                        <button onclick="konfirmasiUangSakuWaliWa()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-2xl font-bold text-xs sm:text-sm shadow-md flex items-center justify-center gap-2 transition active:scale-98">
+                            <i class="fa-brands fa-whatsapp text-base"></i>
+                            <span>Konfirmasi Transfer Uang Saku</span>
+                        </button>
+                        <p class="text-[11px] text-gray-500 text-center">
+                            Wali santri dapat mentransfer uang saku ke rekening resmi pondok dan konfirmasi via WhatsApp agar langsung dicatatkan oleh Bendahara.
                         </p>
                     </div>
 
-                    <button onclick="konfirmasiBayarWaliWa()" class="w-full bg-[#1c6b45] hover:bg-[#165737] text-white py-3 px-4 rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98">
-                        <i class="fa-brands fa-whatsapp text-base"></i>
-                        <span>Konfirmasi Pembayaran via WhatsApp</span>
-                    </button>
+                    <!-- Rekening Box Saku (Ringkas) -->
+                    <div class="p-3.5 rounded-2xl bg-white dark:bg-darkcard border border-blue-200/80 dark:border-slate-700 shadow-xs flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs">BRI</div>
+                            <div>
+                                <span class="text-[10px] text-gray-400 block font-bold">REKENING RESMI PONDOK:</span>
+                                <span class="font-mono text-xs sm:text-sm font-extrabold text-gray-900 dark:text-white">6580 0101 4224 533</span>
+                                <span class="text-[10px] text-gray-500 block">an. Fariz Mas'udin</span>
+                            </div>
+                        </div>
+                        <button onclick="copyRekeningResmi()" type="button" class="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-slate-800 text-blue-700 dark:text-blue-300 font-bold text-xs border border-blue-200 dark:border-slate-700 hover:bg-blue-100 transition active:scale-95 shrink-0">
+                            <i class="fa-regular fa-copy mr-1"></i>Salin
+                        </button>
+                    </div>
+
+                    <!-- Riwayat Mutasi Uang Saku List -->
+                    <div class="space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sm text-gray-800 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-emerald-600"></i> Riwayat Titipan &amp; Pengambilan
+                            </h3>
+                            <span class="text-xs text-gray-400" id="waliUangSakuMutasiCount">0 catatan</span>
+                        </div>
+                        <div id="waliUangSakuMutasiList" class="space-y-2.5">
+                            <!-- Diisi oleh JS -->
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -75,4 +75,48 @@ Untuk memperbarui sistem yang sedang berjalan di Google Apps Script:
    - Pada dropdown **Version**, pilih **New version**.
    - Klik **Deploy**.
 5. **Frontend Web**:
-   - Berkas frontend (`admin.html`, `js/admin.js`, `js/wali.js`) telah diperbarui dan siap digunakan secara langsung.
+   - Berkas frontend (`admin.html`, `js/admin.js`, `js/wali.js`, `wali.html`, `js/core.js`) telah diperbarui dan siap digunakan secara langsung.
+
+---
+
+## 💰 Pembaruan Lanjutan: Modul Titipan & Uang Saku Santri serta Keperluan Lain
+
+### A. Latar Belakang & Masalah
+Selain pembayaran rutin SPP dan biaya pendaftaran, wali santri kerap mentransfer dana untuk:
+1. **Titipan Uang Saku Santri (Pocket Money)**: Bukan pendapatan pondok, melainkan titipan dana amanah untuk uang jajan atau kebutuhan harian santri yang dicairkan bertahap.
+2. **Keperluan Insidental & Non-SPP**: Biaya rihlah/kegiatan, wisuda/khotmil Qur'an, seragam/kitab tambahan, pengobatan santri, atau infaq/donasi sukarela.
+
+### B. Fitur & Penyesuaian yang Diterapkan
+1. **Backend Google Apps Script (`code.gs`)**:
+   - Penambahan sheet baru `"Data_Uang_Saku"` pada `SHEET_CONFIG` (`ID_Transaksi`, `ID_Santri`, `Tanggal`, `Jenis`, `Nominal`, `Saldo_Akhir`, `Keterangan`, `Dicatat_Oleh`, `Timestamp`).
+   - Endpoint API baru:
+     - `catatMutasiUangSaku(token, payload)`: Pencatatan mutasi MASUK (top-up) dan KELUAR (pencairan) dengan atomic `LockService` dan validasi saldo mencukupi.
+     - `deleteMutasiUangSaku(token, idTransaksi)`: Penghapusan transaksi dan rekalkulasi otomatis saldo santri.
+     - `getUangSakuSantri(token, idSantri)`: Pengambilan saldo dan mutasi dengan proteksi IDOR.
+   - Pembaruan `fetchAppData` dan `fetchWaliData` untuk menyertakan data uang saku secara langsung.
+
+2. **Panel Admin (`admin.html` & `js/admin.js`)**:
+   - **Tab 4 Keuangan: "Titipan & Uang Saku"**:
+     - Kartu ringkasan total dana titipan santri aktif, total masuk, dan total pencairan.
+     - Daftar saldo per santri dengan indikator status (*Saldo Aman*, *Saldo Menipis*, *Saldo Kosong*).
+     - Tombol aksi cepat: *Catat Uang Masuk* & *Catat Pencairan*.
+     - Modal **Buku Tabungan / Riwayat Mutasi** per santri dengan opsi cetak bukti tanda terima dan hapus transaksi.
+   - Perluasan kategori tagihan fleksibel di Modal Buat Tagihan:
+     - *Kegiatan & Rihlah*
+     - *Wisuda & Tasmi / Khotmil Qur'an*
+     - *Seragam & Atribut*
+     - *Infaq & Donasi Sukarela*
+     - *Biaya Lainnya (Custom)*
+
+3. **Portal Wali Santri (`wali.html` & `js/wali.js`)**:
+   - Sub-tab navigasi di menu Keuangan: **"Tagihan & SPP"** vs **"Uang Saku & Tabungan"**.
+   - Tampilan **Dompet Uang Saku Santri** bergradien modern dengan sisa saldo *realtime*.
+   - Tombol cepat **"Konfirmasi Transfer Uang Saku"** via WhatsApp ke bendahara dengan draf pesan otomatis.
+   - Daftar mutasi uang saku (kredit masuk hijau, debit keluar merah) dan sisa saldo berjalan.
+   - Tombol cetak/unduh **"Tanda Terima Titipan Uang Saku"** resmi untuk setiap transaksi masuk.
+
+4. **Generator Kwitansi Resmi (`js/core.js`)**:
+   - Adaptasi `generateKwitansiCardHtml` agar otomatis mencetak dokumen dengan judul *"Tanda Terima Titipan Uang Saku"* saat mencetak bukti titipan uang saku.
+
+5. **Pengujian Otomatis (`tests/uang-saku.test.js`)**:
+   - 4 skenario uji baru: verifikasi teks tanda terima, tombol aksi cetak/unduh, kalkulasi saldo berjalan, dan pencegahan penarikan melebihi saldo. Seluruh 89 tes vitest lolos (100% pass).

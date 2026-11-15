@@ -720,10 +720,12 @@ function switchTabKeuangan(tabId) {
     const btnPerlu = document.getElementById('tabBtnPerluDitagih');
     const btnMatriks = document.getElementById('tabBtnMatriksSpp');
     const btnSemua = document.getElementById('tabBtnSemuaTagihan');
+    const btnSaku = document.getElementById('tabBtnUangSaku');
     
     const contPerlu = document.getElementById('tabContentPerluDitagih');
     const contMatriks = document.getElementById('tabContentMatriksSpp');
     const contSemua = document.getElementById('tabContentSemuaTagihan');
+    const contSaku = document.getElementById('tabContentUangSaku');
     
     const activeBtnClass = "pb-3 text-xs sm:text-sm font-bold border-b-2 border-[#9a2024] text-[#9a2024] dark:text-[#f29fa3] flex items-center gap-2 whitespace-nowrap transition";
     const inactiveBtnClass = "pb-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap-2 whitespace-nowrap transition";
@@ -731,14 +733,17 @@ function switchTabKeuangan(tabId) {
     if (btnPerlu) btnPerlu.className = tabId === 'perlu-ditagih' ? activeBtnClass : inactiveBtnClass;
     if (btnMatriks) btnMatriks.className = tabId === 'matriks-spp' ? activeBtnClass : inactiveBtnClass;
     if (btnSemua) btnSemua.className = tabId === 'semua-tagihan' ? activeBtnClass : inactiveBtnClass;
+    if (btnSaku) btnSaku.className = tabId === 'uang-saku' ? activeBtnClass : inactiveBtnClass;
     
     if (contPerlu) contPerlu.classList.toggle('hidden', tabId !== 'perlu-ditagih');
     if (contMatriks) contMatriks.classList.toggle('hidden', tabId !== 'matriks-spp');
     if (contSemua) contSemua.classList.toggle('hidden', tabId !== 'semua-tagihan');
+    if (contSaku) contSaku.classList.toggle('hidden', tabId !== 'uang-saku');
     
     if (tabId === 'perlu-ditagih') renderTabPerluDitagih();
     else if (tabId === 'matriks-spp') renderTabMatriksSpp();
     else if (tabId === 'semua-tagihan') renderTabSemuaTagihan();
+    else if (tabId === 'uang-saku') renderTabUangSaku();
 }
 
 function renderKeuanganView() {
@@ -780,6 +785,14 @@ function renderKeuanganView() {
     
     // Status SPP Card
     renderCardStatusSpp();
+
+    // Badge Uang Saku
+    const badgeUangSaku = document.getElementById('badgeCountUangSaku');
+    if (badgeUangSaku) {
+        const uSakuList = state.uangSaku || [];
+        const uniqueSantriSaku = new Set(uSakuList.map(u => String(u.ID_Santri || '').toUpperCase()));
+        badgeUangSaku.textContent = `${uniqueSantriSaku.size}`;
+    }
     
     // Tab aktif
     if (currentKeuanganTab === 'perlu-ditagih') {
@@ -788,6 +801,8 @@ function renderKeuanganView() {
         renderTabMatriksSpp();
     } else if (currentKeuanganTab === 'semua-tagihan') {
         renderTabSemuaTagihan();
+    } else if (currentKeuanganTab === 'uang-saku') {
+        renderTabUangSaku();
     }
 }
 
@@ -1586,6 +1601,22 @@ function autoFillTagihanPreset(val) {
         if (judulEl) judulEl.value = 'Biaya Kesehatan Santri';
         if (nominalEl) nominalEl.value = 100000;
         if (catatanEl) catatanEl.value = 'Dana operasional poskestren';
+    } else if (val === 'Kegiatan & Rihlah') {
+        if (judulEl) judulEl.value = 'Biaya Kegiatan / Rihlah Santri';
+        if (nominalEl) nominalEl.value = 150000;
+        if (catatanEl) catatanEl.value = 'Rihlah & ziarah santri tahfizh';
+    } else if (val === 'Wisuda & Tasmi') {
+        if (judulEl) judulEl.value = "Biaya Wisuda & Khotmil Qur'an";
+        if (nominalEl) nominalEl.value = 250000;
+        if (catatanEl) catatanEl.value = 'Haflah wisuda & tasmi santri';
+    } else if (val === 'Seragam & Atribut') {
+        if (judulEl) judulEl.value = 'Biaya Seragam & Atribut Pesantren';
+        if (nominalEl) nominalEl.value = 200000;
+        if (catatanEl) catatanEl.value = 'Seragam gamis / koko & atribut';
+    } else if (val === 'Infaq & Donasi') {
+        if (judulEl) judulEl.value = 'Infaq & Donasi Sukarela';
+        if (nominalEl) nominalEl.value = 100000;
+        if (catatanEl) catatanEl.value = 'Infaq jariyah sukarela untuk pesantren';
     } else {
         if (judulEl) judulEl.value = '';
         if (nominalEl) nominalEl.value = 0;
@@ -1796,6 +1827,396 @@ function kirimWaTagihan(idTagihan) {
     }
     const pesan = `Assalamu'alaikum Wr. Wb.\nBapak/Ibu Wali dari ananda *${s.Nama_Santri}* (${s.ID_Santri}).\n\nKami menginformasikan rincian tagihan administrasi *${state.appName || "PPTQ Zadil Qur'an"}*:\n• *Tagihan:* ${t.Judul_Tagihan}\n• *Nominal:* ${formatRupiah(t.Nominal)}\n• *Jatuh Tempo:* ${t.Jatuh_Tempo || '-'}\n• *Status:* *${t.Status}*\n\nPembayaran dapat dilakukan melalui Bendahara Pondok atau konfirmasi ke nomor ini. Jazakumullahu khairan katsiran.`;
     window.open(`https://wa.me/${waClean}?text=${encodeURIComponent(pesan)}`, '_blank');
+}
+
+// ==================== MODUL 3: TITIPAN & UANG SAKU SANTRI (ADMIN) ====================
+let currentRiwayatSantriId = '';
+
+function getSantriUangSakuData(santriId) {
+    const allMutasi = state.uangSaku || [];
+    const santriMutasi = allMutasi.filter(u => isSameSantriId(u.ID_Santri, santriId));
+    let totalMasuk = 0;
+    let totalKeluar = 0;
+
+    santriMutasi.forEach(m => {
+        const nom = Number(m.Nominal) || 0;
+        const jns = String(m.Jenis || '').toUpperCase();
+        if (jns === 'MASUK') totalMasuk += nom;
+        else if (jns === 'KELUAR') totalKeluar += nom;
+    });
+
+    let saldo = totalMasuk - totalKeluar;
+    if (saldo < 0) saldo = 0;
+
+    return {
+        saldo,
+        totalMasuk,
+        totalKeluar,
+        mutasiCount: santriMutasi.length,
+        mutasiList: santriMutasi
+    };
+}
+
+function renderTabUangSaku() {
+    const listEl = document.getElementById('listUangSakuSantri');
+    if (!listEl) return;
+
+    const allSantri = (state.santri || []).filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+    const allMutasi = state.uangSaku || [];
+
+    // KPI Global Uang Saku
+    let globalMasuk = 0;
+    let globalKeluar = 0;
+    let countMasuk = 0;
+    let countKeluar = 0;
+
+    allMutasi.forEach(m => {
+        const nom = Number(m.Nominal) || 0;
+        const jns = String(m.Jenis || '').toUpperCase();
+        if (jns === 'MASUK') {
+            globalMasuk += nom;
+            countMasuk++;
+        } else if (jns === 'KELUAR') {
+            globalKeluar += nom;
+            countKeluar++;
+        }
+    });
+
+    const globalSaldo = Math.max(0, globalMasuk - globalKeluar);
+
+    const elStatSaldo = document.getElementById('uSakuStatSaldo');
+    const elStatMasuk = document.getElementById('uSakuStatMasuk');
+    const elStatMasukCount = document.getElementById('uSakuStatMasukCount');
+    const elStatKeluar = document.getElementById('uSakuStatKeluar');
+    const elStatKeluarCount = document.getElementById('uSakuStatKeluarCount');
+
+    if (elStatSaldo) elStatSaldo.textContent = formatRupiah(globalSaldo);
+    if (elStatMasuk) elStatMasuk.textContent = formatRupiah(globalMasuk);
+    if (elStatMasukCount) elStatMasukCount.textContent = `${countMasuk} kali titipan`;
+    if (elStatKeluar) elStatKeluar.textContent = formatRupiah(globalKeluar);
+    if (elStatKeluarCount) elStatKeluarCount.textContent = `${countKeluar} kali pencairan`;
+
+    // Filter santri
+    const query = (document.getElementById('searchUangSakuSantri')?.value || '').toLowerCase().trim();
+    let filteredSantri = allSantri;
+    if (query) {
+        filteredSantri = allSantri.filter(s => {
+            const nama = (s.Nama_Santri || '').toLowerCase();
+            const id = (s.ID_Santri || '').toLowerCase();
+            const wali = (s.Nama_Wali || s.Nama_Ayah || '').toLowerCase();
+            return nama.includes(query) || id.includes(query) || wali.includes(query);
+        });
+    }
+
+    if (filteredSantri.length === 0) {
+        listEl.innerHTML = `
+            <div class="text-center py-10 px-4 bg-gray-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-gray-200 dark:border-darkborder text-xs text-gray-500">
+                <i class="fa-solid fa-user-slash text-2xl text-gray-300 dark:text-gray-600 mb-2 block"></i>
+                Tidak ditemukan santri yang sesuai dengan pencarian "${escapeHtml(query)}".
+            </div>
+        `;
+        return;
+    }
+
+    listEl.innerHTML = filteredSantri.map(s => {
+        const uData = getSantriUangSakuData(s.ID_Santri);
+        let statusBadge = '';
+        if (uData.saldo > 50000) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1"><i class="fa-solid fa-circle-check text-[8px]"></i> Saldo Aman</span>`;
+        } else if (uData.saldo > 0) {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-[8px]"></i> Saldo Menipis</span>`;
+        } else {
+            statusBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-darkborder">Saldo Kosong</span>`;
+        }
+
+        const waliInfo = s.Nama_Wali || s.Nama_Ayah || s.Nama_Ibu || '-';
+
+        return `
+            <div class="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-darkcard border border-gray-100 dark:border-darkborder shadow-xs hover:border-emerald-200 dark:hover:border-emerald-900/50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap mb-1">
+                        <span class="font-extrabold text-sm sm:text-base text-gray-900 dark:text-white truncate">${escapeHtml(s.Nama_Santri)}</span>
+                        <span class="font-mono text-[10px] px-2 py-0.5 rounded-md bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 font-bold">${escapeHtml(s.ID_Santri)}</span>
+                        ${statusBadge}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-3 flex-wrap">
+                        <span><i class="fa-solid fa-user-group text-[10px] mr-1"></i>Wali: ${escapeHtml(waliInfo)}</span>
+                        <span><i class="fa-solid fa-arrow-down text-emerald-600 text-[10px] mr-1"></i>Masuk: <strong>${formatRupiah(uData.totalMasuk)}</strong></span>
+                        <span><i class="fa-solid fa-arrow-up text-rose-600 text-[10px] mr-1"></i>Keluar: <strong>${formatRupiah(uData.totalKeluar)}</strong></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-darkborder">
+                    <div class="text-left sm:text-right">
+                        <span class="text-[10px] uppercase font-bold text-gray-400 block">Sisa Saldo</span>
+                        <span class="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">${formatRupiah(uData.saldo)}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="openModalCatatUangSaku('${s.ID_Santri}', 'MASUK')" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-300 text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Catat Titipan Uang Masuk">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                            <span class="hidden sm:inline">Titip</span>
+                        </button>
+                        <button onclick="openModalCatatUangSaku('${s.ID_Santri}', 'KELUAR')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-300 text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Catat Pencairan Uang Saku">
+                            <i class="fa-solid fa-minus text-[10px]"></i>
+                            <span class="hidden sm:inline">Cairkan</span>
+                        </button>
+                        <button onclick="openModalRiwayatUangSaku('${s.ID_Santri}')" class="px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 text-xs font-bold transition flex items-center gap-1 shadow-2xs" title="Lihat Buku Tabungan / Riwayat Mutasi">
+                            <i class="fa-solid fa-receipt text-xs"></i>
+                            <span class="hidden sm:inline">Riwayat</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openModalCatatUangSaku(santriId = '', jenisDefault = 'MASUK') {
+    const selSantri = document.getElementById('inputSakuSantri');
+    if (selSantri) {
+        selSantri.innerHTML = '<option value="">-- Pilih Santri --</option>';
+        const activeSantri = (state.santri || []).filter(s => (s.Status || 'Aktif').toLowerCase() === 'aktif');
+        activeSantri.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.ID_Santri;
+            opt.textContent = `${s.Nama_Santri} (${s.ID_Santri})`;
+            selSantri.appendChild(opt);
+        });
+        if (santriId) selSantri.value = santriId;
+    }
+
+    onSelectSantriUangSaku(santriId);
+    updateSakuJenisUI(jenisDefault);
+
+    const now = new Date();
+    const tglEl = document.getElementById('inputSakuTanggal');
+    if (tglEl) {
+        tglEl.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    }
+
+    const nomEl = document.getElementById('inputSakuNominal');
+    if (nomEl) nomEl.value = '';
+
+    const ketEl = document.getElementById('inputSakuKeterangan');
+    if (ketEl) {
+        ketEl.value = jenisDefault === 'MASUK' ? 'Titipan Uang Saku dari Wali' : 'Pencairan Jajan Santri';
+    }
+
+    const modal = document.getElementById('modalCatatUangSaku');
+    const content = document.getElementById('modalCatatUangSakuContent');
+    if (modal && content) {
+        modal.classList.remove('hidden');
+        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+    }
+}
+
+function onSelectSantriUangSaku(santriId) {
+    const infoEl = document.getElementById('infoSaldoTerkiniSantri');
+    const valEl = document.getElementById('valSaldoTerkiniSantri');
+    if (!infoEl || !valEl) return;
+
+    if (!santriId) {
+        infoEl.classList.add('hidden');
+        return;
+    }
+
+    const uData = getSantriUangSakuData(santriId);
+    valEl.textContent = formatRupiah(uData.saldo);
+    infoEl.classList.remove('hidden');
+}
+
+function updateSakuJenisUI(jenis) {
+    const rMasuk = document.querySelector('input[name="inputSakuJenis"][value="MASUK"]');
+    const rKeluar = document.querySelector('input[name="inputSakuJenis"][value="KELUAR"]');
+    const lblMasuk = document.getElementById('lblJenisMasuk');
+    const lblKeluar = document.getElementById('lblJenisKeluar');
+    const titleModal = document.getElementById('titleModalCatatUangSaku');
+    const ketEl = document.getElementById('inputSakuKeterangan');
+
+    if (jenis === 'MASUK') {
+        if (rMasuk) rMasuk.checked = true;
+        if (lblMasuk) {
+            lblMasuk.className = "flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer bg-emerald-50/60 dark:bg-emerald-950/40 border-emerald-500 transition";
+        }
+        if (lblKeluar) {
+            lblKeluar.className = "flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 border-gray-200 dark:border-darkborder transition";
+        }
+        if (titleModal) titleModal.textContent = "Catat Titipan Uang Saku (Masuk)";
+        if (ketEl && (!ketEl.value || ketEl.value.includes('Pencairan'))) {
+            ketEl.value = 'Titipan Uang Saku dari Wali';
+        }
+    } else {
+        if (rKeluar) rKeluar.checked = true;
+        if (lblKeluar) {
+            lblKeluar.className = "flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer bg-rose-50/60 dark:bg-rose-950/40 border-rose-500 transition";
+        }
+        if (lblMasuk) {
+            lblMasuk.className = "flex items-center gap-2 p-2.5 border rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 border-gray-200 dark:border-darkborder transition";
+        }
+        if (titleModal) titleModal.textContent = "Catat Pencairan Uang Saku (Keluar)";
+        if (ketEl && (!ketEl.value || ketEl.value.includes('Titipan'))) {
+            ketEl.value = 'Pencairan Jajan Santri';
+        }
+    }
+}
+
+function saveMutasiUangSaku(e) {
+    e.preventDefault();
+    AppNotify.loading('Menyimpan Transaksi Uang Saku...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+
+    const santriId = document.getElementById('inputSakuSantri')?.value;
+    const jenis = document.querySelector('input[name="inputSakuJenis"]:checked')?.value || 'MASUK';
+    const nominal = Number(document.getElementById('inputSakuNominal')?.value) || 0;
+    const tanggal = document.getElementById('inputSakuTanggal')?.value || '';
+    const keterangan = document.getElementById('inputSakuKeterangan')?.value || '';
+
+    if (!santriId) {
+        AppNotify.close();
+        return AppNotify.toast('error', 'Pilih santri terlebih dahulu');
+    }
+    if (nominal <= 0) {
+        AppNotify.close();
+        return AppNotify.toast('error', 'Nominal harus lebih dari Rp 0');
+    }
+
+    const payload = {
+        idSantri: santriId,
+        jenis: jenis,
+        nominal: nominal,
+        tanggal: tanggal,
+        keterangan: keterangan
+    };
+
+    apiCall('catatMutasiUangSaku', token, payload).then(res => {
+        AppNotify.close();
+        if (res.status === 'success') {
+            closeModal('modalCatatUangSaku', 'modalCatatUangSakuContent');
+            AppNotify.toast('success', res.message || 'Transaksi berhasil dicatat');
+            refreshAdminData();
+        } else {
+            AppNotify.error('Gagal Mencatat', res.message || 'Terjadi kesalahan sistem');
+        }
+    }).catch(err => {
+        AppNotify.close();
+        AppNotify.error('Error', err.message || 'Koneksi gagal');
+    });
+}
+
+function openModalRiwayatUangSaku(santriId) {
+    currentRiwayatSantriId = santriId;
+    const s = findSantriById(state.santri, santriId);
+    const titleEl = document.getElementById('titleRiwayatUangSaku');
+    const subTitleEl = document.getElementById('subTitleRiwayatUangSaku');
+    const saldoDisp = document.getElementById('modalRiwayatSaldoDisplay');
+
+    if (titleEl) titleEl.textContent = `Buku Saku: ${s ? s.Nama_Santri : santriId}`;
+    if (subTitleEl) subTitleEl.textContent = `ID Santri: ${santriId} • Wali: ${(s ? (s.Nama_Wali || s.Nama_Ayah || '-') : '-')}`;
+
+    const uData = getSantriUangSakuData(santriId);
+    if (saldoDisp) saldoDisp.textContent = formatRupiah(uData.saldo);
+
+    const listEl = document.getElementById('modalRiwayatMutasiList');
+    if (listEl) {
+        if (uData.mutasiList.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-center py-10 px-4 bg-gray-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-gray-200 dark:border-darkborder text-xs text-gray-500">
+                    <i class="fa-solid fa-receipt text-2xl text-gray-300 dark:text-gray-600 mb-2 block"></i>
+                    Belum ada riwayat mutasi uang saku untuk santri ini.
+                </div>
+            `;
+        } else {
+            listEl.innerHTML = uData.mutasiList.map(m => {
+                const isMasuk = String(m.Jenis || '').toUpperCase() === 'MASUK';
+                const nom = Number(m.Nominal) || 0;
+                const saldoAkhir = Number(m.Saldo_Akhir) || 0;
+
+                return `
+                    <div class="p-3 rounded-xl bg-white dark:bg-slate-800 border border-gray-100 dark:border-darkborder flex items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-lg ${isMasuk ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/50'} flex items-center justify-center text-xs shrink-0 font-bold">
+                                <i class="fa-solid ${isMasuk ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-xs font-bold text-gray-900 dark:text-white truncate">${escapeHtml(m.Keterangan || (isMasuk ? 'Titipan Uang Saku' : 'Pencairan Jajan'))}</span>
+                                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-slate-700 text-gray-500">${escapeHtml(m.Tanggal || '-')}</span>
+                                </div>
+                                <div class="text-[11px] text-gray-400 mt-0.5">
+                                    Saldo sesudah: <strong>${formatRupiah(saldoAkhir)}</strong> • Oleh: ${escapeHtml(m.Dicatat_Oleh || 'Bendahara')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="font-extrabold text-sm ${isMasuk ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                ${isMasuk ? '+' : '-'} ${formatRupiah(nom)}
+                            </span>
+                            ${isMasuk ? `
+                                <button onclick="cetakKwitansiUangSakuAdmin('${m.ID_Transaksi}')" class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 text-xs transition" title="Cetak Tanda Terima">
+                                    <i class="fa-solid fa-print"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="hapusMutasiUangSakuAction('${m.ID_Transaksi}', '${escapeHtml(m.Keterangan || '')}')" class="p-1.5 rounded-lg bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500 dark:bg-slate-700 text-xs transition" title="Hapus Transaksi">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    const modal = document.getElementById('modalRiwayatUangSaku');
+    const content = document.getElementById('modalRiwayatUangSakuContent');
+    if (modal && content) {
+        modal.classList.remove('hidden');
+        setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
+    }
+}
+
+async function hapusMutasiUangSakuAction(idTransaksi, ket) {
+    const confirmed = await AppNotify.confirm('Hapus Transaksi?', `Hapus mutasi uang saku "${ket}"? Saldo santri akan direkalkulasi otomatis.`, 'Ya, Hapus', 'Batal');
+    if (!confirmed) return;
+
+    AppNotify.loading('Menghapus Mutasi...');
+    const token = localStorage.getItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
+    apiCall('deleteMutasiUangSaku', token, idTransaksi).then(res => {
+        AppNotify.close();
+        if (res.status === 'success') {
+            AppNotify.toast('success', res.message || 'Transaksi berhasil dihapus');
+            refreshAdminData();
+            if (currentRiwayatSantriId) {
+                setTimeout(() => openModalRiwayatUangSaku(currentRiwayatSantriId), 400);
+            }
+        } else {
+            AppNotify.error('Gagal Menghapus', res.message || 'Terjadi kesalahan');
+        }
+    }).catch(err => {
+        AppNotify.close();
+        AppNotify.error('Error', err.message || 'Koneksi gagal');
+    });
+}
+
+function cetakKwitansiUangSakuAdmin(idTransaksi) {
+    const allMutasi = state.uangSaku || [];
+    const m = allMutasi.find(x => x.ID_Transaksi === idTransaksi);
+    if (!m) return AppNotify.toast('warning', 'Data transaksi tidak ditemukan');
+
+    const s = findSantriById(state.santri, m.ID_Santri);
+    const receiptObj = {
+        ID_Transaksi: m.ID_Transaksi,
+        ID_Santri: m.ID_Santri,
+        Judul_Tagihan: 'Titipan Uang Saku Santri',
+        Kategori: 'Titipan Uang Saku',
+        Nominal: m.Nominal,
+        Tgl_Bayar: m.Tanggal,
+        Metode_Bayar: 'Transfer / Kasir Pondok',
+        Catatan: m.Keterangan || 'Titipan uang saku',
+        isUangSaku: true
+    };
+
+    cetakKwitansiResmi(receiptObj, s);
 }
 
 // ==================== GLOBAL DELETE & PENGATURAN ====================
