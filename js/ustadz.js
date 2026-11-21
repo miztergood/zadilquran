@@ -119,8 +119,10 @@ function switchUstadzSection(sectionId) {
 
 // ==================== VIEW 1: DASHBOARD UTAMA HALAQAH ====================
 function renderUstadzDashboard() {
-    const mySantri = state.santri.filter(s => s.ID_Ustadz === (sessionData ? sessionData.id : ''));
-    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === (sessionData ? sessionData.id : ''));
+    const myId = sessionData ? sessionData.id : '';
+    const mySantri = state.santri.filter(s => s.ID_Ustadz === myId);
+    const mySantriIds = new Set(mySantri.map(s => s.ID_Santri));
+    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === myId || mySantriIds.has(set.ID_Santri));
 
     // Tanggal Hari Ini (Format Indonesia)
     const today = new Date();
@@ -128,7 +130,7 @@ function renderUstadzDashboard() {
     const elDate = document.getElementById('dashTodayDate');
     if (elDate) elDate.textContent = todayStr;
 
-    // Santri yang sudah setor hari ini
+    // Santri yang sudah setor hari ini (baik disimak langsung maupun disimak ustadz piket)
     const todaySetoran = mySetoran.filter(set => (set.Tanggal || '').includes(todayStr));
     const uniqueSantriSudahSetorIds = new Set(todaySetoran.map(s => s.ID_Santri));
     const sudahSetorCount = uniqueSantriSudahSetorIds.size;
@@ -879,7 +881,16 @@ function renderUstadzRiwayat() {
     if (!container) return;
     container.innerHTML = '';
 
-    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === (sessionData ? sessionData.id : '')).slice().reverse().slice(0, 8);
+    const myId = sessionData ? sessionData.id : '';
+    const mySantri = (state.santri || []).filter(s => String(s.ID_Ustadz || '').trim() === String(myId).trim());
+    const mySantriIds = new Set(mySantri.map(s => s.ID_Santri));
+
+    // Menampilkan setoran yang disimak ustadz yang login ATAU setoran santri binaan halaqahnya
+    const mySetoran = (state.setoran || []).filter(set => {
+        const isDisimak = String(set.ID_Ustadz || '').trim() === String(myId).trim();
+        const isBinaan = mySantriIds.has(set.ID_Santri);
+        return isDisimak || isBinaan;
+    }).slice().reverse().slice(0, 10);
 
     if (mySetoran.length === 0) {
         container.innerHTML = `<p class="text-center text-gray-500 py-6 text-xs">Belum ada catatan penilaian harian di sesi ini.</p>`;
@@ -894,6 +905,9 @@ function renderUstadzRiwayat() {
         const isBinnadhor = jenis === 'Binnadhor';
         const isTasmi = (jenis || '').toLowerCase().includes('tasmi');
         const detailTasmi = isTasmi ? parseDetailTasmi(set.Detail_Tasmi) : null;
+
+        const isDisimakSaya = String(set.ID_Ustadz || '').trim() === String(myId).trim();
+        const penyimakNama = set.ParafUstadz || (state.ustadz && state.ustadz.find(u => u.ID_Ustadz === set.ID_Ustadz)?.Nama) || set.ID_Ustadz || 'Penyimak Lain';
 
         const borderLeft = isZiyadah
             ? 'border-l-4 border-[#1c6b45]'
@@ -943,11 +957,17 @@ function renderUstadzRiwayat() {
             <div class="bg-gray-50 dark:bg-slate-800 rounded-2xl p-3 sm:p-3.5 border border-gray-100 dark:border-darkborder ${borderLeft}">
                 <div class="flex justify-between items-start gap-2 mb-1.5">
                     <div>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 flex-wrap">
                             <span class="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-slate-700 text-[10px] font-mono font-bold text-gray-700 dark:text-gray-200">${escapeHtml(tmText)}</span>
                             <h4 class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm">${escapeHtml(santriNama)}</h4>
                         </div>
-                        <p class="text-[10px] text-gray-400 mt-0.5">${set.Tanggal}</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5">
+                            ${set.Tanggal} &bull; 
+                            ${isDisimakSaya 
+                                ? '<span class="text-emerald-600 dark:text-emerald-400 font-semibold">Disimak Anda</span>' 
+                                : `<span class="text-indigo-600 dark:text-indigo-400 font-semibold" title="Disimak ustadz piket/badal">Penyimak: ${escapeHtml(penyimakNama)}</span>`
+                            }
+                        </p>
                     </div>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>
                 </div>
@@ -973,12 +993,26 @@ function populateRekapFilterSantri() {
     const sel = document.getElementById('rekapFilterSantri');
     if (!sel) return;
     const currentVal = sel.value;
-    sel.innerHTML = '<option value="all">Semua Santri Binaan</option>';
+    sel.innerHTML = '<option value="all">Semua Santri</option>';
     const myId = sessionData ? sessionData.id : '';
+    
+    // Gabungkan santri binaan halaqah dan santri yang pernah setor ke ustadz ini
     const mySantri = (state.santri || []).filter(s => String(s.ID_Ustadz || '').trim() === String(myId).trim());
-    const list = mySantri.length > 0 ? mySantri : (state.santri || []);
+    const disimakSantriIds = new Set((state.setoran || []).filter(set => String(set.ID_Ustadz || '').trim() === String(myId).trim()).map(s => s.ID_Santri));
+    
+    const combinedSantriMap = new Map();
+    mySantri.forEach(s => combinedSantriMap.set(s.ID_Santri, { ...s, isBinaan: true }));
+    disimakSantriIds.forEach(id => {
+        if (!combinedSantriMap.has(id)) {
+            const sObj = findSantriById(state.santri, id);
+            if (sObj) combinedSantriMap.set(id, { ...sObj, isBinaan: false });
+        }
+    });
+
+    const list = combinedSantriMap.size > 0 ? Array.from(combinedSantriMap.values()) : (state.santri || []);
     list.forEach(s => {
-        sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})</option>`;
+        const tag = s.isBinaan ? '' : ' [Simakan Tamu]';
+        sel.innerHTML += `<option value="${s.ID_Santri}">${s.Nama_Santri} (${s.ID_Santri})${tag}</option>`;
     });
     if (currentVal) sel.value = currentVal;
 }
@@ -990,7 +1024,26 @@ function renderUstadzRekapanTable() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    const mySetoran = state.setoran.filter(set => set.ID_Ustadz === (sessionData ? sessionData.id : '')).slice().reverse();
+    const myId = sessionData ? sessionData.id : '';
+    const mySantri = (state.santri || []).filter(s => String(s.ID_Ustadz || '').trim() === String(myId).trim());
+    const mySantriIds = new Set(mySantri.map(s => s.ID_Santri));
+
+    const lingkupFilter = document.getElementById('rekapFilterLingkup') ? document.getElementById('rekapFilterLingkup').value : 'all_terkait';
+
+    // Filter setoran dasar berdasarkan cakupan:
+    const mySetoran = (state.setoran || []).filter(set => {
+        const isDisimakSaya = String(set.ID_Ustadz || '').trim() === String(myId).trim();
+        const isSantriBinaan = mySantriIds.has(set.ID_Santri);
+
+        if (lingkupFilter === 'binaan_saja') {
+            return isSantriBinaan;
+        } else if (lingkupFilter === 'disimak_saja') {
+            return isDisimakSaya;
+        } else {
+            // all_terkait (default: mencakup santri binaan dan simakan ustadz ini)
+            return isDisimakSaya || isSantriBinaan;
+        }
+    }).slice().reverse();
 
     // Ambil nilai filter
     const santriFilter = document.getElementById('rekapFilterSantri') ? document.getElementById('rekapFilterSantri').value : 'all';
@@ -1034,6 +1087,7 @@ function renderUstadzRekapanTable() {
                 (set.Surah || '').toLowerCase().includes(searchQuery) ||
                 (set.TM || '').toLowerCase().includes(searchQuery) ||
                 (set.Catatan || '').toLowerCase().includes(searchQuery) ||
+                (set.ParafUstadz || '').toLowerCase().includes(searchQuery) ||
                 sName.includes(searchQuery)
             );
             if (!match) return false;
@@ -1058,6 +1112,9 @@ function renderUstadzRekapanTable() {
         const isZiyadah = jenis === 'Ziyadah' || jenis === 'Hafalan Baru';
         const isBinnadhor = jenis === 'Binnadhor';
         const isTasmi = (jenis || '').toLowerCase().includes('tasmi');
+
+        const isDisimakSaya = String(set.ID_Ustadz || '').trim() === String(myId).trim();
+        const penyimakNama = set.ParafUstadz || (state.ustadz && state.ustadz.find(u => u.ID_Ustadz === set.ID_Ustadz)?.Nama) || set.ID_Ustadz || 'Penyimak Lain';
 
         const typeBadge = isZiyadah
             ? 'bg-[#edf7f2] text-[#1c6b45] dark:bg-[#12452c]/50 dark:text-[#83c9a6]'
@@ -1107,6 +1164,10 @@ function renderUstadzRekapanTable() {
                 <td class="py-3 px-4">
                     <span class="font-bold text-gray-900 dark:text-white block">${escapeHtml(sNama)}</span>
                     <span class="text-[10px] text-gray-400 block">${set.Tingkatan || "Al-Qur'an"}</span>
+                    ${!isDisimakSaya 
+                        ? `<span class="inline-flex items-center gap-1 mt-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/50" title="Disimak oleh ustadz lain"><i class="fa-solid fa-user-check text-[8px]"></i>${escapeHtml(penyimakNama)}</span>` 
+                        : `<span class="inline-flex items-center gap-1 mt-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">Disimak Anda</span>`
+                    }
                 </td>
                 <td class="py-3 px-4">
                     <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${typeBadge}">${jenis}</span>

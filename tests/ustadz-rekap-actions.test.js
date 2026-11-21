@@ -56,5 +56,20 @@ describe('Ustadz Rekap Actions (View, Edit, Delete)', () => {
     expect(jsContent).toContain('window.openEditSetoran = openEditSetoran;');
     expect(jsContent).toContain('window.deleteSetoranUstadz = deleteSetoranUstadz;');
   });
+
+  it('memastikan filter cakupan data (rekapFilterLingkup) tersedia untuk melihat setoran santri binaan', () => {
+    expect(htmlContent).toContain('id="rekapFilterLingkup"');
+    expect(htmlContent).toContain('value="all_terkait"');
+    expect(htmlContent).toContain('value="binaan_saja"');
+    expect(htmlContent).toContain('value="disimak_saja"');
+    expect(jsContent).toContain('rekapFilterLingkup');
+    expect(jsContent).toContain('mySantriIds');
+  });
+
+  it('memastikan tabel dan riwayat menandai setoran yang disimak sendiri vs ustadz lain', () => {
+    expect(jsContent).toContain('Disimak Anda');
+    expect(jsContent).toContain('Penyimak:');
+  });
 });
+
 
